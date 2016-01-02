@@ -12,7 +12,7 @@ case class Lint(service: Service) {
 
 }
 
-object Lint extends App {
+object Lint {
 
   val All = Seq(
     linters.Get,
@@ -23,16 +23,6 @@ object Lint extends App {
     val contents = scala.io.Source.fromFile(path).getLines.mkString("\n")
     val service = Json.parse(contents).as[Service]
     Lint(service)
-  }
-
-  fromFile("/tmp/organization.json").validate() match {
-    case Nil => println("valid")
-    case errors => {
-      println("1 or more errors:")
-      errors.foreach { err =>
-        println(s"  - $err")
-      }
-    }
   }
 
 }
