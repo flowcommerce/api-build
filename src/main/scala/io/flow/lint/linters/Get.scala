@@ -13,12 +13,12 @@ import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, Resource,
   * d. offset is long w/ default of 0, minimum of 0, no maximum
   * e. sort is a string with a default specified
   */
-case object Get extends Linter {
+case object Get extends Linter with Helpers {
 
   private[this] val RequiredParameters = Seq("id", "limit", "offset", "sort")
 
   override def validate(service: Service): Seq[String] = {
-    service.resources.map(validateResource(_)).flatten
+    nonHealthcheckResources(service).map(validateResource(_)).flatten
   }
 
   def validateResource(resource: Resource): Seq[String] = {
@@ -136,14 +136,6 @@ case object Get extends Linter {
         }
       }
     }
-  }
-
-  private[this] def error(resource: Resource, error: String): String = {
-    s"${resource.plural}: $error"
-  }
-
-  private[this] def error(resource: Resource, operation: Operation, error: String): String = {
-    s"${resource.plural} ${operation.method} ${operation.path}: $error"
   }
 
 }

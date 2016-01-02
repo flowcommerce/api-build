@@ -15,7 +15,8 @@ case class Lint(service: Service) {
 object Lint extends App {
 
   val All = Seq(
-    linters.Get
+    linters.Get,
+    linters.Healthcheck
   )
 
   def fromFile(path: String): Lint = {
