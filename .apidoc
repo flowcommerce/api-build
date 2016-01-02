@@ -1,0 +1,11 @@
+code:
+  bryzek:
+    apidoc-spec:
+      version: latest
+      generators:
+        play_2_x_json: src/main/scala/io/flow/generated
+    apidoc-api:
+      version: latest
+      generators:
+        ning_1_9_client: src/main/scala/io/flow/generated
+
