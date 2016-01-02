@@ -2,7 +2,7 @@ package io.flow.lint
 
 import org.scalatest.{FunSpec, Matchers}
 
-class LintSpec extends FunSpec with Matchers with Helpers {
+class HealthcheckSpec extends FunSpec with Matchers with Helpers {
 
   it("temporary debugging") {
     Lint.fromFile("/tmp/organization.json").validate() match {
