@@ -23,7 +23,7 @@ case object Get extends Linter with Helpers {
 
   def validateResource(resource: Resource): Seq[String] = {
     resource.operations.filter(_.method == Method.Get).sortBy { _.path }.headOption match {
-      case None => Seq(error(resource, "No operations found"))
+      case None => Seq(error(resource, "Must have at least one operation"))
       case Some(operation) => validateOperation(resource, operation)
     }
 
