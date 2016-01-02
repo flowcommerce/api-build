@@ -4,31 +4,35 @@ import org.scalatest.{FunSpec, Matchers}
 
 class LintSpec extends FunSpec with Matchers {
 
-  val healthcheck = ServiceBuilder().addResource("""
+  val healthcheckResourceTemplate = """
     {
       "type": "io.flow.common.v0.models.healthcheck",
       "plural": "healthchecks",
       "operations": [
         {
-          "method": "GET",
-          "path": "/_internal_/healthcheck",
+          "method": "%s",
+          "path": "%s",
           "parameters": [],
           "responses": [
             {
               "code": {
                 "integer": {
-                  "value": 200
+                  "value": %s
                 }
               },
-              "type": "io.flow.common.v0.models.healthcheck"
+              "type": "%s"
             }
           ]
         }
       ]
     }
-  """)
+  """
 
-  it("my test") {
+  val healthcheck = ServiceBuilder().addResource(
+    healthcheckResourceTemplate.format("GET", "/_internal_/healthcheck", 200, "io.flow.common.v0.models.healthcheck")
+  )
+
+  it("temporary debugging") {
     Lint.fromFile("/tmp/organization.json").validate() match {
       case Nil => println("valid")
       case errors => {
@@ -48,6 +52,42 @@ class LintSpec extends FunSpec with Matchers {
 
   it("healthcheck service is valid") {
     Lint(healthcheck.service).validate should be(Nil)
+  }
+
+  it("healthcheck validates method") {
+    Lint(
+      ServiceBuilder().addResource(
+        healthcheckResourceTemplate.format("POST", "/_internal_/healthcheck", 200, "io.flow.common.v0.models.healthcheck")
+      ).service
+    ).validate should be(Seq("healthchecks: Missing GET /_internal_/healthcheck"))
+  }
+
+  it("healthcheck validates path") {
+    Lint(
+      ServiceBuilder().addResource(
+        healthcheckResourceTemplate.format("GET", "/healthcheck", 200, "io.flow.common.v0.models.healthcheck")
+      ).service
+    ).validate should be(Seq("healthchecks: Missing GET /_internal_/healthcheck"))
+  }
+
+  it("healthcheck validates response code") {
+    Lint(
+      ServiceBuilder().addResource(
+        healthcheckResourceTemplate.format("GET", "/_internal_/healthcheck", 201, "io.flow.common.v0.models.healthcheck")
+      ).service
+    ).validate should be(
+      Seq("healthchecks GET /_internal_/healthcheck: reponse must return HTTP 200 and not HTTP 201")
+    )
+  }
+
+  it("healthcheck validates response type") {
+    Lint(
+      ServiceBuilder().addResource(
+        healthcheckResourceTemplate.format("GET", "/_internal_/healthcheck", 200, "string")
+      ).service
+    ).validate should be(
+      Seq("healthchecks GET /_internal_/healthcheck: response must be of type io.flow.common.v0.models.healthcheck and not string")
+    )
   }
 
 }
