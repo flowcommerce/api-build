@@ -22,10 +22,13 @@ case object Get extends Linter with Helpers {
   }
 
   def validateResource(resource: Resource): Seq[String] = {
-    resource.operations.sortBy { _.path }.headOption match {
-      case None => Seq(error(resource, "No GET method w/ empty path found"))
+    resource.operations.filter(_.method == Method.Get).sortBy { _.path }.headOption match {
+      case None => Seq(error(resource, "No operations found"))
       case Some(operation) => validateOperation(resource, operation)
     }
+
+    // TODO: Collect all operations that return arrays and validate
+    // their parameter lists
   }
 
   def validateOperation(resource: Resource, operation: Operation): Seq[String] = {

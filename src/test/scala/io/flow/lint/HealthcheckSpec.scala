@@ -1,8 +1,9 @@
 package io.flow.lint
 
+import com.bryzek.apidoc.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
 
-class HealthcheckSpec extends FunSpec with Matchers with Helpers {
+class HealthcheckSpec extends FunSpec with Matchers {
 
   it("temporary debugging") {
     Lint.fromFile("/tmp/organization.json").validate() match {
@@ -17,36 +18,63 @@ class HealthcheckSpec extends FunSpec with Matchers with Helpers {
   }
 
   it("requires healthcheck") {
-    Lint(ServiceBuilder().service).validate should be(
+    Lint(Services.Base).validate should be(
       Seq("Missing resource: healthchecks")
     )
   }
 
   it("healthcheck service is valid") {
-    Lint(healthcheck.service).validate should be(Nil)
+    Lint(Services.withHealthcheck(Services.Base)).validate should be(Nil)
   }
 
   it("healthcheck validates method") {
     Lint(
-      ServiceBuilder().addResource(
-        healthcheckResourceTemplate.format("POST", "/_internal_/healthcheck", 200, "io.flow.common.v0.models.healthcheck")
-      ).service
+      Services.Base.copy(
+        resources = Seq(
+          Services.buildSimpleResource(
+            `type` = "io.flow.common.v0.models.healthcheck",
+            plural = "healthchecks",
+            method = Method.Post,
+            path = "/_internal_/healthcheck",
+            responseCode = 200,
+            responseType = "io.flow.common.v0.models.healthcheck"
+          )
+        )
+      )
     ).validate should be(Seq("healthchecks: Missing GET /_internal_/healthcheck"))
   }
 
   it("healthcheck validates path") {
     Lint(
-      ServiceBuilder().addResource(
-        healthcheckResourceTemplate.format("GET", "/healthcheck", 200, "io.flow.common.v0.models.healthcheck")
-      ).service
+      Services.Base.copy(
+        resources = Seq(
+          Services.buildSimpleResource(
+            `type` = "io.flow.common.v0.models.healthcheck",
+            plural = "healthchecks",
+            method = Method.Get,
+            path = "/healthcheck",
+            responseCode = 200,
+            responseType = "io.flow.common.v0.models.healthcheck"
+          )
+        )
+      )
     ).validate should be(Seq("healthchecks: Missing GET /_internal_/healthcheck"))
   }
 
   it("healthcheck validates response code") {
     Lint(
-      ServiceBuilder().addResource(
-        healthcheckResourceTemplate.format("GET", "/_internal_/healthcheck", 201, "io.flow.common.v0.models.healthcheck")
-      ).service
+      Services.Base.copy(
+        resources = Seq(
+          Services.buildSimpleResource(
+            `type` = "io.flow.common.v0.models.healthcheck",
+            plural = "healthchecks",
+            method = Method.Get,
+            path = "/_internal_/healthcheck",
+            responseCode = 201,
+            responseType = "io.flow.common.v0.models.healthcheck"
+          )
+        )
+      )
     ).validate should be(
       Seq("healthchecks GET /_internal_/healthcheck: reponse must return HTTP 200 and not HTTP 201")
     )
@@ -54,9 +82,18 @@ class HealthcheckSpec extends FunSpec with Matchers with Helpers {
 
   it("healthcheck validates response type") {
     Lint(
-      ServiceBuilder().addResource(
-        healthcheckResourceTemplate.format("GET", "/_internal_/healthcheck", 200, "string")
-      ).service
+      Services.Base.copy(
+        resources = Seq(
+          Services.buildSimpleResource(
+            `type` = "io.flow.common.v0.models.healthcheck",
+            plural = "healthchecks",
+            method = Method.Get,
+            path = "/_internal_/healthcheck",
+            responseCode = 200,
+            responseType = "string"
+          )
+        )
+      )
     ).validate should be(
       Seq("healthchecks GET /_internal_/healthcheck: response must be of type io.flow.common.v0.models.healthcheck and not string")
     )
