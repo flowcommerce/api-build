@@ -90,7 +90,7 @@ case object Get extends Linter with Helpers {
       lastThree match {
         case "limit" :: "offset" :: "sort" :: Nil => Nil
         case _ => {
-          Seq(error(resource, operation, s"last three parameters must be limit, offset, sort and not " + lastThree.mkString(", ")))
+          Seq(error(resource, operation, s"Last three parameters must be limit, offset, sort and not " + lastThree.mkString(", ")))
         }
       }
     ).flatten

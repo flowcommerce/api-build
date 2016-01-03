@@ -209,7 +209,44 @@ class GetSpec extends FunSpec with Matchers {
       )
     )
   }
-  
+
+  it("GET / with required parameters in different order") {
+    val otherParameter = Parameter(
+      name = "other",
+      `type` = "string",
+      location = ParameterLocation.Query,
+      required = false
+    )
+
+    Lint(
+      buildResourceWithSearch(
+        Seq(
+          otherParameter,
+          idParameter,
+          limitParameter,
+          offsetParameter,
+          sortParameter
+        )
+      )
+    ).validate should be(Seq(
+      "organizations GET /organizations: Parameter[id] must be the first parameter"
+    ))
+
+    Lint(
+      buildResourceWithSearch(
+        Seq(
+          idParameter,
+          limitParameter,
+          offsetParameter,
+          sortParameter,
+          otherParameter
+        )
+      )
+    ).validate should be(Seq(
+      "organizations GET /organizations: Last three parameters must be limit, offset, sort and not offset, sort, other"
+    ))
+  }
+
   it("GET / with valid parameters") {
     Lint(
       buildResourceWithSearch(
