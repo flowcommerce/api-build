@@ -64,6 +64,13 @@ object Services {
     )
   }
 
+  def buildSimpleModel(name: String, fields: Seq[String]): Model = {
+    Services.buildModel(
+      name = name,
+      fields = fields.map(Services.buildField(_))
+    )
+  }
+
   def buildSimpleResource(
     `type`: String,
     plural: String,
