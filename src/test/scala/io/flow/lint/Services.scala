@@ -29,6 +29,41 @@ object Services {
     responseType = "io.flow.common.v0.models.healthcheck"
   )
 
+  def buildModel(
+    name: String,
+    fields: Seq[Field] = Nil
+  ): Model = {
+    Model(
+      name = name,
+      plural = name + "s",
+      fields = fields
+    )
+  }
+
+  def buildField(
+    name: String,
+    `type`: String = "string",
+    description: Option[String] = None,
+    deprecation: Option[Deprecation] = None,
+    default: Option[String] = None,
+    required: Boolean = true,
+    minimum: Option[Long] = None,
+    maximum: Option[Long] = None,
+    example: Option[String] = None
+  ): Field = {
+    Field(
+      name = name,
+      `type` = `type`,
+      description = description,
+      deprecation = deprecation,
+      default = default,
+      required = required,
+      minimum = minimum,
+      maximum = maximum,
+      example = example
+    )
+  }
+
   def buildSimpleResource(
     `type`: String,
     plural: String,
