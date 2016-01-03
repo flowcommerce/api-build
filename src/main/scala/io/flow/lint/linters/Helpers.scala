@@ -1,6 +1,6 @@
 package io.flow.lint.linters
 
-import com.bryzek.apidoc.spec.v0.models.{Operation, Resource, Service}
+import com.bryzek.apidoc.spec.v0.models.{Model, Operation, Resource, Service}
 
 trait Helpers {
 
@@ -8,12 +8,16 @@ trait Helpers {
     service.resources.filter( _.plural != Healthcheck.Plural)
   }
 
+  def error(model: Model, error: String): String = {
+    s"Model ${model.name}: $error"
+  }
+
   def error(resource: Resource, error: String): String = {
-    s"${resource.plural}: $error"
+    s"Resource ${resource.plural}: $error"
   }
 
   def error(resource: Resource, operation: Operation, error: String): String = {
-    s"${resource.plural} ${operation.method} ${operation.path}: $error"
+    s"Resource ${resource.plural} ${operation.method} ${operation.path}: $error"
   }
 
 }

@@ -5,8 +5,10 @@ import org.scalatest.{FunSpec, Matchers}
 
 class HealthcheckSpec extends FunSpec with Matchers {
 
+  val linter = Lint(Seq(linters.Healthcheck))
+
   it("temporary debugging") {
-    Lint.fromFile("/tmp/organization.json").validate() match {
+    Lint.fromFile("/tmp/organization.json") match {
       case Nil => println("valid")
       case errors => {
         println("1 or more errors:")
@@ -18,17 +20,17 @@ class HealthcheckSpec extends FunSpec with Matchers {
   }
 
   it("requires healthcheck") {
-    Lint(Services.Base).validate should be(
+    linter.validate(Services.Base) should be(
       Seq("Missing resource: healthchecks")
     )
   }
 
   it("healthcheck service is valid") {
-    Lint(Services.withHealthcheck(Services.Base)).validate should be(Nil)
+    linter.validate(Services.withHealthcheck(Services.Base)) should be(Nil)
   }
 
   it("healthcheck validates method") {
-    Lint(
+    linter.validate(
       Services.Base.copy(
         resources = Seq(
           Services.buildSimpleResource(
@@ -41,11 +43,11 @@ class HealthcheckSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(Seq("healthchecks: Missing GET /_internal_/healthcheck"))
+    ) should be(Seq("Resource healthchecks: Missing GET /_internal_/healthcheck"))
   }
 
   it("healthcheck validates path") {
-    Lint(
+    linter.validate(
       Services.Base.copy(
         resources = Seq(
           Services.buildSimpleResource(
@@ -58,11 +60,11 @@ class HealthcheckSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(Seq("healthchecks: Missing GET /_internal_/healthcheck"))
+    ) should be(Seq("Resource healthchecks: Missing GET /_internal_/healthcheck"))
   }
 
   it("healthcheck validates response code") {
-    Lint(
+    linter.validate(
       Services.Base.copy(
         resources = Seq(
           Services.buildSimpleResource(
@@ -75,13 +77,13 @@ class HealthcheckSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(
-      Seq("healthchecks GET /_internal_/healthcheck: reponse must return HTTP 200 and not HTTP 201")
+    ) should be(
+      Seq("Resource healthchecks GET /_internal_/healthcheck: reponse must return HTTP 200 and not HTTP 201")
     )
   }
 
   it("healthcheck validates response type") {
-    Lint(
+    linter.validate(
       Services.Base.copy(
         resources = Seq(
           Services.buildSimpleResource(
@@ -94,8 +96,8 @@ class HealthcheckSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(
-      Seq("healthchecks GET /_internal_/healthcheck: response must be of type io.flow.common.v0.models.healthcheck and not string")
+    ) should be(
+      Seq("Resource healthchecks GET /_internal_/healthcheck: response must be of type io.flow.common.v0.models.healthcheck and not string")
     )
   }
 

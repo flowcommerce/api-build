@@ -5,6 +5,8 @@ import org.scalatest.{FunSpec, Matchers}
 
 class GetSpec extends FunSpec with Matchers {
 
+  val linter = Lint(Seq(linters.Get))
+
   val organization = Services.withHealthcheck(
     Services.Base.copy(
       resources = Seq(
@@ -56,7 +58,7 @@ class GetSpec extends FunSpec with Matchers {
   )
 
   it("requires at least one GET operation for each resource") {
-    Lint(
+    linter.validate(
       Services.withHealthcheck(
         Services.Base.copy(
           resources = Seq(
@@ -68,8 +70,8 @@ class GetSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(
-      Seq("organizations: Must have at least one operation")
+    ) should be(
+      Seq("Resource organizations: Must have at least one operation")
     )
   }
 
@@ -97,7 +99,7 @@ class GetSpec extends FunSpec with Matchers {
   }
 
   it("GET / validation") {
-    Lint(
+    linter.validate(
       buildResourceWithSearch(
         Seq(
           Parameter(
@@ -108,17 +110,17 @@ class GetSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(
+    ) should be(
       Seq(
-        "organizations GET /organizations: Missing parameters: limit, offset, sort",
-        "organizations GET /organizations: Parameter[id] must be optional",
-        "organizations GET /organizations: parameter[id] maximum is missing. Expected 25"
+        "Resource organizations GET /organizations: Missing parameters: limit, offset, sort",
+        "Resource organizations GET /organizations: Parameter[id] must be optional",
+        "Resource organizations GET /organizations: parameter[id] maximum is missing. Expected 25"
       )
     )
   }
 
   it("GET / validates id cannot have default") {
-    Lint(
+    linter.validate(
       buildResourceWithSearch(
         Seq(
           Parameter(
@@ -130,17 +132,17 @@ class GetSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(
+    ) should be(
       Seq(
-        "organizations GET /organizations: Missing parameters: limit, offset, sort",
-        "organizations GET /organizations: parameter[id] default must not be specified. Current value is 1",
-        "organizations GET /organizations: parameter[id] maximum is missing. Expected 25"
+        "Resource organizations GET /organizations: Missing parameters: limit, offset, sort",
+        "Resource organizations GET /organizations: parameter[id] default must not be specified. Current value is 1",
+        "Resource organizations GET /organizations: parameter[id] maximum is missing. Expected 25"
       )
     )
   }
 
   it("GET / validates limit") {
-    Lint(
+    linter.validate(
       buildResourceWithSearch(
         Seq(
           Parameter(
@@ -151,20 +153,20 @@ class GetSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(
+    ) should be(
       Seq(
-        "organizations GET /organizations: Missing parameters: id, offset, sort",
-        "organizations GET /organizations: Parameter[limit] must be optional",
-        "organizations GET /organizations: parameter[limit] must be of type long and not string",
-        "organizations GET /organizations: parameter[limit] default is missing. Expected 25",
-        "organizations GET /organizations: parameter[limit] minimum is missing. Expected 1",
-        "organizations GET /organizations: parameter[limit] maximum is missing. Expected 100"
+        "Resource organizations GET /organizations: Missing parameters: id, offset, sort",
+        "Resource organizations GET /organizations: Parameter[limit] must be optional",
+        "Resource organizations GET /organizations: parameter[limit] must be of type long and not string",
+        "Resource organizations GET /organizations: parameter[limit] default is missing. Expected 25",
+        "Resource organizations GET /organizations: parameter[limit] minimum is missing. Expected 1",
+        "Resource organizations GET /organizations: parameter[limit] maximum is missing. Expected 100"
       )
     )
   }
 
   it("GET / validates offset") {
-    Lint(
+    linter.validate(
       buildResourceWithSearch(
         Seq(
           Parameter(
@@ -177,20 +179,20 @@ class GetSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(
+    ) should be(
       Seq(
-        "organizations GET /organizations: Missing parameters: id, limit, sort",
-        "organizations GET /organizations: Parameter[offset] must be optional",
-        "organizations GET /organizations: parameter[offset] must be of type long and not int",
-        "organizations GET /organizations: parameter[offset] default is missing. Expected 0",
-        "organizations GET /organizations: parameter[offset] minimum must be 0 and not 1",
-        "organizations GET /organizations: parameter[offset] maximum must not be specified. Current value is 100"
+        "Resource organizations GET /organizations: Missing parameters: id, limit, sort",
+        "Resource organizations GET /organizations: Parameter[offset] must be optional",
+        "Resource organizations GET /organizations: parameter[offset] must be of type long and not int",
+        "Resource organizations GET /organizations: parameter[offset] default is missing. Expected 0",
+        "Resource organizations GET /organizations: parameter[offset] minimum must be 0 and not 1",
+        "Resource organizations GET /organizations: parameter[offset] maximum must not be specified. Current value is 100"
       )
     )
   }
 
   it("GET / validates sort") {
-    Lint(
+    linter.validate(
       buildResourceWithSearch(
         Seq(
           Parameter(
@@ -201,11 +203,11 @@ class GetSpec extends FunSpec with Matchers {
           )
         )
       )
-    ).validate should be(
+    ) should be(
       Seq(
-        "organizations GET /organizations: Missing parameters: id, limit, offset",
-        "organizations GET /organizations: parameter[sort] must be of type string and not int",
-        "organizations GET /organizations: parameter[sort] must have a default"
+        "Resource organizations GET /organizations: Missing parameters: id, limit, offset",
+        "Resource organizations GET /organizations: parameter[sort] must be of type string and not int",
+        "Resource organizations GET /organizations: parameter[sort] must have a default"
       )
     )
   }
@@ -218,7 +220,7 @@ class GetSpec extends FunSpec with Matchers {
       required = false
     )
 
-    Lint(
+    linter.validate(
       buildResourceWithSearch(
         Seq(
           otherParameter,
@@ -228,11 +230,11 @@ class GetSpec extends FunSpec with Matchers {
           sortParameter
         )
       )
-    ).validate should be(Seq(
-      "organizations GET /organizations: Parameter[id] must be the first parameter"
+    ) should be(Seq(
+      "Resource organizations GET /organizations: Parameter[id] must be the first parameter"
     ))
 
-    Lint(
+    linter.validate(
       buildResourceWithSearch(
         Seq(
           idParameter,
@@ -242,13 +244,13 @@ class GetSpec extends FunSpec with Matchers {
           otherParameter
         )
       )
-    ).validate should be(Seq(
-      "organizations GET /organizations: Last three parameters must be limit, offset, sort and not offset, sort, other"
+    ) should be(Seq(
+      "Resource organizations GET /organizations: Last three parameters must be limit, offset, sort and not offset, sort, other"
     ))
   }
 
   it("GET / with valid parameters") {
-    Lint(
+    linter.validate(
       buildResourceWithSearch(
         Seq(
           idParameter,
@@ -257,7 +259,7 @@ class GetSpec extends FunSpec with Matchers {
           sortParameter
         )
       )
-    ).validate should be(Nil)
+    ) should be(Nil)
   }
 
 }
