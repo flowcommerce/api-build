@@ -45,15 +45,20 @@ object Services {
           method = method,
           path = path,
           responses = Seq(
-            Response(
-              code = ResponseCodeInt(responseCode),
-              `type` = responseType
-            )
+            buildResponse(responseCode, responseType)
           )
         )
       )
     )
   }
+
+  def buildResponse(
+    code: Int = 200,
+    `type`: String
+  ) = Response(
+    code = ResponseCodeInt(code),
+    `type` = `type`
+  )
 
   def withHealthcheck(service: Service): Service = {
     service.copy(

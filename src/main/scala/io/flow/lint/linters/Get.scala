@@ -35,13 +35,17 @@ case object Get extends Linter with Helpers {
     val requiredErrors = operation.parameters.filter(p => p.required && p.default.isEmpty) match {
       case Nil => Nil
       case params => params.map { p =>
-        error(resource, operation, s"Parameter[${p.name}] must be optional or must have a default")
+        RequiredParameters.contains(p.name) match {
+          case true => error(resource, operation, s"Parameter[${p.name}] must be optional")
+          case false => error(resource, operation, s"Parameter[${p.name}] must be optional or must have a default")
+        }
       }
     }
 
     val paramNames = operation.parameters.map(_.name).filter(name => RequiredParameters.contains(name))
-    val missingRequiredParams = RequiredParameters.filter(n => !paramNames.contains(n)).map { name =>
-      error(resource, operation, s"Missing parameter[$name]")
+    val missingRequiredParams = RequiredParameters.filter(n => !paramNames.contains(n)) match {
+      case Nil => Nil
+      case missing => Seq(error(resource, operation, s"Missing parameters: " + missing.mkString(", ")))
     }
 
     val paramErrors = Seq(
@@ -53,6 +57,9 @@ case object Get extends Linter with Helpers {
       ),
       operation.parameters.find(_.name == "offset").map( p =>
         validateParameter(resource, operation, p, "long", default = Some("0"), minimum = Some(0), maximum = None)
+      ),
+      operation.parameters.find(_.name == "sort").map( p =>
+        validateParameter(resource, operation, p, "string", hasDefault = Some(true))
       )
     ).flatten.flatten
 
@@ -63,7 +70,7 @@ case object Get extends Linter with Helpers {
 
     // TODO: Validate responses
 
-    requiredErrors ++ missingRequiredParams ++ paramErrors ++ positionErrors
+    missingRequiredParams ++ requiredErrors ++ paramErrors ++ positionErrors
   }
 
   // validate id if present is in first position, and the parameter
@@ -94,6 +101,7 @@ case object Get extends Linter with Helpers {
     operation: Operation,
     param: Parameter,
     datatype: String,
+    hasDefault: Option[Boolean] = None,
     default: Option[String] = None,
     minimum: Option[Long] = None,
     maximum: Option[Long] = None
@@ -105,7 +113,28 @@ case object Get extends Linter with Helpers {
       }
     }
 
-    val defaultErrors = compare(resource, operation, param, "default", param.default, default)
+    val defaultErrors = hasDefault match {
+      case None => {
+        compare(resource, operation, param, "default", param.default, default)
+      }
+      case Some(value) => {
+        value match {
+          case true => {
+            param.default match {
+              case None => Seq(error(resource, operation, s"parameter[${param.name}] must have a default"))
+              case Some(_) => Nil
+            }
+          }
+          case false => {
+            param.default match {
+              case None => Nil
+              case Some(v) => Seq(error(resource, operation, s"parameter[${param.name}] must not have a default. Current value is $v"))
+            }
+          }
+        }
+      }
+    }
+
     val minimumErrors = compare(resource, operation, param, "minimum", param.minimum, minimum)
     val maximumErrors = compare(resource, operation, param, "maximum", param.maximum, maximum)
 
@@ -129,7 +158,7 @@ case object Get extends Linter with Helpers {
       }
       case Some(value) => {
         actual match {
-          case None => Seq(error(resource, operation, s"parameter[${param.name}] $desc is missing. Add with value $value"))
+          case None => Seq(error(resource, operation, s"parameter[${param.name}] $desc is missing. Expected $value"))
           case Some(a) => {
             a == value match {
               case true => Nil
