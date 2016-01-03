@@ -20,7 +20,8 @@ object Lint {
     linters.Get,
     linters.Healthcheck,
     linters.ModelsWithOrganizationField,
-    linters.SortParameterDefault
+    linters.SortParameterDefault,
+    linters.StandardResponse
   )
 
   def fromFile(path: String): Seq[String] = {
