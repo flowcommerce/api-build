@@ -5,8 +5,9 @@ import com.bryzek.apidoc.spec.v0.models.{Operation, Resource, Service}
 
 /**
   *  for resources w/ sort parameter:
-  *    - default to lower(name), created_at if there is a name field
-  *    - otherwise default to created_at
+  *    - default to created_at if path ends with /versions
+  *    - default to lower(name), -created_at if there is a name field
+  *    - otherwise default to -created_at
   */
 case object SortParameterDefault extends Linter with Helpers {
 
@@ -29,7 +30,7 @@ case object SortParameterDefault extends Linter with Helpers {
             Seq(error(resource, operation, "Parameter sort requires a default"))
           }
           case Some(default) => {
-            val expected = computeDefault(service, resource.plural)
+            val expected = computeDefault(service, resource.plural, operation.path)
             default == expected match {
               case true => Nil
               case false => {
@@ -42,13 +43,20 @@ case object SortParameterDefault extends Linter with Helpers {
     }
   }
 
-  def computeDefault(service: Service, plural: String): String = {
+  def computeDefault(service: Service, plural: String, path: String): String = {
     service.models.find(_.plural == plural) match {
-      case None => sys.error(s"Could not find model with plural[$plural]")
+      case None => {
+        sys.error(s"Could not find model with plural[$plural]")
+      }
       case Some(model) => {
-        model.fields.find(_.name == "name") match {
-          case None => "created_at"
-          case Some(_) => "lower(name), created_at"
+        path.endsWith("/versions") match {
+          case true => "created_at"
+          case false => {
+            model.fields.find(_.name == "name") match {
+              case None => "-created_at"
+              case Some(_) => "lower(name), -created_at"
+            }
+          }
         }
       }
     }

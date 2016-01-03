@@ -7,7 +7,7 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
 
   val linter = Lint(Seq(linters.SortParameterDefault))
 
-  def buildService(model: Model, param: Parameter): Service = {
+  def buildService(model: Model, param: Parameter, path: String = "/organizations"): Service = {
     Services.Base.copy(
       models = Seq(model),
       resources = Seq(
@@ -15,7 +15,7 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
           `type` = "organization",
           plural = "organizations",
           method = Method.Get,
-          path = "/organizations",
+          path = path,
           responseCode = 200,
           responseType = "[organization]",
           parameters = Seq(param)
@@ -64,7 +64,7 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
     )
   }
 
-  it("Requires 'created_at' if no name field") {
+  it("Requires '-created_at' if no name field") {
     linter.validate(
       buildService(
         Services.buildSimpleModel("organization", fields = Nil),
@@ -77,11 +77,11 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
         )
       )
     ) should be(
-      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[created_at] and not[foo]")
+      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[-created_at] and not[foo]")
     )
   }
 
-  it("Requires 'lower(name), created_at' if name field") {
+  it("Requires 'lower(name), -created_at' if name field") {
     linter.validate(
       buildService(
         Services.buildSimpleModel("organization", fields = Seq("name")),
@@ -94,7 +94,25 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
         )
       )
     ) should be(
-      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[lower(name), created_at] and not[foo]")
+      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[lower(name), -created_at] and not[foo]")
+    )
+  }
+  
+  it("Requires 'created_at' if path ends in /versions") {
+    linter.validate(
+      buildService(
+        Services.buildSimpleModel("organization", fields = Seq("name")),
+        Parameter(
+          name = "sort",
+          `type` = "string",
+          location = ParameterLocation.Query,
+          required = false,
+          default = Some("lower(name), -created_at")
+        ),
+        path = "/organizations/versions"
+      )
+    ) should be(
+      Seq("Resource organizations GET /organizations/versions: Parameter sort default expected to be[created_at] and not[lower(name), -created_at]")
     )
   }
   
