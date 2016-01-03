@@ -16,12 +16,6 @@ make sure all resources have a corresponding _version mapped to
 
   - expose parameters of exactly: id, xxx_id, limit, offset, sort
 
-for models w/ organization, ensure organization is second field (after id)
-
-for resources w/ sort parameter:
-  - default to lower(name), created_at if there is a name field
-  - otherwise default to created_at
-
 for response 401 - verify type: unit, description: "unauthorized request"
 
 validate codes:
