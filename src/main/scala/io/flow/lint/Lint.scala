@@ -19,7 +19,8 @@ object Lint {
   val All = Seq(
     linters.Get,
     linters.Healthcheck,
-    linters.ModelsWithOrganizationField
+    linters.ModelsWithOrganizationField,
+    linters.SortParameterDefault
   )
 
   def fromFile(path: String): Seq[String] = {
