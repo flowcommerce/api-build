@@ -8,20 +8,12 @@ import scala.concurrent.duration.Duration
 /**
   * Utility to download service.json files from apidoc
   */
-case class Downloader() {
-
-  private[this] val apidocApiToken = Environment.optionalString("APIDOC_API_TOKEN")
-  private[this] val apidocApiHost = Environment.optionalString("APIDOC_API_HOST").getOrElse("http://api.apidoc.me")
-
-  apidocApiToken match {
-    case None => println("NO API TOKEN")
-    case Some(t) => println(s"FOUND TOKEN: $t")
-  }
+case class Downloader(config: ApidocProfile) {
 
   private[this] val client = {
     new com.bryzek.apidoc.api.v0.Client(
-      apiUrl = apidocApiHost,
-      auth = apidocApiToken.map { token =>
+      apiUrl = config.apiUrl,
+      auth = config.token.map { token =>
         com.bryzek.apidoc.api.v0.Authorization.Basic(token)
       }
     )
@@ -67,8 +59,12 @@ case class Downloader() {
 
 object Downloader {
 
-  def withClient(f: Downloader => Unit) {
-    val downloader = Downloader()
+  def withClient(
+    config: ApidocProfile
+  ) (
+    f: Downloader => Unit
+  ) {
+    val downloader = Downloader(config)
     try {
       f(downloader)
     } finally {
