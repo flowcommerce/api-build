@@ -3,10 +3,32 @@ package io.flow.lint
 import com.bryzek.apidoc.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
 import scala.collection.JavaConversions._
+import scala.concurrent.Await
+import scala.concurrent.duration.Duration
 
 class LintSpec extends FunSpec with Matchers {
 
   val Dir = new java.io.File("src/main/scala/io/flow/lint/linters")
+
+  it("tmp") {
+    val path = "/tmp/organization.json"
+    val contents = scala.io.Source.fromFile(path).getLines.mkString("\n")
+
+    import scala.concurrent.ExecutionContext.Implicits.global
+
+    Await.result(
+      Config.apidocApiClient.validations.post(contents),
+      Duration(5, "seconds")
+    ).service match {
+      case None => println("No service")
+      case Some(service) => {
+        println("Got service")
+        println(service.toString)
+      }
+    }
+  }
+
+
 
   it("All lists all linters") {
     // avoid runtime reflection but still fail the build if a new
