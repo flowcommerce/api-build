@@ -5,24 +5,16 @@ package io.flow.lint
   */
 object Config extends App {
 
-  val apidocApiHost = optionalString("APIDOC_API_HOST").getOrElse("http://api.apidoc.me")
-  val apidocApiToken = requiredString("APIDOC_API_TOKEN")
+  lazy val apidocApiHost = optionalString("APIDOC_API_HOST").getOrElse("http://api.apidoc.me")
+  lazy val apidocApiToken = requiredString("APIDOC_API_TOKEN")
 
-  println(s"apidocApiHost[$apidocApiHost]")
-  println(s"apidocApiToken[$apidocApiToken]")
-
-  val client = new com.bryzek.apidoc.api.v0.Client(
-    apiUrl = apidocApiHost,
-    auth = Some(
-      com.bryzek.apidoc.api.v0.Authorization.Basic(apidocApiToken)
+  lazy val apidocApiClient = {
+    new com.bryzek.apidoc.api.v0.Client(
+      apiUrl = apidocApiHost,
+      auth = Some(
+        com.bryzek.apidoc.api.v0.Authorization.Basic(apidocApiToken)
+      )
     )
-  )
-
-  import scala.concurrent.ExecutionContext.Implicits.global
-  client.organizations.get().map { orgs =>
-    orgs.foreach { org =>
-      println(s"org: ${org.name}")
-    }
   }
 
   def requiredString(name: String): String = {
