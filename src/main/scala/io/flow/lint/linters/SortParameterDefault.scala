@@ -46,7 +46,7 @@ case object SortParameterDefault extends Linter with Helpers {
   def computeDefault(service: Service, plural: String, path: String): String = {
     service.models.find(_.plural == plural) match {
       case None => {
-        sys.error(s"Could not find model with plural[$plural]")
+        "-created_at"
       }
       case Some(model) => {
         path.endsWith("/versions") match {
