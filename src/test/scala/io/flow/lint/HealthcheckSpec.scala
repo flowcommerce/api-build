@@ -7,8 +7,34 @@ class HealthcheckSpec extends FunSpec with Matchers {
 
   val linter = Lint(Seq(linters.Healthcheck))
 
-  it("requires healthcheck") {
-    linter.validate(Services.Base) should be(
+  def buildService(
+    `type`: String = "io.flow.common.v0.models.healthcheck",
+    plural: String = "healthchecks",
+    method: Method = Method.Get,
+    path: String = "/_internal_/healthcheck",
+    responseCode: Int = 200,
+    responseType: String = "io.flow.common.v0.models.healthcheck"
+  ): Service = {
+    Services.Base.copy(
+      resources = Seq(
+        Services.buildSimpleResource(
+          `type` = `type`,
+          plural = plural,
+          method = method,
+          path = path,
+          responseCode = responseCode,
+          responseType = responseType
+        )
+      )
+    )
+  }
+
+  it("does not require healthcheck if there are no resources") {
+    linter.validate(Services.Base) should be(Nil)
+  }
+
+  it("requires healthcheck if there are resources") {
+    linter.validate(buildService(`type` = "user", plural = "users", path = "/users/:id", responseType = "user")) should be(
       Seq("Missing resource: healthchecks")
     )
   }
@@ -18,73 +44,25 @@ class HealthcheckSpec extends FunSpec with Matchers {
   }
 
   it("healthcheck validates method") {
-    linter.validate(
-      Services.Base.copy(
-        resources = Seq(
-          Services.buildSimpleResource(
-            `type` = "io.flow.common.v0.models.healthcheck",
-            plural = "healthchecks",
-            method = Method.Post,
-            path = "/_internal_/healthcheck",
-            responseCode = 200,
-            responseType = "io.flow.common.v0.models.healthcheck"
-          )
-        )
-      )
-    ) should be(Seq("Resource healthchecks: Missing GET /_internal_/healthcheck"))
+    linter.validate(buildService(method = Method.Post)) should be(
+      Seq("Resource healthchecks: Missing GET /_internal_/healthcheck")
+    )
   }
 
   it("healthcheck validates path") {
-    linter.validate(
-      Services.Base.copy(
-        resources = Seq(
-          Services.buildSimpleResource(
-            `type` = "io.flow.common.v0.models.healthcheck",
-            plural = "healthchecks",
-            method = Method.Get,
-            path = "/healthcheck",
-            responseCode = 200,
-            responseType = "io.flow.common.v0.models.healthcheck"
-          )
-        )
-      )
-    ) should be(Seq("Resource healthchecks: Missing GET /_internal_/healthcheck"))
+    linter.validate(buildService(path = "/foo")) should be(
+      Seq("Resource healthchecks: Missing GET /_internal_/healthcheck")
+    )
   }
 
   it("healthcheck validates response code") {
-    linter.validate(
-      Services.Base.copy(
-        resources = Seq(
-          Services.buildSimpleResource(
-            `type` = "io.flow.common.v0.models.healthcheck",
-            plural = "healthchecks",
-            method = Method.Get,
-            path = "/_internal_/healthcheck",
-            responseCode = 201,
-            responseType = "io.flow.common.v0.models.healthcheck"
-          )
-        )
-      )
-    ) should be(
+    linter.validate(buildService(responseCode = 201)) should be(
       Seq("Resource healthchecks GET /_internal_/healthcheck: reponse must return HTTP 200 and not HTTP 201")
     )
   }
 
   it("healthcheck validates response type") {
-    linter.validate(
-      Services.Base.copy(
-        resources = Seq(
-          Services.buildSimpleResource(
-            `type` = "io.flow.common.v0.models.healthcheck",
-            plural = "healthchecks",
-            method = Method.Get,
-            path = "/_internal_/healthcheck",
-            responseCode = 200,
-            responseType = "string"
-          )
-        )
-      )
-    ) should be(
+    linter.validate(buildService(responseType = "string")) should be(
       Seq("Resource healthchecks GET /_internal_/healthcheck: response must be of type io.flow.common.v0.models.healthcheck and not string")
     )
   }

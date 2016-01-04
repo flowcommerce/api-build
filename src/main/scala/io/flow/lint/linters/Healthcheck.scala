@@ -16,9 +16,14 @@ case object Healthcheck extends Linter with Helpers {
   private[this] val Datatype = "io.flow.common.v0.models.healthcheck"
 
   override def validate(service: Service): Seq[String] = {
-    service.resources.find(_.plural == Plural) match {
-      case None => Seq(s"Missing resource: $Plural")
-      case Some(resource) => validateResource(resource)
+    service.resources.isEmpty match {
+      case true => Nil
+      case false => {
+        service.resources.find(_.plural == Plural) match {
+          case None => Seq(s"Missing resource: $Plural")
+          case Some(resource) => validateResource(resource)
+        }
+      }
     }
   }
 
