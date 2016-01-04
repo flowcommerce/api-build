@@ -22,7 +22,7 @@ case object StandardResponse extends Linter with Helpers {
   val RequiredResponseCodes: Map[Method, Seq[Int]] = Map(
     Method.Get -> Seq(200, 401),
     Method.Patch -> Seq(200, 401, 404, 422),
-    Method.Post -> Seq(200, 401, 422),
+    Method.Post -> Seq(201, 401, 422),
     Method.Put -> Seq(200, 201, 401, 422),
     Method.Delete -> Seq(204, 401, 404),
     Method.Head -> Nil,

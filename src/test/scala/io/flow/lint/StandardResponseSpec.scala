@@ -91,7 +91,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
     )
   }
 
-  it("Post must have 200, 401, 422") {
+  it("Post must have 201, 401, 422") {
     linter.validate(
       buildService(
         Method.Post,
@@ -101,7 +101,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations POST /organizations: Missing response codes: 200, 401, 422"
+        "Resource organizations POST /organizations: Missing response codes: 201, 401, 422"
       )
     )
   }
