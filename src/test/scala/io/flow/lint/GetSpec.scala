@@ -57,24 +57,6 @@ class GetSpec extends FunSpec with Matchers {
     default = Some("created_at")
   )
 
-  it("requires at least one GET operation for each resource") {
-    linter.validate(
-      Services.withHealthcheck(
-        Services.Base.copy(
-          resources = Seq(
-            Resource(
-              `type` = "organization",
-              plural = "organizations",
-              operations = Nil
-            )
-          )
-        )
-      )
-    ) should be(
-      Seq("Resource organizations: Must have at least one operation")
-    )
-  }
-
   def buildResourceWithSearch(params: Seq[Parameter]) = {
       Services.withHealthcheck(
         Services.Base.copy(
