@@ -2,6 +2,11 @@
 
 config_file = File.join(Dir.home, ".apidoc/config")
 
+if !File.exists?(config_file)
+  puts "** Error: Could not read #{config_file}"
+  exit(1)
+end
+
 data = {}
 in_default = false
 IO.readlines(config_file).map(&:strip).each do |l|
@@ -30,6 +35,12 @@ commands = {
 commands << "sbt"
 
 cmd = commands.join(" ")
-puts cmd
+
+if data[:token]
+  puts cmd.sub(data[:token], "xxx")
+else
+  puts cmd
+end
+
 system(cmd)
 
