@@ -13,6 +13,11 @@ case class Downloader() {
   private[this] val apidocApiToken = Environment.optionalString("APIDOC_API_TOKEN")
   private[this] val apidocApiHost = Environment.optionalString("APIDOC_API_HOST").getOrElse("http://api.apidoc.me")
 
+  apidocApiToken match {
+    case None => println("NO API TOKEN")
+    case Some(t) => println(s"FOUND TOKEN: $t")
+  }
+
   private[this] val client = {
     new com.bryzek.apidoc.api.v0.Client(
       apiUrl = apidocApiHost,
