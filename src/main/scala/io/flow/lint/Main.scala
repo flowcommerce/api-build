@@ -29,8 +29,11 @@ object Main extends App {
           linter.validate(service) match {
             case Nil => println("\n  Valid!")
             case errors => {
-              println(" 1 or more errors found:")
-              errors.foreach { error =>
+              errors.size match {
+                case 1 => println(" 1 error:")
+                case n => println(s" $n errors:")
+              }
+              errors.sorted.foreach { error =>
                 println(s"    - $error")
               }
             }
