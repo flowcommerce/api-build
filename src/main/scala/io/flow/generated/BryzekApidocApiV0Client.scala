@@ -1270,6 +1270,10 @@ package com.bryzek.apidoc.api.v0 {
     import com.bryzek.apidoc.generator.v0.models.json._
     import com.bryzek.apidoc.spec.v0.models.json._
 
+    def closeAsyncHttpClient() {
+      asyncHttpClient.close()
+    }
+
     val logger = LoggerFactory.getLogger(getClass)
 
     def applications: Applications = Applications
