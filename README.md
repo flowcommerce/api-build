@@ -39,9 +39,9 @@ The default behavior is to use the default apidoc profile.
 
 ## Updating the jar file on s3
 
-    sbt one-jar
-    cp ./target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar /web/aws-s3-public/util/api-lint/
-    cp ./target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar /web/aws-s3-public/util/api-lint/api-lint.jar
+    sbt clean one-jar
+    cp ./target/scala-2.11/api-lint*-one-jar.jar /web/aws-s3-public/util/api-lint/
+    cp ./target/scala-2.11/api-lint*-one-jar.jar /web/aws-s3-public/util/api-lint/api-lint.jar
     cd /web/aws-s3-public
     git add util/api-lint/*
     git commit -m "Add new version of api-lint" util/api-lint
