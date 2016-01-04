@@ -21,19 +21,19 @@ class ModelsWithOrganizationFieldSpec extends FunSpec with Matchers {
 
   it("w/ organization but no id fields") {
     linter.validate(buildService(Seq("other", "organization"))) should be(Seq(
-      "Model user: Field[operation] must be in position[0] and not[1]"
+      "Model user: Field[organization] must be in position[0] and not[1]"
     ))
   }
 
   it("w/ id and organization fields") {
     linter.validate(buildService(Seq("id", "other", "organization"))) should be(Seq(
-      "Model user: Field[operation] must be in position[1] and not[2]"
+      "Model user: Field[organization] must be in position[1] and not[2]"
     ))
   }
 
   it("w/ id, timestamp, type and organization fields") {
     linter.validate(buildService(Seq("id", "timestamp", "type", "other", "organization"))) should be(Seq(
-      "Model user: Field[operation] must be in position[3] and not[4]"
+      "Model user: Field[organization] must be in position[3] and not[4]"
     ))
   }
 

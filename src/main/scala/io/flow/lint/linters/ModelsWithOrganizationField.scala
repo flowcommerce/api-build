@@ -34,7 +34,7 @@ case object ModelsWithOrganizationField extends Linter with Helpers {
         position == index match {
           case true => Nil
           case false => {
-            Seq(error(model, s"Field[operation] must be in position[$position] and not[$index]"))
+            Seq(error(model, s"Field[organization] must be in position[$position] and not[$index]"))
           }
         }
       }
