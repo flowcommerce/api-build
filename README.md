@@ -31,6 +31,10 @@ To specify a specific APIDOC Profile:
 
     APIDOC_PROFILE=xxx java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar flow/user
 
+Or to specify a specific APIDOC URL and/or Token:
+
+    APIDOC_API_TOKEN=yyy APIDOC_API_URI=http://api.apidoc.mc java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar flow/user
+
 The default behavior is to use the default apidoc profile.
 
 ## Updating the jar file on s3

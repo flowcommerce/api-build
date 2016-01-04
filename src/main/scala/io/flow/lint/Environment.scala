@@ -24,14 +24,30 @@ object ApidocConfig {
     path: String = DefaultPath
   ): Either[String, ApidocProfile] = {
     val profile = Environment.optionalString("APIDOC_PROFILE").getOrElse("default")
+    val envToken = Environment.optionalString("APIDOC_API_TOKEN")
+    val envUri = Environment.optionalString("APIDOC_API_URI")
 
-    loadAllProfiles(path) match {
-      case Left(errors) => Left(errors)
-      case Right(profiles) => {
-        profiles.find(_.name == profile) match {
-          case None => Left(s"apidoc profile named[$profile] not found")
-          case Some(p) => Right(p)
+    Seq(envToken, envUri).flatten match {
+      case Nil => {
+        loadAllProfiles(path) match {
+          case Left(errors) => Left(errors)
+          case Right(profiles) => {
+            profiles.find(_.name == profile) match {
+              case None => Left(s"apidoc profile named[$profile] not found")
+              case Some(p) => Right(p)
+            }
+          }
         }
+      }
+      case _ => {
+        println("Using profile from env variables")
+        Right(
+          ApidocProfile(
+            name = "environment",
+            apiUrl = envUri.getOrElse(DefaultApiUrl),
+            token = envToken
+          )
+        )
       }
     }
   }
