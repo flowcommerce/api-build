@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, Resource, Service}
+import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Service}
 
 /**
   * Enforces that each resource has a top level GET method where:
@@ -31,8 +31,12 @@ case object Get extends Linter with Helpers {
     // their parameter lists
   }
 
+  def queryParameters(operation: Operation): Seq[Parameter] = {
+    operation.parameters.filter(_.location == ParameterLocation.Query)
+  }
+
   def validateOperation(resource: Resource, operation: Operation): Seq[String] = {
-    val requiredErrors = operation.parameters.filter(p => p.required && p.default.isEmpty) match {
+    val requiredErrors = queryParameters(operation).filter(p => p.required && p.default.isEmpty) match {
       case Nil => Nil
       case params => params.map { p =>
         RequiredParameters.contains(p.name) match {
@@ -42,23 +46,23 @@ case object Get extends Linter with Helpers {
       }
     }
 
-    val paramNames = operation.parameters.map(_.name).filter(name => RequiredParameters.contains(name))
+    val paramNames = queryParameters(operation).map(_.name).filter(name => RequiredParameters.contains(name))
     val missingRequiredParams = RequiredParameters.filter(n => !paramNames.contains(n)) match {
       case Nil => Nil
       case missing => Seq(error(resource, operation, s"Missing parameters: " + missing.mkString(", ")))
     }
 
     val paramErrors = Seq(
-      operation.parameters.find(_.name == "id").map( p =>
+      queryParameters(operation).find(_.name == "id").map( p =>
         validateParameter(resource, operation, p, "[string]", maximum = Some(25))
       ),
-      operation.parameters.find(_.name == "limit").map( p =>
+      queryParameters(operation).find(_.name == "limit").map( p =>
         validateParameter(resource, operation, p, "long", default = Some("25"), minimum = Some(1), maximum = Some(100))
       ),
-      operation.parameters.find(_.name == "offset").map( p =>
+      queryParameters(operation).find(_.name == "offset").map( p =>
         validateParameter(resource, operation, p, "long", default = Some("0"), minimum = Some(0), maximum = None)
       ),
-      operation.parameters.find(_.name == "sort").map( p =>
+      queryParameters(operation).find(_.name == "sort").map( p =>
         validateParameter(resource, operation, p, "string", hasDefault = Some(true))
       )
     ).flatten.flatten
@@ -79,7 +83,7 @@ case object Get extends Linter with Helpers {
     resource: Resource,
     operation: Operation
   ): Seq[String] = {
-    val names = operation.parameters.map(_.name)
+    val names = queryParameters(operation).map(_.name)
     val lastThree = names.reverse.take(3).reverse
 
     Seq(

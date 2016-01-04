@@ -8,12 +8,17 @@ class HealthcheckSpec extends FunSpec with Matchers {
   val linter = Lint(Seq(linters.Healthcheck))
 
   it("temporary debugging") {
-    Lint.fromFile("/tmp/organization.json") match {
-      case Nil => println("valid")
-      case errors => {
-        println("1 or more errors:")
-        errors.foreach { err =>
-          println(s"  - $err")
+    Seq("/tmp/carrier.json", "/tmp/organization.json").foreach { path =>
+      println("")
+      println("")
+      println(path)
+      Lint.fromFile(path) match {
+        case Nil => println("valid")
+        case errors => {
+          println("1 or more errors:")
+          errors.foreach { err =>
+            println(s"  - $err")
+          }
         }
       }
     }
