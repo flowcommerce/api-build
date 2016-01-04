@@ -21,7 +21,8 @@ object Lint {
     linters.Healthcheck,
     linters.ModelsWithOrganizationField,
     linters.SortParameterDefault,
-    linters.StandardResponse
+    linters.StandardResponse,
+    linters.VersionModels
   )
 
   def fromFile(path: String): Seq[String] = {
