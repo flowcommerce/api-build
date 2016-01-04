@@ -46,4 +46,4 @@ The default behavior is to use the default apidoc profile.
     git add util/api-lint/*
     git commit -m "Add new version of api-lint" util/api-lint
     git push origin master
-    aws s3 sync util s3://io.flow.aws-s3-public/util
+    aws s3 sync util s3://io.flow.aws-s3-public/util --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
