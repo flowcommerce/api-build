@@ -1,7 +1,8 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Service}
+import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Response, Service}
+import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
 /**
   * Enforces that each resource has a top level GET method where:
@@ -22,13 +23,27 @@ case object Get extends Linter with Helpers {
   }
 
   def validateResource(resource: Resource): Seq[String] = {
-    resource.operations.filter(_.method == Method.Get).sortBy { _.path }.headOption match {
-      case None => Seq(error(resource, "Must have at least one operation"))
-      case Some(operation) => validateOperation(resource, operation)
-    }
+    resource.operations.
+      filter(_.method == Method.Get).
+      filter(returnsArray(_)).
+      flatMap { validateOperation(resource, _) }
+  }
 
-    // TODO: Collect all operations that return arrays and validate
-    // their parameter lists
+  def returnsArray(operation: Operation): Boolean = {
+    operation.responses.find { r =>
+      r.`type`.startsWith("[") && isSuccess(r)
+    } match {
+      case None => false
+      case Some(_) => true
+    }
+  }
+
+  def isSuccess(response: Response): Boolean = {
+    response.code match {
+      case ResponseCodeInt(n) => n >= 200 && n < 300
+      case ResponseCodeOption.Default => true
+      case ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => false
+    }
   }
 
   def queryParameters(operation: Operation): Seq[Parameter] = {
