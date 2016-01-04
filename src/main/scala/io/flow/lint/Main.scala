@@ -3,7 +3,19 @@ package io.flow.lint
 object Main extends App {
 
   private[this] val linter = Lint()
-  private[this] var numberErrors = 0
+  private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
+
+  private[this] def addError(organization: String, application: String, error: String) {
+    val key = s"$organization/$application"
+    errors.get(key) match {
+      case None => {
+        errors.put(key, Seq(error))
+      }
+      case Some(existing) => {
+        errors.put(key, existing ++ Seq(error))
+      }
+    }
+  }
 
   ApidocConfig.load() match {
     case Left(error) => println(s"** Error loading apidoc config: $error")
@@ -26,7 +38,7 @@ object Main extends App {
           print(s"  Downloading...")
           dl.service(organization, application, version) match {
             case Left(error) => {
-              numberErrors += 1
+              addError(organization, application, error)
               println("\n  ** ERROR: " + error)
             }
             case Right(service) => {
@@ -34,12 +46,12 @@ object Main extends App {
               linter.validate(service) match {
                 case Nil => println("\n  Valid!")
                 case errors => {
-                  numberErrors += errors.size
                   errors.size match {
                     case 1 => println(" 1 error:")
                     case n => println(s" $n errors:")
                   }
                   errors.sorted.foreach { error =>
+                    addError(organization, application, error)
                     println(s"    - $error")
                   }
                 }
@@ -51,5 +63,23 @@ object Main extends App {
     }
   }
 
-  System.exit(numberErrors)
+  if (!errors.isEmpty) {
+    println("")
+    println("==================================================")
+    errors.size match {
+      case 1 => println(s"SUMMARY: 1 API HAD ERRORS")
+      case n => println(s"SUMMARY: $n APIs HAD ERRORS")
+    }
+    println("==================================================")
+    errors.keys.toSeq.sorted foreach { app =>
+      println(app)
+      errors(app).foreach { err =>
+        println(s"  - $err")
+      }
+      println("")
+    }
+  }
+
+
+  System.exit(errors.size)
 }
