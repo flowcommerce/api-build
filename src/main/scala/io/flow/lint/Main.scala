@@ -3,6 +3,7 @@ package io.flow.lint
 object Main extends App {
 
   private[this] val linter = Lint()
+  private[this] var numberErrors = 0
 
   ApidocConfig.load() match {
     case Left(error) => println(s"** Error loading apidoc config: $error")
@@ -25,6 +26,7 @@ object Main extends App {
           print(s"  Downloading...")
           dl.service(organization, application, version) match {
             case Left(error) => {
+              numberErrors += 1
               println("\n  ** ERROR: " + error)
             }
             case Right(service) => {
@@ -32,6 +34,7 @@ object Main extends App {
               linter.validate(service) match {
                 case Nil => println("\n  Valid!")
                 case errors => {
+                  numberErrors += errors.size
                   errors.size match {
                     case 1 => println(" 1 error:")
                     case n => println(s" $n errors:")
@@ -44,8 +47,9 @@ object Main extends App {
             }
           }
         }
-
       }
     }
   }
+
+  System.exit(numberErrors)
 }
