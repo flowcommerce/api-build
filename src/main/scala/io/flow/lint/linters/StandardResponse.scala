@@ -40,7 +40,23 @@ case object StandardResponse extends Linter with Helpers {
   }
 
   def validateOperation(resource: Resource, operation: Operation): Seq[String] = {
-    validateResponses(resource, operation) ++ operation.responses.flatMap(validateResponse(resource, operation, _))
+    validateResponses(resource, operation) ++
+    validateStandardResponsesHaveNoDescription(resource, operation) ++
+    operation.responses.flatMap(validateResponse(resource, operation, _))
+  }
+
+  def validateStandardResponsesHaveNoDescription(resource: Resource, operation: Operation): Seq[String] = {
+    RequiredResponseCodes(operation.method).flatMap { code =>
+      operation.responses.find(_.code == ResponseCodeInt(code)) match {
+        case None => Nil
+        case Some(response) => {
+          response.description match {
+            case None => Nil
+            case Some(_) => Seq(error(resource, operation, response, "Must not have a description as this is a globally standard response"))
+          }
+        }
+      }
+    }
   }
 
   def validateResponses(resource: Resource, operation: Operation): Seq[String] = {
@@ -76,7 +92,7 @@ case object StandardResponse extends Linter with Helpers {
       case ResponseCodeInt(n) => {
         n match {
           case 204 => check(resource, operation, response, "unit")
-          case 401 => check(resource, operation, response, "unit", description = Some("Unauthorized"))
+          case 401 => check(resource, operation, response, "unit")
           case 422 => check(resource, operation, response, "[io.flow.common.v0.models.error]")
           case _ => Nil
         }
@@ -88,33 +104,13 @@ case object StandardResponse extends Linter with Helpers {
     resource: Resource,
     operation: Operation,
     response: Response,
-    datatype: String,
-    description: Option[String] = None
+    datatype: String
   ): Seq[String] = {
-    val responseTypeErrors = response.`type` == datatype match {
+    response.`type` == datatype match {
       case true => Nil
       case false => {
         Seq(error(resource, operation, response, s"response must be of type ${datatype} and not ${response.`type`}"))
       }
     }
-
-    val descriptionErrors = description match {
-      case None => Nil
-      case Some(target) => {
-        response.description match {
-          case None => Seq("description is required")
-          case Some(actual) => {
-            actual == target match {
-              case true => Nil
-              case false => {
-                Seq(error(resource, operation, response, s"description must be[$target] and not[$actual]"))
-              }
-            }
-          }
-        }
-      }
-    }
-
-    responseTypeErrors ++ descriptionErrors
   }
 }

@@ -29,17 +29,20 @@ class StandardResponseSpec extends FunSpec with Matchers {
     )
   }
 
-  it("401 description must be Unuathorized") {
+  it("standard codes must not have descriptions") {
     linter.validate(
       buildService(
         Method.Get,
         Seq(
-          Response(ResponseCodeInt(200), "[organization]"),
-          Response(ResponseCodeInt(401), "unit", description = Some("Not authorized"))
+          Response(ResponseCodeInt(200), "[organization]", description = Some("Foo")),
+          Response(ResponseCodeInt(401), "unit", description = Some("Bar"))
         )
       )
     ) should be(
-      Seq("Resource organizations GET /organizations Response 401: description must be[Unauthorized] and not[Not authorized]")
+      Seq(
+        "Resource organizations GET /organizations Response 200: Must not have a description as this is a globally standard response",
+        "Resource organizations GET /organizations Response 401: Must not have a description as this is a globally standard response"
+      )
     )
   }
 
@@ -49,7 +52,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
         Method.Delete,
         Seq(
           Response(ResponseCodeInt(204), "string"),
-          Response(ResponseCodeInt(401), "string", description = Some("Unauthorized")),
+          Response(ResponseCodeInt(401), "string"),
           Response(ResponseCodeInt(404), "unit")
         )
       )

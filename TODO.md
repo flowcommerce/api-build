@@ -1,5 +1,3 @@
-For standard response codes by method - ensure that description is None
-
 Remove unuathorized forced description
  
 make sure all resources have a corresponding _version mapped to
