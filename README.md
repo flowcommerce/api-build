@@ -44,6 +44,6 @@ The default behavior is to use the default apidoc profile.
     cp ./target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar /web/aws-s3-public/util/api-lint/api-lint.jar
     cd /web/aws-s3-public
     git add util/api-lint/*
-    git commit -m "Add new version of api-litn" util/api-lint
+    git commit -m "Add new version of api-lint" util/api-lint
     git push origin master
     aws s3 sync util s3://io.flow.aws-s3-public/util
