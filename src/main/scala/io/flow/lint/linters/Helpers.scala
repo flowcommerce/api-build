@@ -1,6 +1,6 @@
 package io.flow.lint.linters
 
-import com.bryzek.apidoc.spec.v0.models.{Model, Operation, Resource, Response, Service}
+import com.bryzek.apidoc.spec.v0.models.{Field, Model, Operation, Resource, Response, Service}
 import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
 trait Helpers {
@@ -11,6 +11,10 @@ trait Helpers {
 
   def error(model: Model, error: String): String = {
     s"Model ${model.name}: $error"
+  }
+
+  def error(model: Model, field: Field, error: String): String = {
+    s"Model ${model.name} Field[${field.name}]: $error"
   }
 
   def error(resource: Resource, error: String): String = {
