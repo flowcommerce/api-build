@@ -54,7 +54,7 @@ case object SortParameterDefault extends Linter with Helpers {
           case false => {
             model.fields.find(_.name == "name") match {
               case None => "-created_at"
-              case Some(_) => "lower(name), -created_at"
+              case Some(_) => "lower(name),-created_at"
             }
           }
         }
