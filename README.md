@@ -3,7 +3,8 @@ Runs a set of tests against an API defined in apidoc to ensure consistency
 
 ## Installation
 
-TODO: Plan to host in s3
+  curl https://s3.amazonaws.com/io.flow.aws-s3-public/util/api-lint/api-lint.jar > ~/api-lint.jar
+  java -jar ~/api-lint.jar flow/carrier flow/user
 
 ## running locally
 
