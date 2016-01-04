@@ -44,8 +44,11 @@ case class Downloader() {
       case Success(value) => Right(value)
       case Failure(ex) => {
         ex match {
-          case e: java.io.FileNotFoundException => {
-            Left("URL not found or you were not authorized to download that file")
+          case com.bryzek.apidoc.api.v0.errors.UnitResponse(401) => {
+            Left("HTTP 401: you are not authorized to download this service")
+          }
+          case com.bryzek.apidoc.api.v0.errors.UnitResponse(404) => {
+            Left("HTTP 404: service not found (or you might not be authorized)")
           }
           case _ => {
             Left(s"Error: $ex")

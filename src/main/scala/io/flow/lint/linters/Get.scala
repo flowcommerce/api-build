@@ -49,7 +49,13 @@ case object Get extends Linter with Helpers {
     val paramNames = queryParameters(operation).map(_.name).filter(name => RequiredParameters.contains(name))
     val missingRequiredParams = RequiredParameters.filter(n => !paramNames.contains(n)) match {
       case Nil => Nil
-      case missing => Seq(error(resource, operation, s"Missing parameters: " + missing.mkString(", ")))
+      case missing => {
+        val noun = missing.size match {
+          case 1 => "parameter"
+          case _ => "parameters"
+        }
+        Seq(error(resource, operation, s"Missing $noun: " + missing.mkString(", ")))
+      }
     }
 
     val paramErrors = Seq(

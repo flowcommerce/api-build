@@ -46,15 +46,18 @@ object Lint {
         }
 
         println("")
-        println(s"Downloading $name")
+        println(s"$name")
+        print(s"  Downloading...")
         dl.service(organization, application, version) match {
-          case Left(error) => println("  ** ERROR: " + error)
+          case Left(error) => {
+            println("\n  ** ERROR: " + error)
+          }
           case Right(service) => {
-            println("  Success! Starting Linter:")
+            print("  Done\n  Starting Linter... ")
             Lint().validate(service) match {
-              case Nil => println("  Valid!")
+              case Nil => println("\n  Valid!")
               case errors => {
-                println("  1 or more errors:")
+                println(" 1 or more errors found:")
                 errors.foreach { error =>
                   println(s"    - $error")
                 }
