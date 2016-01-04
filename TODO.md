@@ -1,5 +1,3 @@
-Remove unuathorized forced description
- 
 make sure all resources have a corresponding _version mapped to
 /resource/versions
 
