@@ -91,16 +91,16 @@ case object StandardResponse extends Linter with Helpers {
       }
       case ResponseCodeInt(n) => {
         n match {
-          case 204 => check(resource, operation, response, "unit")
-          case 401 => check(resource, operation, response, "unit")
-          case 422 => check(resource, operation, response, "[io.flow.common.v0.models.error]")
+          case 204 => compare(resource, operation, response, "unit")
+          case 401 => compare(resource, operation, response, "unit")
+          case 422 => compare(resource, operation, response, "[io.flow.common.v0.models.error]")
           case _ => Nil
         }
       }
     }
   }
 
-  def check(
+  def compare(
     resource: Resource,
     operation: Operation,
     response: Response,
