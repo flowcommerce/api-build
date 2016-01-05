@@ -29,23 +29,6 @@ case object Get extends Linter with Helpers {
       flatMap { validateOperation(resource, _) }
   }
 
-  def returnsArray(operation: Operation): Boolean = {
-    operation.responses.find { r =>
-      r.`type`.startsWith("[") && isSuccess(r)
-    } match {
-      case None => false
-      case Some(_) => true
-    }
-  }
-
-  def isSuccess(response: Response): Boolean = {
-    response.code match {
-      case ResponseCodeInt(n) => n >= 200 && n < 300
-      case ResponseCodeOption.Default => true
-      case ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => false
-    }
-  }
-
   def queryParameters(operation: Operation): Seq[Parameter] = {
     operation.parameters.filter(_.location == ParameterLocation.Query)
   }

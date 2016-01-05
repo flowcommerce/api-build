@@ -20,6 +20,7 @@ object Lint {
     linters.Get,
     linters.Healthcheck,
     linters.ModelsWithOrganizationField,
+    linters.PrimaryResourcesHaveVersionsOperation,
     linters.SortParameterDefault,
     linters.StandardResponse,
     linters.VersionModels

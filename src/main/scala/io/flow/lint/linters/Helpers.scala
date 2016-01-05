@@ -35,4 +35,28 @@ trait Helpers {
     s"Resource ${resource.plural} ${operation.method} ${operation.path} $label: $error"
   }
 
+  /**
+    * Returns true if this operation has a 2xx response that returns
+    * an array of items.
+    */
+  def returnsArray(operation: Operation): Boolean = {
+    operation.responses.find { r =>
+      r.`type`.startsWith("[") && isSuccess(r)
+    } match {
+      case None => false
+      case Some(_) => true
+    }
+  }
+
+  /**
+    * Returns true if this response represents a 2xx
+    */
+  def isSuccess(response: Response): Boolean = {
+    response.code match {
+      case ResponseCodeInt(n) => n >= 200 && n < 300
+      case ResponseCodeOption.Default => true
+      case ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => false
+    }
+  }
+
 }

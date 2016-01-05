@@ -96,6 +96,33 @@ object Services {
     )
   }
 
+  def buildResource(
+    `type`: String,
+    plural: String,
+    operations: Seq[Operation] = Nil
+  ): Resource = Resource(
+    `type` = `type`,
+    plural = plural,
+    operations = operations
+  )
+
+  def buildSimpleOperation(
+    method: Method = Method.Get,
+    path: String,
+    parameters: Seq[Parameter] = Nil,
+    responseCode: Int = 200,
+    responseType: String
+  ): Operation = {
+    Operation(
+      method = method,
+      path = path,
+      parameters = parameters,
+      responses = Seq(
+        buildResponse(responseCode, responseType)
+      )
+    )
+  }
+
   def buildResponse(
     code: Int = 200,
     `type`: String
