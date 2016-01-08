@@ -58,7 +58,7 @@ case object Get extends Linter with Helpers {
 
     val paramErrors = Seq(
       queryParameters(operation).find(_.name == "id").map( p =>
-        validateParameter(resource, operation, p, "[string]", maximum = Some(25))
+        validateParameter(resource, operation, p, "[string]", maximum = Some(100))
       ),
       queryParameters(operation).find(_.name == "limit").map( p =>
         validateParameter(resource, operation, p, "long", default = Some("25"), minimum = Some(1), maximum = Some(100))
