@@ -27,7 +27,7 @@ class GetSpec extends FunSpec with Matchers {
     `type` = "[string]",
     location = ParameterLocation.Query,
     required = false,
-    maximum = Some(25)
+    maximum = Some(100)
   )
 
   val limitParameter = Parameter(
@@ -96,7 +96,7 @@ class GetSpec extends FunSpec with Matchers {
       Seq(
         "Resource organizations GET /organizations: Missing parameters: limit, offset, sort",
         "Resource organizations GET /organizations: Parameter[id] must be optional",
-        "Resource organizations GET /organizations: parameter[id] maximum is missing. Expected 25"
+        "Resource organizations GET /organizations: parameter[id] maximum is missing. Expected 100"
       )
     )
   }
@@ -118,7 +118,7 @@ class GetSpec extends FunSpec with Matchers {
       Seq(
         "Resource organizations GET /organizations: Missing parameters: limit, offset, sort",
         "Resource organizations GET /organizations: parameter[id] default must not be specified. Current value is 1",
-        "Resource organizations GET /organizations: parameter[id] maximum is missing. Expected 25"
+        "Resource organizations GET /organizations: parameter[id] maximum is missing. Expected 100"
       )
     )
   }
