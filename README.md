@@ -37,8 +37,9 @@ Or to specify a specific APIDOC URL and/or Token:
 
 The default behavior is to use the default apidoc profile.
 
-## Updating the jar file on s3
+## Releasing
 
+    /web/tools/bin/publish
     sbt clean one-jar
     cp ./target/scala-2.11/api-lint*-one-jar.jar /web/aws-s3-public/util/api-lint/
     cp ./target/scala-2.11/api-lint*-one-jar.jar /web/aws-s3-public/util/api-lint/api-lint.jar
