@@ -44,14 +44,14 @@ case object SortParameterDefault extends Linter with Helpers {
   }
 
   def computeDefault(service: Service, plural: String, path: String): String = {
-    service.models.find(_.plural == plural) match {
-      case None => {
-        "-created_at"
-      }
-      case Some(model) => {
-        path.endsWith("/versions") match {
-          case true => "created_at"
-          case false => {
+    path.endsWith("/versions") match {
+      case true => "created_at"
+      case false => {
+        service.models.find(_.plural == plural) match {
+          case None => {
+            "-created_at"
+          }
+          case Some(model) => {
             model.fields.find(_.name == "name") match {
               case None => "-created_at"
               case Some(_) => "lower(name),-created_at"
