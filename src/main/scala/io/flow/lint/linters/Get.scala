@@ -101,8 +101,19 @@ case object Get extends Linter with Helpers {
       ),
       queryParameters(operation).find(_.name == "expand").map( p =>
         expansions match {
-          case Nil => validateParameter(service, resource, operation, p, "string")
-          case names => validateParameter(service, resource, operation, p, "string", example = Some(names.sorted.mkString(", ")))
+          case Nil => validateParameter(service, resource, operation, p, "[string]")
+          case names => {
+            validateParameter(
+              service,
+              resource,
+              operation,
+              p,
+              "[string]",
+              example = Some(names.sorted.mkString(", ")),
+              minimum = Some(0),
+              maximum = Some(names.size)
+            )
+          }
         }
       )
     ).flatten.flatten
