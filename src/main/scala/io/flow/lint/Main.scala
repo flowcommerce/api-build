@@ -6,7 +6,10 @@ object Main extends App {
   private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
 
   private[this] def addError(organization: String, application: String, error: String) {
-    val key = s"$organization/$application"
+    addError(s"$organization/$application", error)
+  }
+
+  private[this] def addError(key: String, error: String) {
     errors.get(key) match {
       case None => {
         errors.put(key, Seq(error))
@@ -31,7 +34,9 @@ object Main extends App {
             case org :: app :: Nil => Some(Config(org, app, "latest"))
             case org :: app :: version :: Nil => Some(Config(org, app, version))
             case _ => {
-              println(s"** ERROR: Invalid name[$name] - expected organization/application (e.g. flow/user)")
+              val msg = s"Invalid name[$name] - expected organization/application (e.g. flow/user)"
+              addError("arguments", msg)
+              println(s"** ERROR: $msg")
               None
             }
           }
@@ -51,7 +56,7 @@ object Main extends App {
                 case Nil => println("\n  Valid!")
                   case errors => {
                     errors.size match {
-                    case 1 => println(" 1 error:")
+                      case 1 => println(" 1 error:")
                       case n => println(s" $n errors:")
                     }
                     errors.sorted.foreach { error =>
@@ -72,8 +77,8 @@ object Main extends App {
     println("")
     println("==================================================")
     errors.size match {
-      case 1 => println(s"SUMMARY: 1 API HAD ERRORS")
-      case n => println(s"SUMMARY: $n APIs HAD ERRORS")
+      case 1 => println(s"SUMMARY: 1 ERROR")
+      case n => println(s"SUMMARY: $n ERRORS")
     }
     println("==================================================")
     errors.keys.toSeq.sorted foreach { app =>
