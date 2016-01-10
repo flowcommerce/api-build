@@ -49,7 +49,7 @@ class GetWithExpansionsSpec extends FunSpec with Matchers {
 
   val expandParameter = Parameter(
     name = "expand",
-    `type` = "string",
+    `type` = "[string]",
     location = ParameterLocation.Query,
     required = false,
     default = None
@@ -94,6 +94,23 @@ class GetWithExpansionsSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq("Resource organizations GET /organizations: There are no expansions available - should not have a parameter named expand")
+    )
+  }
+
+  val serviceWithExpansion = buildService(
+    Services.buildModel(
+      "organization",
+      fields = Seq(
+        Services.buildField("id"),
+        Services.buildField("user", "io.flow.common.v0.models.expandable_user")
+      )
+    ),
+    baseParameters ++ Seq(expandParameter)
+  )
+
+  it("resource w/ expansions validates minimum") {
+    linter.validate(serviceWithExpansion) should be(
+      Seq("Resource organizations GET /organizations: TODO")
     )
   }
   
