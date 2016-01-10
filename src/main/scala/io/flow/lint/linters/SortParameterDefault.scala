@@ -30,11 +30,11 @@ case object SortParameterDefault extends Linter with Helpers {
             Seq(error(resource, operation, "Parameter sort requires a default"))
           }
           case Some(default) => {
-            val expected = computeDefault(service, resource.plural, operation.path)
-            default == expected match {
+            val expected = computeDefaults(service, resource, operation.path)
+            expected.contains(default) match {
               case true => Nil
               case false => {
-                Seq(error(resource, operation, s"Parameter sort default expected to be[$expected] and not[$default]"))
+                Seq(error(resource, operation, s"Parameter sort default expected to be[${expected.mkString(" or ")}] and not[$default]"))
               }
             }
           }
@@ -43,18 +43,22 @@ case object SortParameterDefault extends Linter with Helpers {
     }
   }
 
-  def computeDefault(service: Service, plural: String, path: String): String = {
+  def computeDefaults(service: Service, resource: Resource, path: String): Seq[String] = {
     path.endsWith("/versions") match {
-      case true => "created_at"
+      case true => {
+        Seq("created_at")
+      }
       case false => {
-        service.models.find(_.plural == plural) match {
+        service.models.find(_.plural == resource.plural) match {
           case None => {
-            "-created_at"
+            // Right now this happens when the resource was imported
+            // (e.g. io.flow.common.v0.models.organization)
+            Seq("-created_at", "lower(name),-created_at")
           }
           case Some(model) => {
             model.fields.find(f => f.name == "name" && f.`type` == "string") match {
-              case None => "-created_at"
-              case Some(_) => "lower(name),-created_at"
+              case None => Seq("-created_at")
+              case Some(_) => Seq("lower(name),-created_at")
             }
           }
         }

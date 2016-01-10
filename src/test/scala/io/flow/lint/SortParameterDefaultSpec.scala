@@ -81,6 +81,38 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
     )
   }
 
+  it("Allows either default for imported types") {
+    linter.validate(
+      buildService(
+        Services.buildSimpleModel("io.flow.common.v0.models.organization", fields = Nil),
+        Parameter(
+          name = "sort",
+          `type` = "string",
+          location = ParameterLocation.Query,
+          required = false,
+          default = Some("fo")
+        )
+      )
+    ) should be(
+      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[-created_at or lower(name),-created_at] and not[fo]")
+    )
+
+    Seq("-created_at", "lower(name),-created_at").foreach { sort =>
+      linter.validate(
+        buildService(
+          Services.buildSimpleModel("io.flow.common.v0.models.organization", fields = Nil),
+          Parameter(
+            name = "sort",
+            `type` = "string",
+            location = ParameterLocation.Query,
+            required = false,
+            default = Some(sort)
+          )
+        )
+      ) should be(Nil)
+    }
+  }
+
   it("Requires 'lower(name),-created_at' if name field") {
     linter.validate(
       buildService(
