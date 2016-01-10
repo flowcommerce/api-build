@@ -20,6 +20,11 @@ class VersionModelsSpec extends FunSpec with Matchers {
   val typeField = Services.buildField("type", "io.flow.common.v0.enums.change_type")
   val userField = Services.buildField("user", "user")
 
+  it("no-op w/ imported user should not be an error") {
+    val importedUserField = Services.buildField("user", "io.flow.common.v0.models.user")
+    linter.validate(buildService(Seq(idField, timestampField, typeField, importedUserField))) should be(Nil)
+  }
+
   it("no-op w/ correct fields") {
     linter.validate(buildService(Seq(idField, timestampField, typeField, userField))) should be(Nil)
   }

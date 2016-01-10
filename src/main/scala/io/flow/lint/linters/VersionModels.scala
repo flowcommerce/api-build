@@ -61,7 +61,7 @@ case object VersionModels extends Linter with Helpers {
   }
 
   private[this] def validateType(model: Model, field: Field, datatype: String): Seq[String] = {
-    field.`type` == datatype match {
+    (field.`type` == datatype || field.`type`.endsWith(s".$datatype")) match {
       case false => {
         Seq(error(model, field, s"Must have type ${datatype} and not ${field.`type`}"))
       }
