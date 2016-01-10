@@ -31,7 +31,7 @@ case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
     val paths = data.map(_.operation.path)
 
     data.filter(!_.operation.path.endsWith("/versions")).flatMap { item =>
-      val versionPath = s"${item.operation.path}/versions"
+      val versionPath = if (item.operation.path == "/") { "/versions"} else { s"${item.operation.path}/versions" }
       paths.contains(versionPath) match {
         case true => {
           None

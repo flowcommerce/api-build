@@ -46,4 +46,21 @@ class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
     )
   }
 
+  it("validates version path at root") {
+    linter.validate(
+      buildService(
+        Seq(
+          Services.buildSimpleOperation(
+            path = "/",
+            responseType = "[organization]"
+          ),
+          Services.buildSimpleOperation(
+            path = "/versions",
+            responseType = "[organization_version]"
+          )
+        )
+      )
+    ) should be(Nil)
+  }
+
 }
