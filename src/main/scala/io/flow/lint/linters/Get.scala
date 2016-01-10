@@ -1,6 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
+import io.flow.lint.util.Expansions
 import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Response, Service}
 import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
@@ -17,23 +18,35 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
 case object Get extends Linter with Helpers {
 
   private[this] val RequiredParameters = Seq("id", "limit", "offset", "sort")
+  private[this] val ExpandName = "expand"
 
   override def validate(service: Service): Seq[String] = {
-    nonHealthcheckResources(service).map(validateResource(_)).flatten
+    nonHealthcheckResources(service).map(validateResource(service, _)).flatten
   }
 
-  def validateResource(resource: Resource): Seq[String] = {
+  def validateResource(service: Service, resource: Resource): Seq[String] = {
     resource.operations.
       filter(_.method == Method.Get).
       filter(returnsArray(_)).
-      flatMap { validateOperation(resource, _) }
+      flatMap { validateOperation(service, resource, _) }
   }
 
   def queryParameters(operation: Operation): Seq[Parameter] = {
     operation.parameters.filter(_.location == ParameterLocation.Query)
   }
 
-  def validateOperation(resource: Resource, operation: Operation): Seq[String] = {
+  def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
+    val expansions = model(service, resource).map { m =>
+      Expansions.fromFields(m.fields.map(_.name))
+    }.getOrElse(Nil)
+
+    println(s"expansions: $expansions")
+
+    val allRequiredParameters = expansions match {
+      case Nil => RequiredParameters
+      case _ => RequiredParameters ++ Seq(ExpandName)
+    }
+
     val requiredErrors = queryParameters(operation).filter(p => p.required && p.default.isEmpty) match {
       case Nil => Nil
       case params => params.map { p =>
@@ -44,8 +57,25 @@ case object Get extends Linter with Helpers {
       }
     }
 
-    val paramNames = queryParameters(operation).map(_.name).filter(name => RequiredParameters.contains(name))
-    val missingRequiredParams = RequiredParameters.filter(n => !paramNames.contains(n)) match {
+    val invalidExpandsParameter = expansions match {
+      case Nil => {
+        println("all params: " + queryParameters(operation).map(_.name))
+        queryParameters(operation).map(_.name).contains(ExpandName) match {
+          case false => {
+            Nil
+          }
+          case true => {
+            Seq(error(resource, operation, s"There are no expansions available - should not have a parameter named $ExpandName"))
+          }
+        }
+      }
+      case _ => {
+        Nil
+      }
+    }
+
+    val requiredParamNames = queryParameters(operation).map(_.name).filter(name => allRequiredParameters.contains(name))
+    val missingRequiredParams = allRequiredParameters.filter(n => !requiredParamNames.contains(n)) match {
       case Nil => Nil
       case missing => {
         val noun = missing.size match {
@@ -58,59 +88,77 @@ case object Get extends Linter with Helpers {
 
     val paramErrors = Seq(
       queryParameters(operation).find(_.name == "id").map( p =>
-        validateParameter(resource, operation, p, "[string]", maximum = Some(100))
+        validateParameter(service, resource, operation, p, "[string]", maximum = Some(100))
       ),
       queryParameters(operation).find(_.name == "limit").map( p =>
-        validateParameter(resource, operation, p, "long", default = Some("25"), minimum = Some(1), maximum = Some(100))
+        validateParameter(service, resource, operation, p, "long", default = Some("25"), minimum = Some(1), maximum = Some(100))
       ),
       queryParameters(operation).find(_.name == "offset").map( p =>
-        validateParameter(resource, operation, p, "long", default = Some("0"), minimum = Some(0), maximum = None)
+        validateParameter(service, resource, operation, p, "long", default = Some("0"), minimum = Some(0), maximum = None)
       ),
       queryParameters(operation).find(_.name == "sort").map( p =>
-        validateParameter(resource, operation, p, "string", hasDefault = Some(true))
+        validateParameter(service, resource, operation, p, "string", hasDefault = Some(true))
+      ),
+      queryParameters(operation).find(_.name == "expand").map( p =>
+        expansions match {
+          case Nil => validateParameter(service, resource, operation, p, "string")
+          case names => validateParameter(service, resource, operation, p, "string", example = Some(names.sorted.mkString(", ")))
+        }
       )
     ).flatten.flatten
 
-    val positionErrors = missingRequiredParams match {
-      case Nil => validateParameterPositions(resource, operation)
+    val positionErrors = Seq(invalidExpandsParameter, missingRequiredParams).flatten match {
+      case Nil => {
+        val trailingParams = expansions match {
+          case Nil => Seq("limit", "offset", "sort")
+          case _ => Seq("limit", "offset", "sort", "expand")
+        }
+        validateParameterPositions(service, resource, operation, trailingParams)
+      }
       case errors => Nil
     }
 
-    // TODO: Validate responses
-
-    missingRequiredParams ++ requiredErrors ++ paramErrors ++ positionErrors
+    invalidExpandsParameter ++ missingRequiredParams ++ requiredErrors ++ paramErrors ++ positionErrors
   }
 
-  // validate id if present is in first position, and the parameter
-  // list ends with limit, offset, sort
+  /**
+    * validate id if present is in first position, and the parameter
+    *  list ends with the specified expectedTail (e.g. limit, offset, sort)
+    */
   private[this] def validateParameterPositions(
+    service: Service,
     resource: Resource,
-    operation: Operation
+    operation: Operation,
+    expectedTail: Seq[String]
   ): Seq[String] = {
     val names = queryParameters(operation).map(_.name)
-    val lastThree = names.reverse.take(3).reverse
+    val tail = names.reverse.take(expectedTail.size).reverse
 
     Seq(
       names.head == "id" match {
         case true => Nil
         case false => Seq(error(resource, operation, s"Parameter[id] must be the first parameter"))
       },
-      lastThree match {
-        case "limit" :: "offset" :: "sort" :: Nil => Nil
-        case _ => {
-          Seq(error(resource, operation, s"Last three parameters must be limit, offset, sort and not " + lastThree.mkString(", ")))
+      tail == expectedTail match {
+        case true => {
+          Nil
+        }
+        case false => {
+          Seq(error(resource, operation, s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}"))
         }
       }
     ).flatten
   }
-
+  
   def validateParameter(
+    service: Service,
     resource: Resource,
     operation: Operation,
     param: Parameter,
     datatype: String,
     hasDefault: Option[Boolean] = None,
     default: Option[String] = None,
+    example: Option[String] = None,
     minimum: Option[Long] = None,
     maximum: Option[Long] = None
   ): Seq[String] = {
@@ -143,10 +191,25 @@ case object Get extends Linter with Helpers {
       }
     }
 
+    val exampleErrors = example match {
+      case None => Nil
+      case Some(ex) => {
+        param.example match {
+          case None => Seq(error(resource, operation, s"parameter[${param.name}] is missing example. It should be $ex"))
+          case Some(actual) => {
+            actual == ex match {
+              case true => Nil
+              case false => Seq(error(resource, operation, s"parameter[${param.name}] example must be[$ex] and not[$actual]"))
+            }
+          }
+        }
+      }
+    }
+
     val minimumErrors = compare(resource, operation, param, "minimum", param.minimum, minimum)
     val maximumErrors = compare(resource, operation, param, "maximum", param.maximum, maximum)
 
-    typeErrors ++ defaultErrors ++ minimumErrors ++ maximumErrors
+    typeErrors ++ defaultErrors ++ exampleErrors ++ minimumErrors ++ maximumErrors
   }
 
   private[this] def compare(

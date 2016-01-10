@@ -3,23 +3,13 @@ package io.flow.lint
 import com.bryzek.apidoc.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
 
-class GetSpec extends FunSpec with Matchers {
+class GetWithoutExpansionsSpec extends FunSpec with Matchers {
 
   val linter = Lint(Seq(linters.Get))
 
-  val organization = Services.withHealthcheck(
-    Services.Base.copy(
-      resources = Seq(
-        Services.buildSimpleResource(
-          `type` = "organization",
-          plural = "organizations",
-          method = Method.Get,
-          path = "/organizations",
-          responseCode = 200,
-          responseType = "[organization]"
-        )
-      )
-    )
+  val model = Services.buildSimpleModel(
+    "organization",
+    fields = Seq("id", "name")
   )
 
   val idParameter = Parameter(
@@ -227,7 +217,7 @@ class GetSpec extends FunSpec with Matchers {
         )
       )
     ) should be(Seq(
-      "Resource organizations GET /organizations: Last three parameters must be limit, offset, sort and not offset, sort, other"
+      "Resource organizations GET /organizations: Last 3 parameters must be limit, offset, sort and not offset, sort, other"
     ))
   }
 

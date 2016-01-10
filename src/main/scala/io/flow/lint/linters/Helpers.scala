@@ -5,6 +5,15 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
 
 trait Helpers {
 
+  /**
+    * Returns the model for this resource. Right now only will resolve
+    * if the model is defined directly in the service (i.e. not
+    * imported)
+    */
+  def model(service: Service, resource: Resource): Option[Model] = {
+    service.models.find(_.plural == resource.plural)
+  }
+
   def nonHealthcheckResources(service: Service): Seq[Resource] = {
     service.resources.filter( _.plural != Healthcheck.Plural)
   }

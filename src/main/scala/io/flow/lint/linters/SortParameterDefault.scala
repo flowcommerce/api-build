@@ -49,10 +49,8 @@ case object SortParameterDefault extends Linter with Helpers {
         Seq("created_at")
       }
       case false => {
-        service.models.find(_.plural == resource.plural) match {
+        model(service, resource) match {
           case None => {
-            // Right now this happens when the resource was imported
-            // (e.g. io.flow.common.v0.models.organization)
             Seq("-created_at", "lower(name),-created_at")
           }
           case Some(model) => {
