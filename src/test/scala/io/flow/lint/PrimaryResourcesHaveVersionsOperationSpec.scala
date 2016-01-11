@@ -63,4 +63,21 @@ class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
     ) should be(Nil)
   }
 
+  it("validates response type") {
+    linter.validate(
+      buildService(
+        Seq(
+          Services.buildSimpleOperation(
+            path = "/",
+            responseType = "[organization]"
+          ),
+          Services.buildSimpleOperation(
+            path = "/versions",
+            responseType = "[organization]"
+          )
+        )
+      )
+    ) should be(Seq("Resource organizations GET /versions: 2xx response type should be 'organization_version' and not organization"))
+  }
+
 }

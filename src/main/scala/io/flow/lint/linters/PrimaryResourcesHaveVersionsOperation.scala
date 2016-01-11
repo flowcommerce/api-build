@@ -28,19 +28,37 @@ case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
         }
     }
 
-    val paths = data.map(_.operation.path)
+    val versionsOperationErrors = data.filter(_.operation.path.endsWith("/versions")).flatMap { item =>
+      responseType(service, item.operation) match {
+        case None => {
+          Some(error(item.resource, item.operation, s"Missing a 2xx response"))
+        }
+        case Some(t) => {
+          t.endsWith("_version") match {
+            case true => None
+            case false => Some(error(item.resource, item.operation, s"2xx response type should be '${t}_version' and not $t"))
+          }
+        }
+      }
+    }
 
-    data.filter(!_.operation.path.endsWith("/versions")).flatMap { item =>
+    val paths = data.map(_.operation.path)
+    val nonVersionsOperationErrors = data.filter(!_.operation.path.endsWith("/versions")).flatMap { item =>
       val versionPath = if (item.operation.path == "/") { "/versions"} else { s"${item.operation.path}/versions" }
       paths.contains(versionPath) match {
         case true => {
-          None
+          responseType(service, item.operation) match {
+            case None => Some(error(item.resource, item.operation, s"Missing a 2xx response"))
+            case Some(_) => Nil
+          }
         }
         case false => {
           Some(error(item.resource, item.operation, s"Missing versions operation at path $versionPath"))
         }
       }
     }
+
+    versionsOperationErrors ++ nonVersionsOperationErrors
   }
 
 }
