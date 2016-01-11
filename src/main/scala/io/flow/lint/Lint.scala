@@ -17,6 +17,7 @@ case class Lint(
 object Lint {
 
   val All = Seq(
+    linters.CommonParametersHaveNoDescriptions,
     linters.Get,
     linters.Healthcheck,
     linters.ModelsWithOrganizationField,

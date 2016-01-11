@@ -85,7 +85,7 @@ object Services {
     )
   }
 
-  def buildSimpleModel(name: String, fields: Seq[String]): Model = {
+  def buildSimpleModel(name: String, fields: Seq[String] = Nil): Model = {
     Services.buildModel(
       name = name,
       fields = fields.map(Services.buildField(_))

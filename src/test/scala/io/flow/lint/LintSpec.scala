@@ -23,7 +23,7 @@ class LintSpec extends FunSpec with Matchers {
           case Pattern(className) => {
             found = true
             if (!Lint.All.map(_.toString).contains(className)) {
-              fail(s"Lint.All is missing $className - it contains: " + Lint.All.map(_.toString).mkString(", "))
+              fail(s"Lint.All is missing linters.$className - it contains: " + Lint.All.map(_.toString).mkString(", "))
             }
           }
           case _ => {
