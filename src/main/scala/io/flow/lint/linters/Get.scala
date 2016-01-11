@@ -75,11 +75,25 @@ case object Get extends Linter with Helpers {
     val missingRequiredParams = allRequiredParameters.filter(n => !requiredParamNames.contains(n)) match {
       case Nil => Nil
       case missing => {
+        val expandDetail = if (missing.contains(ExpandName)) {
+          expansions match {
+            case Nil => None
+            case names => {
+              val ex = names.sorted.mkString(", ")
+              val template = s"""{ "name": "$ExpandName", "type": "[string]", "minimum": 0, "maximum": ${names.size}, "example": "$ex", "required": false }"""
+              Some(s". Expand template: $template")
+            }
+          }
+        } else {
+          None
+        }
+
         val noun = missing.size match {
           case 1 => "parameter"
           case _ => "parameters"
         }
-        Seq(error(resource, operation, s"Missing $noun: " + missing.mkString(", ")))
+
+        Seq(error(resource, operation, s"Missing $noun: " + missing.mkString(", ") + expandDetail.getOrElse("")))
       }
     }
 

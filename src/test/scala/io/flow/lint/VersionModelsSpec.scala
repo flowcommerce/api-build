@@ -25,6 +25,11 @@ class VersionModelsSpec extends FunSpec with Matchers {
     linter.validate(buildService(Seq(idField, timestampField, typeField, importedUserField))) should be(Nil)
   }
 
+  it("no-op w/ imported expandable user should not be an error") {
+    val importedUserField = Services.buildField("user", "io.flow.common.v0.models.expandable_user")
+    linter.validate(buildService(Seq(idField, timestampField, typeField, importedUserField))) should be(Nil)
+  }
+
   it("no-op w/ correct fields") {
     linter.validate(buildService(Seq(idField, timestampField, typeField, userField))) should be(Nil)
   }
