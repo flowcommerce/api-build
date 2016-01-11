@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class GetWithoutExpansionsSpec extends FunSpec with Matchers {
 
-  val linter = Lint(Seq(linters.Get))
+  val linter = linters.Get
 
   val model = Services.buildSimpleModel(
     "organization",

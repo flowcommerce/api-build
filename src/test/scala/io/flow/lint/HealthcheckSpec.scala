@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class HealthcheckSpec extends FunSpec with Matchers {
 
-  val linter = Lint(Seq(linters.Healthcheck))
+  val linter = linters.Healthcheck
 
   def buildService(
     `type`: String = "io.flow.common.v0.models.healthcheck",

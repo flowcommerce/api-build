@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class ModelsWithOrganizationFieldSpec extends FunSpec with Matchers {
 
-  val linter = Lint(Seq(linters.ModelsWithOrganizationField))
+  val linter = linters.ModelsWithOrganizationField
 
   def buildService(fields: Seq[String]): Service = {
     Services.Base.copy(

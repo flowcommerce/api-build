@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class VersionModelsSpec extends FunSpec with Matchers {
 
-  val linter = Lint(Seq(linters.VersionModels))
+  val linter = linters.VersionModels
 
   def buildService(fields: Seq[Field]): Service = {
     Services.Base.copy(

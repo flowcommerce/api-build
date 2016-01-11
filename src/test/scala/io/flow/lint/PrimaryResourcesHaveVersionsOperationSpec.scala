@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
 
-  val linter = Lint(Seq(linters.PrimaryResourcesHaveVersionsOperation))
+  val linter = linters.PrimaryResourcesHaveVersionsOperation
 
   def buildService(operations: Seq[Operation]): Service = {
     Services.Base.copy(

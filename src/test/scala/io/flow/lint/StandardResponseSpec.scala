@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class StandardResponseSpec extends FunSpec with Matchers {
 
-  val linter = Lint(Seq(linters.StandardResponse))
+  val linter = linters.StandardResponse
 
   def buildService(
     method: Method,
