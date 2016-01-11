@@ -38,7 +38,7 @@ case object VersionModels extends Linter with Helpers {
             validateType(model, idField, "string") ++
             validateType(model, timestampField, "date-time-iso8601") ++
             validateType(model, typeField, "io.flow.common.v0.enums.change_type") ++
-            validateType(model, modelField, baseModelName)
+            validateTypes(model, modelField, Seq(baseModelName, s"expandable_$baseModelName"))
           }
           case other => {
             Seq(error(model, s"Must have exactly 4 fields: id, timestamp, type, $baseModelName"))
@@ -61,11 +61,20 @@ case object VersionModels extends Linter with Helpers {
   }
 
   private[this] def validateType(model: Model, field: Field, datatype: String): Seq[String] = {
-    (field.`type` == datatype || field.`type`.endsWith(s".$datatype") || field.`type`.endsWith(s".expandable_$datatype")) match {
-      case false => {
-        Seq(error(model, field, s"Must have type ${datatype} and not ${field.`type`}"))
+    validateTypes(model, field, Seq(datatype))
+  }
+
+  private[this] def validateTypes(model: Model, field: Field, datatypes: Seq[String]): Seq[String] = {
+    assert(!datatypes.isEmpty)
+    datatypes.find { datatype =>
+      field.`type` == datatype || field.`type`.endsWith(s".$datatype") || field.`type`.endsWith(s".expandable_$datatype")
+    } match {
+      case None => {
+        Seq(
+          error(model, field, s"Must have type ${datatypes.mkString(" or ")} and not ${field.`type`}")
+        )
       }
-      case true => {
+      case _ => {
         field.required match {
           case false => Seq(error(model, field, s"Must be required"))
           case true => Nil

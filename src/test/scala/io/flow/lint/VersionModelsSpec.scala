@@ -88,7 +88,7 @@ class VersionModelsSpec extends FunSpec with Matchers {
       Seq(
         idField, timestampField, typeField, userField.copy(`type` = "long")
       )
-    )) should be(Seq("Model user_version Field[user]: Must have type user and not long"))
+    )) should be(Seq("Model user_version Field[user]: Must have type user or expandable_user and not long"))
   }
   
   it("error if field is not required") {
