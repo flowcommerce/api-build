@@ -29,6 +29,27 @@ object Services {
     responseType = "io.flow.common.v0.models.healthcheck"
   )
 
+  def buildUnion(
+    name: String,
+    discriminator: Option[String] = None,
+    types: Seq[UnionType] = Nil
+  ): Union = {
+    Union(
+      name = name,
+      plural = name + "s",
+      discriminator = discriminator,
+      types = types
+    )
+  }
+
+  def buildUnionType(
+    `type`: String
+  ): UnionType = {
+    UnionType(
+      `type` = `type`
+    )
+  }
+
   def buildModel(
     name: String,
     fields: Seq[Field] = Nil

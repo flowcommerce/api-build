@@ -23,6 +23,7 @@ object Lint {
     linters.PrimaryResourcesHaveVersionsOperation,
     linters.SortParameterDefault,
     linters.StandardResponse,
+    linters.UnionTypesHaveCommonDiscriminator,
     linters.VersionModels
   )
 

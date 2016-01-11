@@ -1,6 +1,6 @@
 package io.flow.lint.linters
 
-import com.bryzek.apidoc.spec.v0.models.{Field, Model, Operation, Resource, Response, Service}
+import com.bryzek.apidoc.spec.v0.models.{Field, Model, Operation, Resource, Response, Service, Union}
 import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
 trait Helpers {
@@ -33,6 +33,10 @@ trait Helpers {
 
   def nonHealthcheckResources(service: Service): Seq[Resource] = {
     service.resources.filter( _.plural != Healthcheck.Plural)
+  }
+
+  def error(union: Union, error: String): String = {
+    s"Union ${union.name}: $error"
   }
 
   def error(model: Model, error: String): String = {
