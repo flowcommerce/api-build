@@ -2,7 +2,15 @@ package io.flow.lint.util
 
 object Expansions {
 
-  def fromFields(fields: Seq[String]): Seq[String] = {
+  /**
+    * Accepts a list of field types, returning the list of possible
+    * examples.
+    * 
+    * Examples:
+    *   Seq("id", "name") => Nil
+    *   Seq("id", "expandable_organization") => Seq("organization")
+    */
+  def fromFieldTypes(fields: Seq[String]): Seq[String] = {
     fields.flatMap(toName(_))
   }
 

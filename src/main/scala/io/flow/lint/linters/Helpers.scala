@@ -14,6 +14,23 @@ trait Helpers {
     service.models.find(_.plural == resource.plural)
   }
 
+  /**
+    * Returns the model for the successful response type for this
+    * operation. Right now only will resolve if the model is defined
+    * directly in the service (i.e. not imported)
+    */
+  def model(service: Service, operation: Operation): Option[Model] = {
+    operation.responses.find(isSuccess(_)).flatMap { response =>
+      val i = response.`type`.lastIndexOf("[")
+      val coreType = if (i < 0) {
+        response.`type`
+      } else {
+        response.`type`.substring(i + 1, response.`type`.indexOf("]"))
+      }
+      service.models.find(_.name == coreType)
+    }
+  }
+
   def nonHealthcheckResources(service: Service): Seq[Resource] = {
     service.resources.filter( _.plural != Healthcheck.Plural)
   }

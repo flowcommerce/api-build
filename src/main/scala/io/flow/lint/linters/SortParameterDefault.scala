@@ -30,7 +30,7 @@ case object SortParameterDefault extends Linter with Helpers {
             Seq(error(resource, operation, "Parameter sort requires a default"))
           }
           case Some(default) => {
-            val expected = computeDefaults(service, resource, operation.path)
+            val expected = computeDefaults(service, operation)
             expected.contains(default) match {
               case true => Nil
               case false => {
@@ -43,13 +43,13 @@ case object SortParameterDefault extends Linter with Helpers {
     }
   }
 
-  def computeDefaults(service: Service, resource: Resource, path: String): Seq[String] = {
-    path.endsWith("/versions") match {
+  def computeDefaults(service: Service, operation: Operation): Seq[String] = {
+    operation.path.endsWith("/versions") match {
       case true => {
         Seq("created_at")
       }
       case false => {
-        model(service, resource) match {
+        model(service, operation) match {
           case None => {
             Seq("-created_at", "lower(name),-created_at")
           }

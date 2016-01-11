@@ -36,11 +36,9 @@ case object Get extends Linter with Helpers {
   }
 
   def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
-    val expansions = model(service, resource).map { m =>
-      Expansions.fromFields(m.fields.map(_.name))
+    val expansions = model(service, operation).map { m =>
+      Expansions.fromFieldTypes(m.fields.map(_.`type`))
     }.getOrElse(Nil)
-
-    println(s"expansions: $expansions")
 
     val allRequiredParameters = expansions match {
       case Nil => RequiredParameters
@@ -59,7 +57,6 @@ case object Get extends Linter with Helpers {
 
     val invalidExpandsParameter = expansions match {
       case Nil => {
-        println("all params: " + queryParameters(operation).map(_.name))
         queryParameters(operation).map(_.name).contains(ExpandName) match {
           case false => {
             Nil
