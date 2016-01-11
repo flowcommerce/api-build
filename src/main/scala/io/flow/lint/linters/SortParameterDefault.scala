@@ -51,12 +51,12 @@ case object SortParameterDefault extends Linter with Helpers {
       case false => {
         model(service, operation) match {
           case None => {
-            Seq("-created_at", "lower(name),-created_at")
+            Seq("-created_at", "lower(name)")
           }
           case Some(model) => {
             model.fields.find(f => f.name == "name" && f.`type` == "string") match {
               case None => Seq("-created_at")
-              case Some(_) => Seq("lower(name),-created_at")
+              case Some(_) => Seq("lower(name)")
             }
           }
         }

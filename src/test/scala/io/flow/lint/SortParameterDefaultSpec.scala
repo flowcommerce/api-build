@@ -94,10 +94,10 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
         )
       )
     ) should be(
-      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[-created_at or lower(name),-created_at] and not[fo]")
+      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[-created_at or lower(name)] and not[fo]")
     )
 
-    Seq("-created_at", "lower(name),-created_at").foreach { sort =>
+    Seq("-created_at", "lower(name)").foreach { sort =>
       linter.validate(
         buildService(
           Services.buildSimpleModel("io.flow.common.v0.models.organization", fields = Nil),
@@ -113,7 +113,7 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
     }
   }
 
-  it("Requires 'lower(name),-created_at' if name field") {
+  it("Requires 'lower(name)' if name field") {
     linter.validate(
       buildService(
         Services.buildSimpleModel("organization", fields = Seq("name")),
@@ -126,7 +126,7 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
         )
       )
     ) should be(
-      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[lower(name),-created_at] and not[foo]")
+      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[lower(name)] and not[foo]")
     )
   }
   
@@ -139,12 +139,12 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
           `type` = "string",
           location = ParameterLocation.Query,
           required = false,
-          default = Some("lower(name),-created_at")
+          default = Some("lower(name)")
         ),
         path = "/organizations/versions"
       )
     ) should be(
-      Seq("Resource organizations GET /organizations/versions: Parameter sort default expected to be[created_at] and not[lower(name),-created_at]")
+      Seq("Resource organizations GET /organizations/versions: Parameter sort default expected to be[created_at] and not[lower(name)]")
     )
   }
   
