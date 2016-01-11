@@ -19,6 +19,7 @@ object Lint {
   val All = Seq(
     linters.CommonParametersHaveNoDescriptions,
     linters.Get,
+    linters.GetByIdIsExpandable,
     linters.Healthcheck,
     linters.MinimumMaximum,
     linters.ModelsWithOrganizationField,
