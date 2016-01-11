@@ -18,7 +18,6 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
 case object Get extends Linter with Helpers {
 
   private[this] val RequiredParameters = Seq("id", "limit", "offset", "sort")
-  private[this] val ExpandName = "expand"
 
   override def validate(service: Service): Seq[String] = {
     nonHealthcheckResources(service).map(validateResource(service, _)).flatten

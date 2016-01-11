@@ -20,6 +20,7 @@ object Lint {
     linters.CommonParametersHaveNoDescriptions,
     linters.Get,
     linters.Healthcheck,
+    linters.MinimumMaximum,
     linters.ModelsWithOrganizationField,
     linters.PrimaryResourcesHaveVersionsOperation,
     linters.SortParameterDefault,
