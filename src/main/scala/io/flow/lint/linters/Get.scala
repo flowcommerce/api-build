@@ -99,23 +99,32 @@ case object Get extends Linter with Helpers {
       queryParameters(operation).find(_.name == "sort").map( p =>
         validateParameter(service, resource, operation, p, "string", hasDefault = Some(true))
       ),
-      queryParameters(operation).find(_.name == "expand").map( p =>
-        expansions match {
-          case Nil => validateParameter(service, resource, operation, p, "[string]")
-          case names => {
-            validateParameter(
-              service,
-              resource,
-              operation,
-              p,
-              "[string]",
-              example = Some(names.sorted.mkString(", ")),
-              minimum = Some(0),
-              maximum = Some(names.size)
-            )
-          }
+      invalidExpandsParameter match {
+        case Nil => {
+          queryParameters(operation).find(_.name == "expand").map( p =>
+            expansions match {
+              case Nil => validateParameter(service, resource, operation, p, "[string]")
+              case names => {
+                validateParameter(
+                  service,
+                  resource,
+                  operation,
+                  p,
+                  "[string]",
+                  example = Some(names.sorted.mkString(", ")),
+                  minimum = Some(0),
+                  maximum = Some(names.size)
+                )
+              }
+            }
+          )
         }
-      )
+        case _ => {
+          // Already have errors about the expands parameter... don't
+          // validate any further
+          None
+        }
+      }
     ).flatten.flatten
 
     val positionErrors = Seq(invalidExpandsParameter, missingRequiredParams).flatten match {
