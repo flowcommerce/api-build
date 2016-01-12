@@ -4,7 +4,8 @@ import io.flow.lint.Linter
 import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
 
 /**
-  * fields named:
+  * For all models, except for those whose name ends in _form", any
+  * field named:
   * 
   *   id
   * 
@@ -17,7 +18,7 @@ case object CommonFieldsHaveNoDescriptions extends Linter with Helpers {
   val NamesWithNoDescriptions = Seq("id")
 
   override def validate(service: Service): Seq[String] = {
-    service.models.flatMap(validateModel(service, _))
+    service.models.filter(!_.name.endsWith("_form")).flatMap(validateModel(service, _))
   }
 
   def validateModel(service: Service, model: Model): Seq[String] = {

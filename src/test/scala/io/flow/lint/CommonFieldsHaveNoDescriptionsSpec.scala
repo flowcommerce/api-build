@@ -7,10 +7,13 @@ class CommonFieldsHaveNoDescriptionsSpec extends FunSpec with Matchers {
 
   val linter = linters.CommonFieldsHaveNoDescriptions
 
-  def buildService(fields: Seq[String]): Service = {
+  def buildService(
+    name: String = "user",
+    fields: Seq[String]
+  ): Service = {
     Services.Base.copy(
       models = Seq(
-        Services.buildModel("user", fields.map { name =>
+        Services.buildModel(name, fields.map { name =>
           Services.buildField(name, description = Some("test"))
         })
       )
@@ -18,13 +21,21 @@ class CommonFieldsHaveNoDescriptionsSpec extends FunSpec with Matchers {
   }
 
   it("no-op w/out common fields") {
-    linter.validate(buildService(Seq("foo", "bar"))) should be(Nil)
+    linter.validate(buildService(fields = Seq("foo", "bar"))) should be(Nil)
   }
 
-  it("Common parameters cannot have descriptions") {
+  it("no-op w/out common fields for a form") {
     linters.CommonFieldsHaveNoDescriptions.NamesWithNoDescriptions.foreach { name =>
       linter.validate(
-        buildService(Seq(name))
+        buildService(name = "user_form", fields = Seq(name))
+      ) should be(Nil)
+    }
+  }
+
+  it("Common fields cannot have descriptions") {
+    linters.CommonFieldsHaveNoDescriptions.NamesWithNoDescriptions.foreach { name =>
+      linter.validate(
+        buildService(fields = Seq(name))
       ) should be(
         Seq(s"Model user Field[$name]: Must not have a description")
       )
