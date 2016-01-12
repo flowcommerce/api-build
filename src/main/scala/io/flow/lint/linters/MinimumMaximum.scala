@@ -91,7 +91,16 @@ case object MinimumMaximum extends Linter with Helpers {
       case Some(max) => {
         max == GlobalMax match {
           case true => Nil
-          case false => Seq(error(resource, operation, param, s"Maximum must be $GlobalMax and not $max"))
+          case false => {
+            param.name == ExpandName match {
+              case false => {
+                Seq(error(resource, operation, param, s"Maximum must be $GlobalMax and not $max"))
+              }
+              case true => {
+                Nil
+              }
+            }
+          }
         }
       }
     }

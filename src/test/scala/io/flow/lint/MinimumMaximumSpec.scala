@@ -30,6 +30,7 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
   }
 
   def buildServiceWithParameter(
+    paramName: String = "email",
     paramType: String = "string",
     minimum: Option[Long] = None,
     maximum: Option[Long] = None
@@ -48,7 +49,7 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
           responseType = "[organization]",
           parameters = Seq(
             Parameter(
-              name = "email",
+              name = paramName,
               `type` = paramType,
               location = ParameterLocation.Query,
               required = false,
@@ -107,6 +108,18 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
     linter.validate(buildServiceWithParameter(paramType = "[string]")) should be(
       Seq(
         "Resource users GET /users Parameter email: Missing maximum. All parameters that are arrays must have a maximum set to 100"
+      )
+    )
+  }
+
+  it("Parameter expand is excepted from a max") {
+    linter.validate(buildServiceWithParameter(paramName = "expand", maximum = Some(2))) should be(Nil)
+  }
+
+  it("Parameter expand has min validated") {
+    linter.validate(buildServiceWithParameter(paramName = "expand", minimum = Some(-1))) should be(
+      Seq(
+        "Resource users GET /users Parameter expand: Minimum must be >= 0 and not -1"
       )
     )
   }
