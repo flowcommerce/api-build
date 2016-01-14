@@ -12,7 +12,9 @@ case object CommonFieldTypes extends Linter with Helpers {
 
   val Expected = Map(
     "id" -> "string",
-    "name" -> "string"
+    "guid" -> "uuid",
+    "name" -> "string",
+    "email" -> "string"
   )
 
   override def validate(service: Service): Seq[String] = {
