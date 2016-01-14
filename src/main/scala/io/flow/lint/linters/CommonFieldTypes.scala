@@ -5,7 +5,7 @@ import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
 
 /**
   * For well known field names, enforce specific types to ensure
-  * consistency. For example, all fields named 'id' or 'name' must be
+  * consistency. For example, all fields named 'id' must be
   * strings.
   */
 case object CommonFieldTypes extends Linter with Helpers {
@@ -13,7 +13,6 @@ case object CommonFieldTypes extends Linter with Helpers {
   val Expected = Map(
     "id" -> "string",
     "guid" -> "uuid",
-    "name" -> "string",
     "email" -> "string"
   )
 
