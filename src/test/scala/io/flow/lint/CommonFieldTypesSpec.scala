@@ -33,6 +33,13 @@ class CommonFieldTypesSpec extends FunSpec with Matchers {
     )
   }
 
+  it("number must be a string") {
+    linter.validate(buildService("number", "string")) should be(Nil)
+    linter.validate(buildService("number", "long")) should be(
+      Seq("Model user Field[number]: Type must be 'string' and not long")
+    )
+  }
+
   it("guid must be a uuid") {
     linter.validate(buildService("guid", "uuid")) should be(Nil)
     linter.validate(buildService("guid", "string")) should be(
