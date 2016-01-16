@@ -130,7 +130,7 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
     )
   }
   
-  it("Requires 'created_at' if path ends in /versions") {
+  it("Requires 'journal_timestamp' if path ends in /versions") {
     linter.validate(
       buildService(
         Services.buildSimpleModel("organization", fields = Seq("name")),
@@ -144,7 +144,7 @@ class SortParameterDefaultSpec extends FunSpec with Matchers {
         path = "/organizations/versions"
       )
     ) should be(
-      Seq("Resource organizations GET /organizations/versions: Parameter sort default expected to be[created_at] and not[lower(name)]")
+      Seq("Resource organizations GET /organizations/versions: Parameter sort default expected to be[journal_timestamp] and not[lower(name)]")
     )
   }
   

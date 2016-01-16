@@ -46,7 +46,7 @@ case object SortParameterDefault extends Linter with Helpers {
   def computeDefaults(service: Service, operation: Operation): Seq[String] = {
     operation.path.endsWith("/versions") match {
       case true => {
-        Seq("created_at")
+        Seq("journal_timestamp")
       }
       case false => {
         model(service, operation) match {
