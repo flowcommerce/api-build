@@ -11,7 +11,8 @@ import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
 case object CommonFieldTypes extends Linter with Helpers {
 
   val Expected = Map(
-    "id" -> "string",
+    "id" -> "string",      // we use string identifiers for all of our resources
+    "number" -> "string",  // 'number' is the external unique identifier
     "guid" -> "uuid",
     "email" -> "string"
   )
