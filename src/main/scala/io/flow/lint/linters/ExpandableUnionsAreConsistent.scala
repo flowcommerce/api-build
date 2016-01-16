@@ -9,13 +9,17 @@ import com.bryzek.apidoc.spec.v0.models.{Service, Union}
   *  "expandable_organization": {
   *    "discriminator": "discriminator",
   *    "types": [
-  *      { "type": "organization_reference" },
-  *      { "type": "organization" }
+  *      { "type": "organization" },
+  *      { "type": "organization_reference" }
   *    ]
   *  }
   * 
   * We validate that any union named expandable_xxx has exactly two
-  * types: xxx_reference and xxx
+  * types: xxx and xxx_reference. Note that the reason we force the
+  * reference last is that when we use parser combinators, we look in
+  * order for the first matching type. Having the types in this order
+  * means the organization will match before the reference (otherwise
+  * we would always end up matching on the reference).
   */
 case object ExpandableUnionsAreConsistent extends Linter with Helpers {
 
@@ -28,7 +32,7 @@ case object ExpandableUnionsAreConsistent extends Linter with Helpers {
   def validateUnion(union: Union): Seq[String] = {
     union.name match {
       case Pattern(name) => {
-        validateUnionTypes(union, Seq(s"${name}_reference", name))
+        validateUnionTypes(union, Seq(name, s"${name}_reference"))
       }
       case _ => {
         Nil

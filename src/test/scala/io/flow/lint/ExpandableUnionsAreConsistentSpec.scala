@@ -23,33 +23,33 @@ class ExpandableUnionsAreConsistentSpec extends FunSpec with Matchers {
 
   it("with no types") {
     linter.validate(buildService(Nil)) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user_reference, user")
+      Seq("Union expandable_user: Types for this expandable union must be user, user_reference")
     )
   }
 
   it("with single types") {
     linter.validate(buildService(Seq("user_reference"))) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user_reference, user and not user_reference")
+      Seq("Union expandable_user: Types for this expandable union must be user, user_reference and not user_reference")
     )
 
     linter.validate(buildService(Seq("user"))) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user_reference, user and not user")
+      Seq("Union expandable_user: Types for this expandable union must be user, user_reference and not user")
     )
   }
 
   it("with valid types") {
-    linter.validate(buildService(Seq("user_reference", "user"))) should be(Nil)
+    linter.validate(buildService(Seq("user", "user_reference"))) should be(Nil)
   }
 
   it("with valid types in invalid order") {
-    linter.validate(buildService(Seq("user", "user_reference"))) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user_reference, user and not user, user_reference")
+    linter.validate(buildService(Seq("user_reference", "user"))) should be(
+      Seq("Union expandable_user: Types for this expandable union must be user, user_reference and not user_reference, user")
     )
   }
 
   it("with invalid types") {
     linter.validate(buildService(Seq("foo", "bar"))) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user_reference, user and not foo, bar")
+      Seq("Union expandable_user: Types for this expandable union must be user, user_reference and not foo, bar")
     )
   }
 
