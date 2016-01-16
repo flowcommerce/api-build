@@ -4,18 +4,14 @@ import io.flow.lint.Linter
 import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
 
 /**
-  * For all models, except for those whose name ends in _form", any
-  * field named:
-  * 
-  *   id
-  * 
-  * should not have descriptions. This enables us to generate
+  * For all models, except for those whose name ends in _form", common
+  * fields should not have descriptions. This enables us to generate
   * consistent documenetation without worrying about whether a
   * particular description adds anything useful.
   */
 case object CommonFieldsHaveNoDescriptions extends Linter with Helpers {
 
-  val NamesWithNoDescriptions = Seq("id")
+  val NamesWithNoDescriptions = Seq("id", "number")
 
   override def validate(service: Service): Seq[String] = {
     service.models.filter(!_.name.endsWith("_form")).flatMap(validateModel(service, _))
