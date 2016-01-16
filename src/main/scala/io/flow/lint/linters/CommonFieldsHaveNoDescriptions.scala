@@ -11,7 +11,7 @@ import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
   */
 case object CommonFieldsHaveNoDescriptions extends Linter with Helpers {
 
-  val NamesWithNoDescriptions = Seq("id", "number")
+  val NamesWithNoDescriptions = Seq("id", "number", "guid", "email")
 
   override def validate(service: Service): Seq[String] = {
     service.models.filter(!_.name.endsWith("_form")).flatMap(validateModel(service, _))
