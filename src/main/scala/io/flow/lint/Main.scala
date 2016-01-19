@@ -73,21 +73,20 @@ object Main extends App {
     }
   }
 
-  if (!errors.isEmpty) {
+  println("")
+  println("==================================================")
+  errors.size match {
+    case 0 => println(s"SUMMARY: NO ERRORS")
+    case 1 => println(s"SUMMARY: 1 ERROR")
+    case n => println(s"SUMMARY: $n ERRORS")
+  }
+  println("==================================================")
+  errors.keys.toSeq.sorted foreach { app =>
+    println(app)
+    errors(app).foreach { err =>
+      println(s"  - $err")
+    }
     println("")
-    println("==================================================")
-    errors.size match {
-      case 1 => println(s"SUMMARY: 1 ERROR")
-      case n => println(s"SUMMARY: $n ERRORS")
-    }
-    println("==================================================")
-    errors.keys.toSeq.sorted foreach { app =>
-      println(app)
-      errors(app).foreach { err =>
-        println(s"  - $err")
-      }
-      println("")
-    }
   }
 
 
