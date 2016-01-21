@@ -10,7 +10,7 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   * 
   *   GET: 200, 401
   *   POST: 200,401, 422
-  *   PUT: 200, 201, 401, 422
+  *   PUT: 401, 422
   *   DELETE: 204, 401, 404
   * 
   *   - 204 - verify type: unit
@@ -23,7 +23,7 @@ case object StandardResponse extends Linter with Helpers {
     Method.Get -> Seq(200, 401),
     Method.Patch -> Seq(200, 401, 404, 422),
     Method.Post -> Seq(201, 401, 422),
-    Method.Put -> Seq(200, 201, 401, 422),
+    Method.Put -> Seq(401, 422),
     Method.Delete -> Seq(204, 401, 404),
     Method.Head -> Nil,
     Method.Connect -> Nil,
