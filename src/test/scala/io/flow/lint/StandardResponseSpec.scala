@@ -109,7 +109,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
     )
   }
 
-  it("Put must have 200, 201, 401, 422") {
+  it("Put must have 401, 422") {
     linter.validate(
       buildService(
         Method.Put,
@@ -119,7 +119,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations PUT /organizations: Missing response codes: 200, 201, 401, 422"
+        "Resource organizations PUT /organizations: Missing response codes: 401, 422"
       )
     )
   }
