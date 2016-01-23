@@ -38,7 +38,11 @@ case object VersionModels extends Linter with Helpers {
             validateType(model, idField, "string") ++
             validateType(model, timestampField, "date-time-iso8601") ++
             validateType(model, typeField, "io.flow.common.v0.enums.change_type") ++
-            validateTypes(model, modelField, Seq(baseModelName, s"expandable_$baseModelName"))
+            validateTypes(model, modelField, Seq(
+              baseModelName,
+              s"${baseModelName}_summary",
+              s"expandable_$baseModelName"
+            ))
           }
           case other => {
             Seq(error(model, s"Must have exactly 4 fields: id, timestamp, type, $baseModelName"))
