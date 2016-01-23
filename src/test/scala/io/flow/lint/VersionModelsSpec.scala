@@ -30,6 +30,11 @@ class VersionModelsSpec extends FunSpec with Matchers {
     linter.validate(buildService(Seq(idField, timestampField, typeField, importedUserField))) should be(Nil)
   }
 
+  it("no-op w/ imported user summary should not be an error") {
+    val importedUserField = Services.buildField("user", "io.flow.common.v0.models.user_summary")
+    linter.validate(buildService(Seq(idField, timestampField, typeField, importedUserField))) should be(Nil)
+  }
+
   it("no-op w/ correct fields") {
     linter.validate(buildService(Seq(idField, timestampField, typeField, userField))) should be(Nil)
   }
@@ -88,7 +93,7 @@ class VersionModelsSpec extends FunSpec with Matchers {
       Seq(
         idField, timestampField, typeField, userField.copy(`type` = "long")
       )
-    )) should be(Seq("Model user_version Field[user]: Must have type user or expandable_user and not long"))
+    )) should be(Seq("Model user_version Field[user]: Must have type user or user_summary or expandable_user and not long"))
   }
   
   it("error if field is not required") {
