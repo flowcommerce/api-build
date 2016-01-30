@@ -17,7 +17,7 @@ lazy val root = project
   .settings(
     libraryDependencies ++= Seq(
       "com.typesafe.play" %% "play-json" % "2.4.6",
-      "com.ning" % "async-http-client" % "1.9.32",
+      "com.ning" % "async-http-client" % "1.9.33",
       "org.scalatest" %% "scalatest" % "2.2.6" % Test
     )
   )
