@@ -8,6 +8,7 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
   val linter = linters.MinimumMaximum
 
   def buildServiceWithModel(
+    fieldName: String = "email",
     minimum: Option[Long] = None,
     maximum: Option[Long] = None,
     default: Option[String] = None
@@ -18,29 +19,7 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
           "user",
           fields = Seq(
             Services.buildField(
-              name = "email",
-              default = default,
-              minimum = minimum,
-              maximum = maximum
-            )
-          )
-        )
-      )
-    )
-  }
-
-  def buildServiceWitCurrencyhModel(
-   minimum: Option[Long] = None,
-   maximum: Option[Long] = None,
-   default: Option[String] = None
-  ): Service = {
-    Services.Base.copy(
-      models = Seq(
-        Services.buildModel(
-          "currency",
-          fields = Seq(
-            Services.buildField(
-              name = "currency",
+              name = fieldName,
               default = default,
               minimum = minimum,
               maximum = maximum
@@ -107,11 +86,11 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
   }
 
   it("Model w/ currency max of 3 is fine") {
-    linter.validate(buildServiceWitCurrencyhModel(maximum = Some(3))) should be(Nil)
+    linter.validate(buildServiceWithModel(fieldName = "currency", maximum = Some(3))) should be(Nil)
   }
 
   it("Model w/ currency max of 5 fails") {
-    linter.validate(buildServiceWitCurrencyhModel(maximum = Some(5))) should be(Seq("Model currency Field[currency]: Maximum must be 3 and not 5"))
+    linter.validate(buildServiceWithModel(fieldName = "currency", maximum = Some(5))) should be(Seq("Model currency Field[currency]: Maximum must be 3 and not 5"))
   }
 
   it("Model w/ non numeric default is ignored") {
