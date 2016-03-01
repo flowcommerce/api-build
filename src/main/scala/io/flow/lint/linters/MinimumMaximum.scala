@@ -59,7 +59,11 @@ case object MinimumMaximum extends Linter with Helpers {
       case Some(max) => {
         max == GlobalMax match {
           case true => Nil
-          case false => Seq(error(model, field, s"Maximum must be $GlobalMax and not $max"))
+          case false =>
+            ExceptionFields.contains(field.name) match {
+              case true => Nil
+              case false => Seq(error(model, field, s"Maximum must be $GlobalMax and not $max"))
+            }
         }
       }
     }
