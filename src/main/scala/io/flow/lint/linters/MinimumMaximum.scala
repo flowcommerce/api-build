@@ -16,6 +16,8 @@ case object MinimumMaximum extends Linter with Helpers {
 
   val GlobalMax = 100
 
+  val CurrencyMax = 3
+
   override def validate(service: Service): Seq[String] = {
     service.models.flatMap(validateModel(service, _)) ++ service.resources.flatMap(validateResource(service, _))
   }
@@ -57,13 +59,19 @@ case object MinimumMaximum extends Linter with Helpers {
     val maxErrors = field.maximum match {
       case None => Nil
       case Some(max) => {
-        max == GlobalMax match {
-          case true => Nil
-          case false =>
-            ExceptionFields.contains(field.name) match {
+        field.name == CurrencyField match {
+          case true => {
+            max == CurrencyMax match {
+              case true => Nil
+              case false => Seq(error(model, field, s"Maximum must be $CurrencyMax and not $max"))
+            }
+          }
+          case false => {
+            max == GlobalMax match {
               case true => Nil
               case false => Seq(error(model, field, s"Maximum must be $GlobalMax and not $max"))
             }
+          }
         }
       }
     }

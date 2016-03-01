@@ -7,7 +7,7 @@ trait Helpers {
 
   val ExpandName = "expand"
 
-  val ExceptionFields = Seq("currency")
+  val CurrencyField = "currency"
 
   /**
     * Returns the model for this resource. Right now only will resolve
