@@ -39,12 +39,4 @@ The default behavior is to use the default apidoc profile.
 
 ## Releasing
 
-    /web/tools/bin/publish
-    sbt clean one-jar
-    cp ./target/scala-2.11/api-lint*-one-jar.jar /web/aws-s3-public/util/api-lint/
-    cp ./target/scala-2.11/api-lint*-one-jar.jar /web/aws-s3-public/util/api-lint/api-lint.jar
-    cd /web/aws-s3-public
-    git add util/api-lint/*
-    git commit -m "Add new version of api-lint" util/api-lint
-    git push origin master
-    aws s3 sync util s3://io.flow.aws-s3-public/util --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+    go run release.go
