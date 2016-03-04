@@ -79,7 +79,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
     )
   }
 
-  it("Patch must have 200, 401, 404, 422") {
+  it("Patch must have 401, 404, 422") {
     linter.validate(
       buildService(
         Method.Patch,
@@ -89,12 +89,12 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations PATCH /organizations: Missing response codes: 200, 401, 404, 422"
+        "Resource organizations PATCH /organizations: Missing response codes: 401, 404, 422"
       )
     )
   }
 
-  it("Post must have 201, 401, 422") {
+  it("Post must have 401, 422") {
     linter.validate(
       buildService(
         Method.Post,
@@ -104,7 +104,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations POST /organizations: Missing response codes: 201, 401, 422"
+        "Resource organizations POST /organizations: Missing response codes: 401, 422"
       )
     )
   }
