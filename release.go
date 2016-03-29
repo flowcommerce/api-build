@@ -13,8 +13,8 @@ func main() {
 
 	executor = executor.Add("dev tag --label micro")
 	executor = executor.Add("sbt clean one-jar")
-	executor = executor.Add("cp ./target/scala-2.11/api-lint*-one-jar.jar /web/aws-s3-public/util/api-lint/")
-	executor = executor.Add("cp ./target/scala-2.11/api-lint*-one-jar.jar /web/aws-s3-public/util/api-lint/api-lint.jar")
+	executor = executor.Add("cp ./target/scala-2.11/api-lint*-one-jar.jar ../aws-s3-public/util/api-lint/")
+	executor = executor.Add("cp ./target/scala-2.11/api-lint*-one-jar.jar ../aws-s3-public/util/api-lint/api-lint.jar")
 
 	executor = executor.Add("cd ../aws-s3-public\ngit add util/api-lint/*")
 	executor = executor.Add("cd ../aws-s3-public\ngit commit -m 'Add new version of api-lint' util/api-lint")
