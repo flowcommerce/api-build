@@ -111,9 +111,8 @@ class GetWithExpansionsSpec extends FunSpec with Matchers {
   it("resource w/ expansions validates attributes") {
     linter.validate(serviceWithExpansion) should be(
       Seq(
-        "Resource organizations GET /organizations: parameter[expand] is missing example. It should be user",
-        "Resource organizations GET /organizations: parameter[expand] minimum is missing. Expected 0",
-        "Resource organizations GET /organizations: parameter[expand] maximum is missing. Expected 1"
+        "Resource organizations GET /organizations: parameter[expand] is missing example. It must be user",
+        "Resource organizations GET /organizations: parameter[expand] is missing maximum. It must be 1"
       )
 
     )
