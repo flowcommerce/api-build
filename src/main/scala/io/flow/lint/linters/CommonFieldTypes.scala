@@ -14,7 +14,11 @@ case object CommonFieldTypes extends Linter with Helpers {
     "id" -> "string",      // we use string identifiers for all of our resources
     "number" -> "string",  // 'number' is the external unique identifier
     "guid" -> "uuid",
-    "email" -> "string"
+    "email" -> "string",
+    "limit" -> "long",
+    "offset" -> "long",
+    "sort" -> "string",
+    "expand" -> "[string]"
   )
 
   override def validate(service: Service): Seq[String] = {

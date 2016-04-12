@@ -9,11 +9,13 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   * Enforces that each resource has a top level GET method where:
   * 
   * a. All parameters are optional
-  * b. First param named "id" with type "[string]"
-  * c. last three parameters named limit, offset, sort
-  * d. limit is long w/ default of 25, minimum of 1, maximum of 100
-  * d. offset is long w/ default of 0, minimum of 0, no maximum
-  * e. sort is a string with a default specified
+  * b. One of the following is true
+  *    a. first param named 'q' with type 'string'
+  *    b. First param named "id" with type "[string]" and
+  *       last three parameters named limit, offset, sort
+  * c. limit, if present, is long w/ default of 25, minimum of 1, maximum of 100
+  * d. offset, if present, is long w/ default of 0, minimum of 0, no maximum
+  * e. sort, if present, is a string with a default specified
   */
 case object Get extends Linter with Helpers {
 
@@ -164,20 +166,25 @@ case object Get extends Linter with Helpers {
     val names = queryParameters(operation).map(_.name)
     val tail = names.reverse.take(expectedTail.size).reverse
 
-    Seq(
-      names.head == "id" match {
-        case true => Nil
-        case false => Seq(error(resource, operation, s"Parameter[id] must be the first parameter"))
-      },
-      tail == expectedTail match {
-        case true => {
-          Nil
-        }
-        case false => {
-          Seq(error(resource, operation, s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}"))
-        }
+    names.head == "q" match {
+      case true => Nil
+      case false => {
+        Seq(
+          names.head == "id" match {
+            case true => Nil
+            case false => Seq(error(resource, operation, s"Parameter[id] must be the first parameter"))
+          },
+          tail == expectedTail match {
+            case true => {
+              Nil
+            }
+            case false => {
+              Seq(error(resource, operation, s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}"))
+            }
+          }
+        ).flatten
       }
-    ).flatten
+    }
   }
   
   def validateParameter(
