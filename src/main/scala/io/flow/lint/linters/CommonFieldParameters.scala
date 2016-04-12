@@ -46,8 +46,8 @@ case object CommonFieldParameters extends Linter with Helpers {
   private[this] def compare[T](model: Model, field: Field, label: String, actual: Option[T], expected: Option[T]): Seq[String] = {
     (actual, expected) match {
       case (None, None) => Nil
-      case (None, Some(_)) => Seq(error(model, field, s"$label should not be specified"))
-      case (Some(_), None) => Seq(error(model, field, s"$label mising"))
+      case (None, Some(e)) => Seq(error(model, field, s"$label was not specified - should be $e"))
+      case (Some(_), None) => Seq(error(model, field, s"$label should not be specified"))
       case (Some(a), Some(e)) => {
         a == e match {
           case true => Nil

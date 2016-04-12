@@ -36,9 +36,9 @@ class CommonFieldParametersSpec extends FunSpec with Matchers {
 
     linter.validate(buildService("limit", None, None, None)) should be(
       Seq(
-        "Model user Field[limit]: Default should not be specified",
-        "Model user Field[limit]: Minimum should not be specified",
-        "Model user Field[limit]: Maximum should not be specified"
+        "Model user Field[limit]: Default was not specified - should be 25",
+        "Model user Field[limit]: Minimum was not specified - should be 1",
+        "Model user Field[limit]: Maximum was not specified - should be 100"
       )
     )
 
@@ -47,6 +47,26 @@ class CommonFieldParametersSpec extends FunSpec with Matchers {
         "Model user Field[limit]: Default expected[25] but found[10]",
         "Model user Field[limit]: Minimum expected[1] but found[0]",
         "Model user Field[limit]: Maximum expected[100] but found[10]"
+      )
+    )
+  }
+
+  it("offset") {
+    linter.validate(buildService("offset", Some("0"), Some(0), None)) should be(Nil)
+
+    linter.validate(buildService("offset", None, None, Some(100))) should be(
+      Seq(
+        "Model user Field[offset]: Default was not specified - should be 0",
+        "Model user Field[offset]: Minimum was not specified - should be 0",
+        "Model user Field[offset]: Maximum should not be specified"
+      )
+    )
+
+    linter.validate(buildService("offset", Some("10"), Some(1), Some(10))) should be(
+      Seq(
+        "Model user Field[offset]: Default expected[0] but found[10]",
+        "Model user Field[offset]: Minimum expected[0] but found[1]",
+        "Model user Field[offset]: Maximum should not be specified"
       )
     )
   }
