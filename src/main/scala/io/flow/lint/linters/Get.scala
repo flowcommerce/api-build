@@ -6,16 +6,12 @@ import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, Parameter
 import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
 /**
-  * Enforces that each resource has a top level GET method where:
+  * Enforces that each resource has a top level GET method where one
+  * of the following is true
   * 
-  * a. All parameters are optional
-  * b. One of the following is true
-  *    a. first param named 'q' with type 'string'
-  *    b. First param named "id" with type "[string]" and
-  *       last three parameters named limit, offset, sort
-  * c. limit, if present, is long w/ default of 25, minimum of 1, maximum of 100
-  * d. offset, if present, is long w/ default of 0, minimum of 0, no maximum
-  * e. sort, if present, is a string with a default specified
+  *  a. first param named 'q' with type 'string'
+  *  b. first param named "id" with type "[string]" and
+  *     last three parameters named limit, offset, sort
   */
 case object Get extends Linter with Helpers {
 
