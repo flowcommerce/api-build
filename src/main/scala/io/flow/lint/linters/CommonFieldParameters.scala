@@ -34,23 +34,25 @@ case object CommonFieldParameters extends Linter with Helpers {
       case None => {
         Nil
       }
+
       case Some(spec) => {
-        val defaultErrors = field.default.map(_.toString) == spec.default.map(_.toString) match {
-          case true => Nil
-          case false => Seq(error(model, field, s"Default must be '${spec.default}' and not ${field.default}"))
-        }
+        compare(model, field, "Default", field.default.map(_.toString), spec.default.map(_.toString)) ++
+        compare(model, field, "Minimum", field.minimum, spec.minimum) ++
+        compare(model, field, "Maximum", field.maximum, spec.maximum)
+      }
+    }
+  }
 
-        val minimumErrors = field.minimum == spec.minimum match {
+  private[this] def compare[T](model: Model, field: Field, label: String, actual: Option[T], expected: Option[T]): Seq[String] = {
+    (actual, expected) match {
+      case (None, None) => Nil
+      case (None, Some(_)) => Seq(error(model, field, s"$label should not be specified"))
+      case (Some(_), None) => Seq(error(model, field, s"$label mising"))
+      case (Some(a), Some(e)) => {
+        a == e match {
           case true => Nil
-          case false => Seq(error(model, field, s"Minimum must be '${spec.minimum}' and not ${field.minimum}"))
+          case false => Seq(error(model, field, s"$label expected[$e] but found[$a]"))
         }
-
-        val maximumErrors = field.maximum == spec.maximum match {
-          case true => Nil
-          case false => Seq(error(model, field, s"Maximum must be '${spec.maximum}' and not ${field.maximum}"))
-        }
-        
-        defaultErrors ++ minimumErrors ++ maximumErrors
       }
     }
   }
