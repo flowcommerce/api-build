@@ -17,6 +17,7 @@ case object CommonFieldParameters extends Linter with Helpers {
   )
 
   val Expected = Map(
+    "id" -> Spec(default = None, minimum = Some(0), maximum = Some(100)),
     "limit" -> Spec(default = Some("25"), minimum = Some(1), maximum = Some(100)),
     "offset" -> Spec(default = Some("0"), minimum = Some(0), maximum = None)
   )
