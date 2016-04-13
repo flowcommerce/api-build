@@ -95,12 +95,12 @@ case object Get extends Linter with Helpers {
 
               case names => {
                 val requiredExample = names.sorted.mkString(", ")
-                val exampleErrors = p.example == requiredExample match {
+                val exampleErrors = p.example == Some(requiredExample) match {
                   case true => Nil
                   case false => {
                     p.example match {
                       case None =>Seq(error(resource, operation, s"parameter[expand] is missing example. It must be $requiredExample"))
-                      case value => Seq(error(resource, operation, s"parameter[expand] must have example[$requiredExample] and not[$value]"))
+                      case Some(value) => Seq(error(resource, operation, s"parameter[expand] must have example[$requiredExample] and not[$value]"))
                     }
                   }
                 }

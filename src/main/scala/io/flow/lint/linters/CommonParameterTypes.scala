@@ -34,6 +34,7 @@ case object CommonParameterTypes extends Linter with Helpers {
   def validateResource(service: Service, resource: Resource): Seq[String] = {
     resource.operations.
       filter(_.method == Method.Get).
+      filter(returnsArray(_)).
       flatMap { op =>
         op.parameters.flatMap { param =>
           validateParameter(service, resource, op, param)
