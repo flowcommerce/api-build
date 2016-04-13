@@ -15,8 +15,12 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   */
 case object Get extends Linter with Helpers {
 
+  trait Sublinter {
+    def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String]
+  }
+
   override def validate(service: Service): Seq[String] = {
-    nonHealthcheckResources(service).map(GetPrimary.validateResource(service, _)).flatten match {
+    nonHealthcheckResources(service).map(validateResource(GetPrimary, service, _)).flatten match {
       case Nil => {
         Nil // todo
       }
@@ -25,24 +29,25 @@ case object Get extends Linter with Helpers {
     }
   }
 
+  def validateResource(sublinter: Sublinter, service: Service, resource: Resource): Seq[String] = {
+    resource.operations.
+      filter(_.method == Method.Get).
+      filter(returnsArray(_)).
+      flatMap { sublinter.validateOperation(service, resource, _) }
+  }
+  
+  def queryParameters(operation: Operation): Seq[Parameter] = {
+    operation.parameters.filter(_.location == ParameterLocation.Query)
+  }
+
+
   /**
     *  b. first param named "id" with type "[string]" and
     *     last three parameters named limit, offset, sort
     */
-  case object GetPrimary extends Helpers {
+  case object GetPrimary extends Sublinter with Helpers {
 
     private[this] val RequiredParameters = Seq("id", "limit", "offset", "sort")
-
-    def validateResource(service: Service, resource: Resource): Seq[String] = {
-      resource.operations.
-        filter(_.method == Method.Get).
-        filter(returnsArray(_)).
-        flatMap { validateOperation(service, resource, _) }
-    }
-
-    def queryParameters(operation: Operation): Seq[Parameter] = {
-      operation.parameters.filter(_.location == ParameterLocation.Query)
-    }
 
     def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
       val expansions = model(service, operation).map { m =>
