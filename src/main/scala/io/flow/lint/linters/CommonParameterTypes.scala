@@ -19,8 +19,12 @@ case object CommonParameterTypes extends Linter with Helpers {
   val Expected = Map(
     "id" -> Spec("[string]", default = None, minimum = None, maximum = Some(100)),
     "limit" -> Spec("long", default = Some("25"), minimum = Some(1), maximum = Some(100)),
-    "offset" -> Spec("long", default = Some("0"), minimum = Some(0), maximum = None),
-    "sort" -> Spec("string")
+    "offset" -> Spec("long", default = Some("0"), minimum = Some(0), maximum = None)
+  )
+
+  val Types = Map(
+    "sort" -> "string",
+    "expand" -> "[string]"
   )
 
   override def validate(service: Service): Seq[String] = {
@@ -40,11 +44,18 @@ case object CommonParameterTypes extends Linter with Helpers {
   def validateParameter(service: Service, resource: Resource, op: Operation, param: Parameter): Seq[String] = {
     Expected.get(param.name) match {
       case None => {
-        Nil
+        Types.get(param.name) match {
+          case None => Nil
+          case Some(typ) => {
+            typ == param.`type` match {
+              case true => Nil
+              case false => Seq(error(resource, op, param, s"Type expected[$typ] but found[${param.`type`}]"))
+            }
+          }
+        }
       }
 
       case Some(spec) => {
-        println("Param: " + param)
         compare(resource, op, param, "Type", Some(param.`type`), Some(spec.typ)) ++
         compare(resource, op, param, "Default", param.default.map(_.toString), spec.default.map(_.toString)) ++
         compare(resource, op, param, "Minimum", param.minimum, spec.minimum) ++
