@@ -53,8 +53,9 @@ case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
           }
         }
         case false => {
-          // if successful response type (2xx) references a model from another schema (i.e. [io.flow.example.v0.models.object]), no /versions endpoint is required
-          // the resource is most likely manipulating/aggregating data rather than CRUD
+          /** if successful response type (2xx) references a model from another schema (i.e. [io.flow.example.v0.models.object]), no id parameter is required
+            * the resource is most likely manipulating/aggregating data rather than CRUD
+            **/
           if (!responseType(item.operation).getOrElse("").contains("."))
             Some(error(item.resource, item.operation, s"Missing versions operation at path $versionPath"))
           else

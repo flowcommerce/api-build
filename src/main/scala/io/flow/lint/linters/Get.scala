@@ -58,8 +58,9 @@ case object Get extends Linter with Helpers {
       }.getOrElse(Nil)
 
       val requiredParams =
-        // if successful response type (2xx) references a model from another schema (i.e. [io.flow.example.v0.models.object]), no id parameter is required
-        // the resource is most likely manipulating/aggregating data rather than CRUD
+        /** if successful response type (2xx) references a model from another schema (i.e. [io.flow.example.v0.models.object]), no id parameter is required
+          * the resource is most likely manipulating/aggregating data rather than CRUD
+          **/
         if(responseType(operation).getOrElse("").contains("."))
           trailingParams
         else
