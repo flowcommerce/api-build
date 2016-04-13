@@ -15,25 +15,30 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   */
 case object Get extends Linter with Helpers {
 
-  trait Sublinter {
-    def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String]
-  }
+  private[this] val Primary = Sublinter(
+    leadingParam = "id",
+    trailingParams = Seq("limit", "offset", "sort")
+  )
+
+  private[this] val Query = Sublinter(
+    leadingParam = "q",
+    trailingParams = Nil
+  )
 
   override def validate(service: Service): Seq[String] = {
-    nonHealthcheckResources(service).map(validateResource(GetPrimary, service, _)).flatten match {
-      case Nil => {
-        Nil // todo
-      }
-
-      case errors => errors
-    }
+    nonHealthcheckResources(service).map(validateResource(service, _)).flatten
   }
 
-  def validateResource(sublinter: Sublinter, service: Service, resource: Resource): Seq[String] = {
+  def validateResource(service: Service, resource: Resource): Seq[String] = {
     resource.operations.
       filter(_.method == Method.Get).
       filter(returnsArray(_)).
-      flatMap { sublinter.validateOperation(service, resource, _) }
+      flatMap { op =>
+        queryParameters(op).headOption.map(_.name) match {
+          case Some("q") => Query.validateOperation(service, resource, op)
+          case _ => Primary.validateOperation(service, resource, op)
+        }
+      }
   }
   
   def queryParameters(operation: Operation): Seq[Parameter] = {
@@ -45,9 +50,9 @@ case object Get extends Linter with Helpers {
     *  b. first param named "id" with type "[string]" and
     *     last three parameters named limit, offset, sort
     */
-  case object GetPrimary extends Sublinter with Helpers {
+  private[this] case class Sublinter(leadingParam: String, trailingParams: Seq[String]) {
 
-    private[this] val RequiredParameters = Seq("id", "limit", "offset", "sort")
+    val RequiredParameters = Seq(leadingParam) ++ trailingParams
 
     def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
       val expansions = model(service, operation).map { m =>
@@ -145,11 +150,11 @@ case object Get extends Linter with Helpers {
 
       val positionErrors = Seq(expandErrors, missingRequiredParams).flatten match {
         case Nil => {
-          val trailingParams = expansions match {
-            case Nil => Seq("limit", "offset", "sort")
-            case _ => Seq("limit", "offset", "sort", "expand")
+          val trailingParamsWithExpand = expansions match {
+            case Nil => trailingParams
+            case _ => trailingParams ++ Seq("expand")
           }
-          validateParameterPositions(service, resource, operation, trailingParams)
+          validateParameterPositions(service, resource, operation, trailingParamsWithExpand)
         }
         case errors => Nil
       }
@@ -161,7 +166,7 @@ case object Get extends Linter with Helpers {
       * validate id if present is in first position, and the parameter
       *  list ends with the specified expectedTail (e.g. limit, offset, sort)
       */
-    private[this] def validateParameterPositions(
+    def validateParameterPositions(
       service: Service,
       resource: Resource,
       operation: Operation,
@@ -170,26 +175,21 @@ case object Get extends Linter with Helpers {
       val names = queryParameters(operation).map(_.name)
       val tail = names.reverse.take(expectedTail.size).reverse
 
-      names.head == "q" match {
-        case true => Nil
-        case false => {
-          Seq(
-            names.head == "id" match {
-              case true => Nil
-              case false => Seq(error(resource, operation, s"Parameter[id] must be the first parameter"))
-            },
-            tail == expectedTail match {
-              case true => {
-                Nil
-              }
-              case false => {
-                Seq(error(resource, operation, s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}"))
-              }
-            }
-          ).flatten
+      Seq(
+        names.head == leadingParam match {
+          case true => Nil
+          case false => Seq(error(resource, operation, s"Parameter[$leadingParam] must be the first parameter"))
+        },
+        tail == expectedTail match {
+          case true => {
+            Nil
+          }
+          case false => {
+            Seq(error(resource, operation, s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}"))
+          }
         }
-      }
+      ).flatten
     }
-    
   }
+
 }
