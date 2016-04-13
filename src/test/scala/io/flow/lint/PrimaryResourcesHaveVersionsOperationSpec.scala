@@ -24,11 +24,6 @@ class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
     responseType = "[organization]"
   )
 
-  private[this] val getNoVersions = Services.buildSimpleOperation(
-    path = "/organizations",
-    responseType = "[io.flow.organization.v0.models.organization]"
-  )
-
   it("valid resource is left alone") {
     linter.validate(
       buildService(
@@ -49,12 +44,6 @@ class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
     ) should be(
       Seq("Resource organizations GET /organizations: Missing versions operation at path /organizations/versions")
     )
-  }
-
-  it("validates /versions resource is ok to be missing when 2xx response is a model from another schema") {
-    linter.validate(
-      buildService(Seq(getNoVersions))
-    ) should be(Nil)
   }
 
   it("validates version path at root") {

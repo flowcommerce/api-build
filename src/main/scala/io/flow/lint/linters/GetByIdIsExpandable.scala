@@ -33,7 +33,7 @@ case object GetByIdIsExpandable extends Linter with Helpers {
   }
 
   def returnsExpandableType(service: Service, op: Operation): Boolean = {
-    responseType(op) match {
+    responseType(service, op) match {
       case None => false
       case Some(t) => {
         Expansions.fromFieldTypes(Seq(t)) match {

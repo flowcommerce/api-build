@@ -52,29 +52,22 @@ case object Get extends Linter with Helpers {
     */
   private[this] case class Sublinter(leadingParam: String, trailingParams: Seq[String]) {
 
+    val RequiredParameters = Seq(leadingParam) ++ trailingParams
+
     def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
       val expansions = model(service, operation).map { m =>
         Expansions.fromFieldTypes(m.fields.map(_.`type`))
       }.getOrElse(Nil)
 
-      val requiredParams =
-        /** if successful response type (2xx) references a model from another schema (i.e. [io.flow.example.v0.models.object]), no id parameter is required
-          * the resource is most likely manipulating/aggregating data rather than CRUD
-          **/
-        if(responseType(operation).getOrElse("").contains("."))
-          trailingParams
-        else
-          Seq(leadingParam) ++ trailingParams
-
       val allRequiredParameters = expansions match {
-        case Nil => requiredParams
-        case _ => requiredParams ++ Seq(ExpandName)
+        case Nil => RequiredParameters
+        case _ => RequiredParameters ++ Seq(ExpandName)
       }
 
       val requiredErrors = queryParameters(operation).filter(p => p.required && p.default.isEmpty) match {
         case Nil => Nil
         case params => params.map { p =>
-          requiredParams.contains(p.name) match {
+          RequiredParameters.contains(p.name) match {
             case true => error(resource, operation, s"Parameter[${p.name}] must be optional")
             case false => error(resource, operation, s"Parameter[${p.name}] must be optional or must have a default")
           }
@@ -185,11 +178,7 @@ case object Get extends Linter with Helpers {
       Seq(
         names.head == leadingParam match {
           case true => Nil
-          case false =>
-            if(!responseType(operation).getOrElse("").contains("."))
-              Seq(error(resource, operation, s"Parameter[$leadingParam] must be the first parameter"))
-            else
-              Nil
+          case false => Seq(error(resource, operation, s"Parameter[$leadingParam] must be the first parameter"))
         },
         tail == expectedTail match {
           case true => {
