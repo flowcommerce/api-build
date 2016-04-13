@@ -19,6 +19,7 @@ object Lint {
   val All = Seq(
     linters.CommonFieldTypes,
     linters.CommonFieldsHaveNoDescriptions,
+    linters.CommonParameterTypes,
     linters.CommonParametersHaveNoDescriptions,
     linters.ExpandableUnionsAreConsistent,
     linters.Get,
