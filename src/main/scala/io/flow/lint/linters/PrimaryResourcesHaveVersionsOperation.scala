@@ -29,7 +29,7 @@ case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
     }
 
     val versionsOperationErrors = data.filter(_.operation.path.endsWith("/versions")).flatMap { item =>
-      responseType(service, item.operation) match {
+      responseType(item.operation) match {
         case None => {
           Some(error(item.resource, item.operation, s"Missing a 2xx response"))
         }
@@ -47,13 +47,18 @@ case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
       val versionPath = if (item.operation.path == "/") { "/versions"} else { s"${item.operation.path}/versions" }
       paths.contains(versionPath) match {
         case true => {
-          responseType(service, item.operation) match {
+          responseType(item.operation) match {
             case None => Some(error(item.resource, item.operation, s"Missing a 2xx response"))
             case Some(_) => Nil
           }
         }
         case false => {
-          Some(error(item.resource, item.operation, s"Missing versions operation at path $versionPath"))
+          // if successful response type (2xx) references a model from another schema (i.e. [io.flow.example.v0.models.object]), no /versions endpoint is required
+          // the resource is most likely manipulating/aggregating data rather than CRUD
+          if (!responseType(item.operation).getOrElse("").contains("."))
+            Some(error(item.resource, item.operation, s"Missing versions operation at path $versionPath"))
+          else
+            Nil
         }
       }
     }
