@@ -24,7 +24,7 @@ trait Helpers {
     * directly in the service (i.e. not imported)
     */
   def model(service: Service, operation: Operation): Option[Model] = {
-    responseType(service, operation).flatMap { t =>
+    responseType(operation).flatMap { t =>
       service.models.find(_.name == t)
     }
   }
@@ -33,7 +33,7 @@ trait Helpers {
     * Returns the name of the datatype for the successful response for this
     * operation.
     */
-  def responseType(service: Service, operation: Operation): Option[String] = {
+  def responseType(operation: Operation): Option[String] = {
     operation.responses.find(isSuccess(_)).map { response =>
       val i = response.`type`.lastIndexOf("[")
       if (i < 0) {
