@@ -2,14 +2,14 @@ package io.flow.lint
 
 import scala.util.{Failure, Success, Try}
 
-case class ApidocProfile(name: String, apiUrl: String, token: Option[String] = None)
+case class ApidocProfile(name: String, baseUrl: String, token: Option[String] = None)
 
 /**
   * Parses the apidoc configuration file
   */
 object ApidocConfig {
 
-  private[this] val DefaultApiUrl = "http://api.apidoc.me"
+  private[this] val DefaultBaseUrl = "http://api.apidoc.me"
   private[this] val DefaultPath = "~/.apidoc/config"
 
   /**
@@ -25,9 +25,9 @@ object ApidocConfig {
   ): Either[String, ApidocProfile] = {
     val profile = Environment.optionalString("APIDOC_PROFILE").getOrElse("default")
     val envToken = Environment.optionalString("APIDOC_API_TOKEN")
-    val envUri = Environment.optionalString("APIDOC_API_URI")
+    val envBaseUrl = Environment.optionalString("APIDOC_API_BASE_URL")
 
-    Seq(envToken, envUri).flatten match {
+    Seq(envToken, envBaseUrl).flatten match {
       case Nil => {
         loadAllProfiles(path) match {
           case Left(errors) => Left(errors)
@@ -40,11 +40,11 @@ object ApidocConfig {
         }
       }
       case _ => {
-        println("Using profile from env variables")
+        println("Creating profile from environment variables")
         Right(
           ApidocProfile(
             name = "environment",
-            apiUrl = envUri.getOrElse(DefaultApiUrl),
+            baseUrl = envBaseUrl.getOrElse(DefaultBaseUrl),
             token = envToken
           )
         )
@@ -67,11 +67,11 @@ object ApidocConfig {
           l match {
             case Profile(name) => {
               currentProfile.map { p => allProfiles += p }
-              currentProfile = Some(ApidocProfile(name = name, apiUrl = DefaultApiUrl))
+              currentProfile = Some(ApidocProfile(name = name, baseUrl = DefaultBaseUrl))
             }
             case Default() => {
               currentProfile.map { p => allProfiles += p }
-              currentProfile = Some(ApidocProfile(name = "default", apiUrl = DefaultApiUrl))
+              currentProfile = Some(ApidocProfile(name = "default", baseUrl = DefaultBaseUrl))
             }
             case _ => {
               l.split("=").map(_.trim).toList match {
@@ -79,7 +79,7 @@ object ApidocConfig {
                   currentProfile = currentProfile.map(_.copy(token = Some(value)))
                 }
                 case "api_uri" :: value :: Nil => {
-                  currentProfile = currentProfile.map(_.copy(apiUrl = value))
+                  currentProfile = currentProfile.map(_.copy(baseUrl = value))
                 }
                 case _ => {
                   // ignore

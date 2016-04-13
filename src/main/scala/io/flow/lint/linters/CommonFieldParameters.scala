@@ -17,7 +17,7 @@ case object CommonFieldParameters extends Linter with Helpers {
   )
 
   val Expected = Map(
-    "id" -> Spec(default = None, minimum = Some(0), maximum = Some(100)),
+    "id" -> Spec(default = None, minimum = None, maximum = Some(100)),
     "limit" -> Spec(default = Some("25"), minimum = Some(1), maximum = Some(100)),
     "offset" -> Spec(default = Some("0"), minimum = Some(0), maximum = None)
   )
@@ -37,6 +37,7 @@ case object CommonFieldParameters extends Linter with Helpers {
       }
 
       case Some(spec) => {
+        println("FIELD: " + field)
         compare(model, field, "Default", field.default.map(_.toString), spec.default.map(_.toString)) ++
         compare(model, field, "Minimum", field.minimum, spec.minimum) ++
         compare(model, field, "Maximum", field.maximum, spec.maximum)

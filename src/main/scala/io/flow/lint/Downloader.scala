@@ -12,7 +12,7 @@ case class Downloader(config: ApidocProfile) {
 
   private[this] val client = {
     new com.bryzek.apidoc.api.v0.Client(
-      apiUrl = config.apiUrl,
+      baseUrl = config.baseUrl,
       auth = config.token.map { token =>
         com.bryzek.apidoc.api.v0.Authorization.Basic(token)
       }
@@ -32,7 +32,7 @@ case class Downloader(config: ApidocProfile) {
   ): Either[String, Service] = {
     Try(
       Await.result(
-        client.versions.getByOrgKeyAndApplicationKeyAndVersion(organization, application, version).map { v =>
+        client.versions.getByApplicationKeyAndVersion(organization, application, version).map { v =>
           v.service
         },
         Duration(5, "seconds")
