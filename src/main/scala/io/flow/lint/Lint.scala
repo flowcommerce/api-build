@@ -17,9 +17,9 @@ case class Lint(
 object Lint {
 
   val All = Seq(
-    linters.CommonFieldParameters,
     linters.CommonFieldTypes,
     linters.CommonFieldsHaveNoDescriptions,
+    linters.CommonParameterTypes,
     linters.CommonParametersHaveNoDescriptions,
     linters.ExpandableUnionsAreConsistent,
     linters.Get,
