@@ -48,26 +48,49 @@ class GetWithoutExpansionsSpec extends FunSpec with Matchers {
   )
 
   def buildResourceWithSearch(params: Seq[Parameter]) = {
-      Services.withHealthcheck(
-        Services.Base.copy(
-          resources = Seq(
-            Resource(
-              `type` = "organization",
-              plural = "organizations",
-              operations = Seq(
-                Operation(
-                  method = Method.Get,
-                  path = "/organizations",
-                  parameters = params,
-                  responses = Seq(
-                    Services.buildResponse(`type` = "[organization]")
-                  )
+    Services.withHealthcheck(
+      Services.Base.copy(
+        resources = Seq(
+          Resource(
+            `type` = "organization",
+            plural = "organizations",
+            operations = Seq(
+              Operation(
+                method = Method.Get,
+                path = "/organizations",
+                parameters = params,
+                responses = Seq(
+                  Services.buildResponse(`type` = "[organization]")
                 )
               )
             )
           )
         )
       )
+    )
+  }
+
+  def buildResourceWithSearchAltSchemaResponse(params: Seq[Parameter]) = {
+    Services.withHealthcheck(
+      Services.Base.copy(
+        resources = Seq(
+          Resource(
+            `type` = "organization",
+            plural = "organizations",
+            operations = Seq(
+              Operation(
+                method = Method.Get,
+                path = "/organizations",
+                parameters = params,
+                responses = Seq(
+                  Services.buildResponse(`type` = "[io.flow.organization.v0.models.organization]")
+                )
+              )
+            )
+          )
+        )
+      )
+    )
   }
 
   it("GET / validation") {
@@ -130,6 +153,35 @@ class GetWithoutExpansionsSpec extends FunSpec with Matchers {
         "Resource organizations GET /organizations: Parameter[offset] must be optional"
       )
     )
+  }
+
+  it("GET / validates id not required") {
+    linter.validate(
+      buildResourceWithSearchAltSchemaResponse(
+        Seq(
+          Parameter(
+            name = "limit",
+            `type` = "string",
+            location = ParameterLocation.Query,
+            required = false
+          ),
+          Parameter(
+            name = "offset",
+            `type` = "int",
+            location = ParameterLocation.Query,
+            required = false,
+            minimum = Some(1),
+            maximum = Some(100)
+          ),
+          Parameter(
+            name = "sort",
+            `type` = "string",
+            location = ParameterLocation.Query,
+            required = false
+          )
+        )
+      )
+    ) should be(Nil)
   }
 
   it("GET / with required parameters in different order") {
