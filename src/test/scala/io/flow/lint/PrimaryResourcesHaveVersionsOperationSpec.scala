@@ -2,6 +2,7 @@ package io.flow.lint
 
 import com.bryzek.apidoc.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
+import play.api.libs.json.Json
 
 class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
 
@@ -24,6 +25,12 @@ class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
     responseType = "[organization]"
   )
 
+  private[this] val getNoVersions = Services.buildSimpleOperation(
+    path = "/organizations",
+    responseType = "[organization]",
+    attributes = Seq(Attribute("non-crud", Json.obj()))
+  )
+
   it("valid resource is left alone") {
     linter.validate(
       buildService(
@@ -44,6 +51,12 @@ class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
     ) should be(
       Seq("Resource organizations GET /organizations: Missing versions operation at path /organizations/versions")
     )
+  }
+
+  it("validates /versions resource not required when 'non-crud' attribute is present") {
+    linter.validate(
+      buildService(Seq(getNoVersions))
+    ) should be(Nil)
   }
 
   it("validates version path at root") {

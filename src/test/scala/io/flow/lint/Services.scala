@@ -132,7 +132,8 @@ object Services {
     path: String,
     parameters: Seq[Parameter] = Nil,
     responseCode: Int = 200,
-    responseType: String
+    responseType: String,
+    attributes: Seq[Attribute] = Nil
   ): Operation = {
     Operation(
       method = method,
@@ -140,7 +141,8 @@ object Services {
       parameters = parameters,
       responses = Seq(
         buildResponse(responseCode, responseType)
-      )
+      ),
+      attributes = attributes
     )
   }
 
