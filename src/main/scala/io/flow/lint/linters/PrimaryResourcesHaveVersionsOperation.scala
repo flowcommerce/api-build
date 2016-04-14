@@ -53,7 +53,13 @@ case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
           }
         }
         case false => {
-          Some(error(item.resource, item.operation, s"Missing versions operation at path $versionPath"))
+          /** If operation has attribute with name 'non-crud', no /versions route is required.
+            * The resource is most likely manipulating/aggregating data rather than CRUD
+            **/
+          if (item.operation.attributes.exists(_.name == "non-crud"))
+            Nil
+          else
+            Some(error(item.resource, item.operation, s"Missing versions operation at path $versionPath"))
         }
       }
     }

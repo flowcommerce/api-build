@@ -52,22 +52,29 @@ case object Get extends Linter with Helpers {
     */
   private[this] case class Sublinter(leadingParam: String, trailingParams: Seq[String]) {
 
-    val RequiredParameters = Seq(leadingParam) ++ trailingParams
-
     def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
       val expansions = model(service, operation).map { m =>
         Expansions.fromFieldTypes(m.fields.map(_.`type`))
       }.getOrElse(Nil)
 
+      val requiredParams =
+        /** If operation has attribute with name 'non-crud', no id parameter is required.
+          * The resource is most likely manipulating/aggregating data rather than CRUD
+          **/
+        if(operation.attributes.exists(_.name == "non-crud"))
+          trailingParams
+        else
+          Seq(leadingParam) ++ trailingParams
+
       val allRequiredParameters = expansions match {
-        case Nil => RequiredParameters
-        case _ => RequiredParameters ++ Seq(ExpandName)
+        case Nil => requiredParams
+        case _ => requiredParams ++ Seq(ExpandName)
       }
 
       val requiredErrors = queryParameters(operation).filter(p => p.required && p.default.isEmpty) match {
         case Nil => Nil
         case params => params.map { p =>
-          RequiredParameters.contains(p.name) match {
+          requiredParams.contains(p.name) match {
             case true => error(resource, operation, s"Parameter[${p.name}] must be optional")
             case false => error(resource, operation, s"Parameter[${p.name}] must be optional or must have a default")
           }
