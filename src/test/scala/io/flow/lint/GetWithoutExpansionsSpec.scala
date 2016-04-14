@@ -2,6 +2,7 @@ package io.flow.lint
 
 import com.bryzek.apidoc.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
+import play.api.libs.json.Json
 
 class GetWithoutExpansionsSpec extends FunSpec with Matchers {
 
@@ -70,7 +71,7 @@ class GetWithoutExpansionsSpec extends FunSpec with Matchers {
     )
   }
 
-  def buildResourceWithSearchAltSchemaResponse(params: Seq[Parameter]) = {
+  def buildResourceWithSearchNonCrud(params: Seq[Parameter]) = {
     Services.withHealthcheck(
       Services.Base.copy(
         resources = Seq(
@@ -84,7 +85,8 @@ class GetWithoutExpansionsSpec extends FunSpec with Matchers {
                 parameters = params,
                 responses = Seq(
                   Services.buildResponse(`type` = "[io.flow.organization.v0.models.organization]")
-                )
+                ),
+                attributes = Seq(Attribute("non-crud", Json.obj()))
               )
             )
           )
@@ -157,7 +159,7 @@ class GetWithoutExpansionsSpec extends FunSpec with Matchers {
 
   it("GET / validates id not required") {
     linter.validate(
-      buildResourceWithSearchAltSchemaResponse(
+      buildResourceWithSearchNonCrud(
         Seq(
           Parameter(
             name = "limit",

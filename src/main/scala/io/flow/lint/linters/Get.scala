@@ -185,7 +185,14 @@ case object Get extends Linter with Helpers {
       Seq(
         names.head == leadingParam match {
           case true => Nil
-          case false => Seq(error(resource, operation, s"Parameter[$leadingParam] must be the first parameter"))
+          case false =>
+            /** If operation has attribute with name 'non-crud', no id parameter is required.
+              * The resource is most likely manipulating/aggregating data rather than CRUD
+              **/
+            if(operation.attributes.exists(_.name == "non-crud"))
+              Nil
+            else
+              Seq(error(resource, operation, s"Parameter[$leadingParam] must be the first parameter"))
         },
         tail == expectedTail match {
           case true => {
