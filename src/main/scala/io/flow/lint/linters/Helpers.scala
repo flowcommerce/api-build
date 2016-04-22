@@ -45,7 +45,7 @@ trait Helpers {
   }
 
   def nonHealthcheckResources(service: Service): Seq[Resource] = {
-    service.resources.filter( _.plural != Healthcheck.Plural)
+    service.resources.filter( _.plural != "healthchecks")
   }
 
   def error(union: Union, error: String): String = {
