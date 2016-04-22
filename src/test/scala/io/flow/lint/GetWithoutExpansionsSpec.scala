@@ -49,20 +49,18 @@ class GetWithoutExpansionsSpec extends FunSpec with Matchers {
   )
 
   def buildResourceWithSearch(params: Seq[Parameter]) = {
-    Services.withHealthcheck(
-      Services.Base.copy(
-        resources = Seq(
-          Resource(
-            `type` = "organization",
-            plural = "organizations",
-            operations = Seq(
-              Operation(
-                method = Method.Get,
-                path = "/organizations",
-                parameters = params,
-                responses = Seq(
-                  Services.buildResponse(`type` = "[organization]")
-                )
+    Services.Base.copy(
+      resources = Seq(
+        Resource(
+          `type` = "organization",
+          plural = "organizations",
+          operations = Seq(
+            Operation(
+              method = Method.Get,
+              path = "/organizations",
+              parameters = params,
+              responses = Seq(
+                Services.buildResponse(`type` = "[organization]")
               )
             )
           )
@@ -72,22 +70,20 @@ class GetWithoutExpansionsSpec extends FunSpec with Matchers {
   }
 
   def buildResourceWithSearchNonCrud(params: Seq[Parameter]) = {
-    Services.withHealthcheck(
-      Services.Base.copy(
-        resources = Seq(
-          Resource(
-            `type` = "organization",
-            plural = "organizations",
-            operations = Seq(
-              Operation(
-                method = Method.Get,
-                path = "/organizations",
-                parameters = params,
-                responses = Seq(
-                  Services.buildResponse(`type` = "[io.flow.organization.v0.models.organization]")
-                ),
-                attributes = Seq(Attribute("non-crud", Json.obj()))
-              )
+    Services.Base.copy(
+      resources = Seq(
+        Resource(
+          `type` = "organization",
+          plural = "organizations",
+          operations = Seq(
+            Operation(
+              method = Method.Get,
+              path = "/organizations",
+              parameters = params,
+              responses = Seq(
+                Services.buildResponse(`type` = "[io.flow.organization.v0.models.organization]")
+              ),
+              attributes = Seq(Attribute("non-crud", Json.obj()))
             )
           )
         )

@@ -20,15 +20,6 @@ object Services {
     info = Info()
   )
 
-  lazy val HealthcheckResource = buildSimpleResource(
-    `type` = "io.flow.common.v0.models.healthcheck",
-    plural = "healthchecks",
-    method = Method.Get,
-    path = "/_internal_/healthcheck",
-    responseCode = 200,
-    responseType = "io.flow.common.v0.models.healthcheck"
-  )
-
   def buildUnion(
     name: String,
     discriminator: Option[String] = None,
@@ -153,11 +144,5 @@ object Services {
     code = ResponseCodeInt(code),
     `type` = `type`
   )
-
-  def withHealthcheck(service: Service): Service = {
-    service.copy(
-      resources = service.resources ++ Seq(HealthcheckResource)
-    )
-  }
 
 }

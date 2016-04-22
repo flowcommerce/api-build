@@ -20,26 +20,24 @@ class GetQuerySpec extends FunSpec with Matchers {
   )
 
   def buildResourceWithSearch(params: Seq[Parameter]) = {
-      Services.withHealthcheck(
-        Services.Base.copy(
-          resources = Seq(
-            Resource(
-              `type` = "organization",
-              plural = "organizations",
-              operations = Seq(
-                Operation(
-                  method = Method.Get,
-                  path = "/organizations",
-                  parameters = params,
-                  responses = Seq(
-                    Services.buildResponse(`type` = "[organization]")
-                  )
-                )
+    Services.Base.copy(
+      resources = Seq(
+        Resource(
+          `type` = "organization",
+          plural = "organizations",
+          operations = Seq(
+            Operation(
+              method = Method.Get,
+              path = "/organizations",
+              parameters = params,
+              responses = Seq(
+                Services.buildResponse(`type` = "[organization]")
               )
             )
           )
         )
       )
+    )
   }
 
   it("GET / validates 'q' must be optional") {
