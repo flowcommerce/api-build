@@ -16,6 +16,11 @@ case object MinimumMaximum extends Linter with Helpers {
 
   val GlobalMax = 100
 
+  // Since country code is variable depending on ISO code used,
+  // the max must AT LEAST be set to 2,
+  // but can then be of any variable length
+  val CountryMaxMin = 2
+
   val CurrencyMax = 3
 
   override def validate(service: Service): Seq[String] = {
@@ -58,21 +63,24 @@ case object MinimumMaximum extends Linter with Helpers {
 
     val maxErrors = field.maximum match {
       case None => Nil
-      case Some(max) => {
-        field.name == CurrencyField match {
-          case true => {
-            max == CurrencyMax match {
-              case true => Nil
-              case false => Seq(error(model, field, s"Maximum must be $CurrencyMax and not $max"))
-            }
+      case Some(max) =>  field.name match {
+        case c if c.contains(CountryField) =>
+          max >= 2 match {
+            case true => Nil
+            case false => Seq(error(model, field, s"Maximum must be at least $CountryMaxMin and not $max"))
           }
-          case false => {
-            max == GlobalMax match {
-              case true => Nil
-              case false => Seq(error(model, field, s"Maximum must be $GlobalMax and not $max"))
-            }
+
+        case CurrencyField =>
+          max == CurrencyMax match {
+            case true => Nil
+            case false => Seq(error(model, field, s"Maximum must be $CurrencyMax and not $max"))
           }
-        }
+
+        case _ =>
+          max == GlobalMax match {
+            case true => Nil
+            case false => Seq(error(model, field, s"Maximum must be $GlobalMax and not $max"))
+          }
       }
     }
 

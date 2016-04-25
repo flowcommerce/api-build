@@ -7,6 +7,7 @@ trait Helpers {
 
   val ExpandName = "expand"
 
+  val CountryField = "country"
   val CurrencyField = "currency"
 
   /**
