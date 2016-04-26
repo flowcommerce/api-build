@@ -137,6 +137,15 @@ object Services {
     )
   }
 
+  def buildParameter(
+    name: String = "q"
+  ) = Parameter(
+    name = name,
+    `type` = "string",
+    location = ParameterLocation.Query,
+    required = false
+  )
+  
   def buildResponse(
     code: Int = 200,
     `type`: String
