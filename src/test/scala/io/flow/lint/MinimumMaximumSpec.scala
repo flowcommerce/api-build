@@ -98,6 +98,10 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
     linter.validate(buildServiceWithModel(modelName = "country", fieldName = "country", maximum = Some(3))) should be(Nil)
   }
 
+  it("Model w/ origin max of 3 is fine") {
+    linter.validate(buildServiceWithModel(modelName = "country", fieldName = "origin", maximum = Some(3))) should be(Nil)
+  }
+
   it("Model w/ country max of 5 fails") {
     linter.validate(buildServiceWithModel(modelName = "country", fieldName = "country", maximum = Some(5))) should be(Seq("Model country Field[country]: Maximum must be 3 and not 5"))
   }
