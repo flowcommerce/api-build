@@ -7,8 +7,30 @@ trait Helpers {
 
   val ExpandName = "expand"
 
-  val CountryField = "country"
-  val CurrencyField = "currency"
+  private val CountryFields = Seq("country", "origin")
+  private val CurrencyFields = Seq("currency")
+  private val LanguageFields = Seq("language")
+
+  def isCountry(name: String): Boolean = {
+    CountryFields.find(name.contains(_)) match {
+      case None => false
+      case Some(_) => true
+    }
+  }
+
+  def isCurrency(name: String): Boolean = {
+    CurrencyFields.find(name.contains(_)) match {
+      case None => false
+      case Some(_) => true
+    }
+  }
+
+  def isLanguage(name: String): Boolean = {
+    LanguageFields.find(name.contains(_)) match {
+      case None => false
+      case Some(_) => true
+    }
+  }
 
   /**
     * Returns the model for this resource. Right now only will resolve
