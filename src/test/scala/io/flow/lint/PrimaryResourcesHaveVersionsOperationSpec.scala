@@ -8,6 +8,19 @@ class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
 
   val linter = linters.PrimaryResourcesHaveVersionsOperation
 
+  def buildReferenceService(operations: Seq[Operation]): Service = {
+    Services.Base.copy(
+      name = "reference",
+      resources = Seq(
+        Services.buildResource(
+          `type` = "organization",
+          plural = "organizations",
+          operations = operations
+        )
+      )
+    )
+  }
+
   def buildService(operations: Seq[Operation]): Service = {
     Services.Base.copy(
       resources = Seq(
@@ -30,6 +43,13 @@ class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
     responseType = "[organization]",
     attributes = Seq(Attribute("non-crud", Json.obj()))
   )
+
+  it("validates /versions resource not required servince name is referenece") {
+    println("=====================================")
+    linter.validate(
+      buildReferenceService(Seq(get))
+    ) should be(Nil)
+  }
 
   it("valid resource is left alone") {
     linter.validate(
