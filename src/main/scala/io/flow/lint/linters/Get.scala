@@ -15,6 +15,8 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   */
 case object Get extends Linter with Helpers {
 
+  private[this] val ExcludedApplications = Seq("location")
+
   private[this] val Primary = Sublinter(
     leadingParam = "id",
     trailingParams = Seq("limit", "offset", "sort")
@@ -26,7 +28,10 @@ case object Get extends Linter with Helpers {
   )
 
   override def validate(service: Service): Seq[String] = {
-    nonHealthcheckResources(service).map(validateResource(service, _)).flatten
+    ExcludedApplications.contains(service.name.toLowerCase) match {
+      case true => Nil
+      case false => nonHealthcheckResources(service).map(validateResource(service, _)).flatten
+    }
   }
 
   def validateResource(service: Service, resource: Resource): Seq[String] = {

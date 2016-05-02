@@ -13,17 +13,22 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   */
 case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
 
+  // hack for now
+  private[this] val ExcludedApplications = Seq("location", "reference")
+
   private[this] case class Data(
     resource: Resource,
     operation: Operation
   )
 
   override def validate(service: Service): Seq[String] = {
-    // hack for now
-    if (service.name == "reference") {
-      return Nil
+    ExcludedApplications.contains(service.name.toLowerCase) match {
+      case true => Nil
+      case false => doValidate(service)
     }
+  }
 
+  private[this] def doValidate(service: Service): Seq[String] = {
     val data: Seq[Data] = nonHealthcheckResources(service).flatMap { resource =>
       resource.operations.
         filter(_.method == Method.Get).
