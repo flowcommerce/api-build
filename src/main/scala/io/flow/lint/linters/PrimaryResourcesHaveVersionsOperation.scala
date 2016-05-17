@@ -14,7 +14,7 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
 case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
 
   // hack for now
-  private[this] val ExcludedApplications = Seq("location", "reference")
+  private[this] val ExcludedApplications = Seq("location", "reference", "search")
 
   private[this] case class Data(
     resource: Resource,
