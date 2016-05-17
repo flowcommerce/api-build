@@ -15,7 +15,7 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   */
 case object Get extends Linter with Helpers {
 
-  private[this] val ExcludedApplications = Seq("location")
+  private[this] val ExcludedApplications = Seq("location", "search")
 
   private[this] val Primary = Sublinter(
     leadingParam = "id",
