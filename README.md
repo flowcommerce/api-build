@@ -1,6 +1,4 @@
-[![Build Status](https://travis-ci.org/flowcommerce/api-lint.svg?branch=master](https://travis-ci.org/flowcommerce/api-lint)
-
-[![Build Status](https://travis-ci.com/flowcommerce/view.svg?token=oUHWHo5vY3ztBcmpWd4d&branch=master)](https://travis-ci.com/flowcommerce/view)
+[![Build Status](https://travis-ci.org/flowcommerce/api-lint.png?branch=master](https://travis-ci.org/flowcommerce/api-lint)
 
 # api-lint
 Runs a set of tests against an API defined in apidoc to ensure consistency
