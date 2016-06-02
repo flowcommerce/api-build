@@ -6,6 +6,12 @@ import play.api.libs.json.{Json, JsString}
 private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(services: Seq[Service]) {
+
+  private[this] val defaultFieldDescriptions = Map(
+    "id" -> "Globally unique identifier",
+    "number" -> "Client's unique identifier for this object"
+  )
+
   private[this] val canonical = services.find(_.name == "common").getOrElse {
     services.headOption.getOrElse {
       sys.error("Must have at least one service")
@@ -81,7 +87,13 @@ case class OneApi(services: Seq[Service]) {
 
   def localize(service: Service, field: Field): Field = {
     field.copy(
-      `type` = localizeType(field.`type`)
+      `type` = localizeType(field.`type`),
+      description = (
+        field.description match {
+          case Some(d) => Some(d)
+          case None => defaultFieldDescriptions.get(field.name)
+        }
+      )
     )
   }
 
