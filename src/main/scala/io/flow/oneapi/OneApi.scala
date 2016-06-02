@@ -6,9 +6,10 @@ import play.api.libs.json.{Json, JsString}
 private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(services: Seq[Service]) {
-
-  private[this] val common = services.find(_.name == "common").getOrElse {
-    sys.error("Must have a service named common")
+  private[this] val canonical = services.find(_.name == "common").getOrElse {
+    services.headOption.getOrElse {
+      sys.error("Must have at least one service")
+    }
   }
 
   def process(): Either[Seq[String], Service] = {
@@ -26,17 +27,17 @@ case class OneApi(services: Seq[Service]) {
   }
 
   def buildOneApi() = Service(
-    apidoc = common.apidoc,
+    apidoc = canonical.apidoc,
     name = "Flow Commerce API",
-    organization = common.organization,
+    organization = canonical.organization,
     application = Application(
       key = "api"
     ),
-    namespace = "io.flow.v" + majorVersion(common.version),
-    version = common.version,
-    baseUrl = common.baseUrl,
-    description = common.description,
-    info = common.info,
+    namespace = "io.flow.v" + majorVersion(canonical.version),
+    version = canonical.version,
+    baseUrl = canonical.baseUrl,
+    description = canonical.description,
+    info = canonical.info,
     headers = Nil,
     imports = Nil,
     attributes = Nil,
