@@ -37,9 +37,9 @@ case class OneApi(services: Seq[Service]) {
     info = common.info,
     headers = Nil,
     imports = Nil,
-    enums = services.flatMap(_.enums.map(localTypes(_))),
-    models = services.flatMap(_.models.map(localTypes(_))),
-    unions = services.flatMap(_.unions),
+    enums = services.flatMap(_.enums.map(localize(_))),
+    models = services.flatMap(_.models.map(localize(_))),
+    unions = services.flatMap(_.unions.map(localize(_))),
     resources = Nil,
     attributes = Nil
   )
@@ -50,27 +50,36 @@ case class OneApi(services: Seq[Service]) {
     }.toInt
   }
 
-  def localTypes(enum: Enum): Enum = {
+  def localize(enum: Enum): Enum = {
     enum
   }
 
-  def localTypes(model: Model): Model = {
+  def localize(model: Model): Model = {
     model.copy(
-      fields = model.fields.map(localTypes(_))
+      fields = model.fields.map(localize(_))
     )
   }
 
-  def localTypes(field: Field): Field = {
+  def localize(field: Field): Field = {
     field.copy(
-      `type` = localType(field.`type`)
+      `type` = localizeType(field.`type`)
     )
   }
 
-  def localType(name: String): String = {
-    //name.startsWith("io.flow") match {
+  def localize(union: Union): Union = {
+    union.copy(
+      types = union.types.map(localize(_))
+    )
+  }
 
-    //}
-    name
+  def localize(ut: UnionType): UnionType = {
+    ut.copy(
+      `type` = localizeType(ut.`type`)
+    )
+  }
+
+  def localizeType(name: String): String = {
+    name.split("\\.").last
   }
 
   def validatePaths(): Seq[String] = {
