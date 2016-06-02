@@ -38,7 +38,7 @@ object Main extends App {
 
         import scala.concurrent.ExecutionContext.Implicits.global
 
-        Specs.foreach { name =>
+        val services = Specs.flatMap { name =>
           val configOption = name.split("/").map(_.trim).toList match {
             case org :: app :: Nil => Some(Config(org, app, "latest"))
             case _ => {
@@ -49,7 +49,7 @@ object Main extends App {
             }
           }
 
-          val services = configOption.map { config =>
+          configOption.map { config =>
             println("")
             println(s"$name")
             print(s"  Downloading...")
@@ -65,28 +65,28 @@ object Main extends App {
               }
             }
           }
+        }
 
-          errors.toList match {
-            case Nil => {
-              services.flatten.toList match {
-                case Nil => {
-                  addError("At least one service must be specified")
-                }
-                case svcs => {
-                  OneApi(svcs).process match {
-                    case Left(errs) => {
-                      errs.foreach { addError(_) }
-                    }
-                    case Right(service) => {
-                      println("Done")
-                    }
+        errors.toList match {
+          case Nil => {
+            services.flatten.toList match {
+              case Nil => {
+                addError("At least one service must be specified")
+              }
+              case svcs => {
+                OneApi(svcs).process match {
+                  case Left(errs) => {
+                    errs.foreach { addError(_) }
+                  }
+                  case Right(service) => {
+                    println("Done")
                   }
                 }
               }
             }
-            case _ => {
-              // handled below
-            }
+          }
+          case _ => {
+            // handled below
           }
         }
       }
