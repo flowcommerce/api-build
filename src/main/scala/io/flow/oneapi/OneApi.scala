@@ -1,12 +1,13 @@
 package io.flow.oneapi
 
-import com.bryzek.apidoc.spec.v0.models.{Method, Service}
+import com.bryzek.apidoc.spec.v0.models.{Application, Method, Service}
 
 case class ContextualValue(context: String, value: String)
 
 case class OneApi(services: Seq[Service]) {
-
-  println(s"One Api: " + services.map(_.name))
+  private[this] val common = services.find(_.name == "common").getOrElse {
+    sys.error("Must have a service named common")
+  }
 
   def process(): Either[Seq[String], Service] = {
     val pathErrors = validatePaths()
@@ -14,13 +15,34 @@ case class OneApi(services: Seq[Service]) {
 
     (pathErrors ++ duplicateRecordErrors).toList match {
       case Nil => {
-        Left(Seq("TODO: Finish"))
+        Right(buildOneApi())
       }
       case errors => {
         Left(errors)
       }
     }
   }
+
+  def buildOneApi() = Service(
+    apidoc = common.apidoc,
+    name = "Flow Commerce API",
+    organization = common.organization,
+    application = Application(
+      key = "api"
+    ),
+    namespace = common.namespace,
+    version = common.version,
+    baseUrl = common.baseUrl,
+    description = common.description,
+    info = common.info,
+    headers = Nil,
+    imports = Nil,
+    enums = services.flatMap(_.enums),
+    models = services.flatMap(_.models),
+    unions = services.flatMap(_.unions),
+    resources = Nil,
+    attributes = Nil
+  )
 
   def validatePaths(): Seq[String] = {
     val allPaths: Seq[ContextualValue] = services.flatMap { s =>

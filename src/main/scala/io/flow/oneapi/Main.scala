@@ -4,9 +4,13 @@ import io.flow.lint.{ApidocConfig, Config, Downloader}
 
 object Main extends App {
 
-  val Specs = Seq(
+  val SpecsAll = Seq(
     "flow/catalog-event", "flow/common", "flow/experience", "flow/location", "flow/reference", "flow/tracking",
     "flow/catalog", "flow/delivery_window", "flow/fulfillment", "flow/organization", "flow/search", "flow/user"
+  )
+
+  val Specs = Seq(
+    "flow/catalog-event", "flow/common", "flow/user"
   )
 
   private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
@@ -85,7 +89,14 @@ object Main extends App {
                     errs.foreach { addError(_) }
                   }
                   case Right(service) => {
+                    import com.bryzek.apidoc.spec.v0.models.json._
+                    import play.api.libs.json._
+
                     println("Done")
+
+                    val path = "/tmp/flow-api.json"
+                    new java.io.PrintWriter(path) { write(Json.prettyPrint(Json.toJson(service))); close }
+                    println(s"See: $path")
                   }
                 }
               }
