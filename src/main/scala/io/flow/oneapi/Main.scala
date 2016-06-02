@@ -4,7 +4,7 @@ import io.flow.lint.{ApidocConfig, Config, Downloader}
 
 object Main extends App {
 
-  val Specs = Seq("flow/common", "flow/user")
+  val Specs = Seq("flow/common", "flow/organization", "flow/catalog", "flow/user")
 
   private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
   private[this] val GlobalError = "Global"
@@ -56,11 +56,13 @@ object Main extends App {
 
             dl.service(config.organization, config.application, config.version) match {
               case Left(error) => {
+                print(s" error\n")
                 addError(config.organization, config.application, error)
                 None
               }
 
               case Right(service) => {
+                print(s" done\n")
                 Some(service)
               }
             }
@@ -74,6 +76,7 @@ object Main extends App {
                 addError("At least one service must be specified")
               }
               case svcs => {
+                println("")
                 OneApi(svcs).process match {
                   case Left(errs) => {
                     errs.foreach { addError(_) }
