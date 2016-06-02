@@ -1,8 +1,6 @@
-package io.flow.lint
+package io.flow.build
 
 import scala.util.{Failure, Success, Try}
-
-case class Config(organization: String, application: String, version: String)
 
 case class ApidocProfile(name: String, baseUrl: String, token: Option[String] = None)
 

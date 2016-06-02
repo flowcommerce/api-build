@@ -1,4 +1,4 @@
-package io.flow.lint
+package io.flow.build
 
 import com.bryzek.apidoc.spec.v0.models.Service
 import scala.util.{Failure, Success, Try}
@@ -9,6 +9,8 @@ import scala.concurrent.duration.Duration
   * Utility to download service.json files from apidoc
   */
 case class Downloader(config: ApidocProfile) {
+
+println("CREATED DOWNLOADER")
 
   private[this] val client = {
     new com.bryzek.apidoc.api.v0.Client(
@@ -60,11 +62,11 @@ case class Downloader(config: ApidocProfile) {
 object Downloader {
 
   def withClient(
-    config: ApidocProfile
+    profile: ApidocProfile
   ) (
     f: Downloader => Unit
   ) {
-    val downloader = Downloader(config)
+    val downloader = Downloader(profile)
     try {
       f(downloader)
     } finally {
@@ -73,7 +75,3 @@ object Downloader {
   }
 
 }
-
-
-
-

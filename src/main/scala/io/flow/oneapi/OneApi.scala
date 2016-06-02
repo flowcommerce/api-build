@@ -9,7 +9,14 @@ case class OneApi(services: Seq[Service]) {
 
   private[this] val DefaultFieldDescriptions = Map(
     "id" -> "Globally unique identifier",
-    "number" -> "Client's unique identifier for this object"
+    "number" -> "Client's unique identifier for this object",
+    "organization" -> "Refers to your organization's account identifier"
+  )
+
+  private[this] val DefaultParameterDescriptions = Map(
+    "id" -> "Filter by one or more IDs of this resource",
+    "limit" -> "The maximum number of results to return",
+    "offset" -> "The number of results to skip before returning results"
   )
 
   private[this] val DefaultResponseDescriptions = Map(
@@ -186,7 +193,13 @@ case class OneApi(services: Seq[Service]) {
 
   def localize(service: Service, param: Parameter): Parameter = {
     param.copy(
-      `type` = localizeType(param.`type`)
+      `type` = localizeType(param.`type`),
+      description = (
+        param.description match {
+          case Some(d) => Some(d)
+          case None => DefaultParameterDescriptions.get(param.name)
+        }
+      )
     )
   }
 
