@@ -7,9 +7,18 @@ private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(services: Seq[Service]) {
 
-  private[this] val defaultFieldDescriptions = Map(
+  private[this] val DefaultFieldDescriptions = Map(
     "id" -> "Globally unique identifier",
     "number" -> "Client's unique identifier for this object"
+  )
+
+  private[this] val DefaultResponseDescriptions = Map(
+    "200" -> "Successful response",
+    "201" -> "Operation succeeded and the resource was created",
+    "204" -> "Operation succeeded. No content is returned",
+    "401" -> "Authorization failed.",
+    "404" -> "Resource was not found",
+    "422" -> "One or more errors were found with the data sent in the request. The body of the response contains specific details on what data failed validation."
   )
 
   private[this] val canonical = services.find(_.name == "common").getOrElse {
@@ -34,7 +43,7 @@ case class OneApi(services: Seq[Service]) {
 
   def buildOneApi() = Service(
     apidoc = canonical.apidoc,
-    name = "Flow Commerce API",
+    name = "API",
     organization = canonical.organization,
     application = Application(
       key = "api"
@@ -91,7 +100,7 @@ case class OneApi(services: Seq[Service]) {
       description = (
         field.description match {
           case Some(d) => Some(d)
-          case None => defaultFieldDescriptions.get(field.name)
+          case None => DefaultFieldDescriptions.get(field.name)
         }
       )
     )
@@ -183,10 +192,23 @@ case class OneApi(services: Seq[Service]) {
 
   def localize(service: Service, response: Response): Response = {
     response.copy(
-      `type` = localizeType(response.`type`)
+      `type` = localizeType(response.`type`),
+      description = (
+        response.description match {
+          case Some(d) => Some(d)
+          case None => DefaultResponseDescriptions.get(responseCodeToString(response.code))
+        }
+      )
     )
   }
-  
+
+  def responseCodeToString(code: ResponseCode): String = {
+    code match {
+      case ResponseCodeInt(code) => code.toString
+      case ResponseCodeOption.Default | ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => "*"
+    }
+  }
+
   def localizeType(name: String): String = {
     TextDatatype.toString(TextDatatype.parse(name))
   }
