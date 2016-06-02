@@ -4,7 +4,10 @@ import io.flow.lint.{ApidocConfig, Config, Downloader}
 
 object Main extends App {
 
-  val Specs = Seq("flow/common", "flow/organization", "flow/catalog", "flow/user")
+  val Specs = Seq(
+    "flow/catalog-event", "flow/common", "flow/experience", "flow/location", "flow/reference", "flow/tracking",
+    "flow/catalog", "flow/delivery_window", "flow/fulfillment", "flow/organization", "flow/search", "flow/user"
+  )
 
   private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
   private[this] val GlobalError = "Global"
