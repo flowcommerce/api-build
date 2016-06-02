@@ -3,9 +3,9 @@ package io.flow.oneapi
 import com.bryzek.apidoc.spec.v0.models._
 import play.api.libs.json.{Json, JsString}
 
-case class ContextualValue(context: String, value: String)
-
 case class OneApi(services: Seq[Service]) {
+
+  private[this] case class ContextualValue(context: String, value: String)
 
   private[this] val common = services.find(_.name == "common").getOrElse {
     sys.error("Must have a service named common")
