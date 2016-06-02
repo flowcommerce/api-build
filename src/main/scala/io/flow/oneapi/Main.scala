@@ -1,14 +1,22 @@
-package io.flow.lint
+package io.flow.oneapi
+
+import io.flow.lint.{ApidocConfig, Config, Downloader}
 
 object Main extends App {
 
-  private[this] val linter = Lint()
+  val Specs = Seq("flow/common", "flow/user")
+
   private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
+  private[this] val GlobalError = "Global"
 
   private[this] def addError(organization: String, application: String, error: String) {
     addError(s"$organization/$application", error)
   }
 
+  private[this] def addError(message: String) {
+    addError(GlobalError, message)
+  }
+  
   private[this] def addError(key: String, error: String) {
     errors.get(key) match {
       case None => {
@@ -19,18 +27,20 @@ object Main extends App {
       }
     }
   }
-
+  
   ApidocConfig.load() match {
-    case Left(error) => println(s"** Error loading apidoc config: $error")
+    case Left(error) => {
+      println(s"** Error loading apidoc config: $error")
+    }
+
     case Right(config) => {
       Downloader.withClient(config) { dl =>
 
         import scala.concurrent.ExecutionContext.Implicits.global
 
-        args.foreach { name =>
+        Specs.foreach { name =>
           val configOption = name.split("/").map(_.trim).toList match {
             case org :: app :: Nil => Some(Config(org, app, "latest"))
-            case org :: app :: version :: Nil => Some(Config(org, app, version))
             case _ => {
               val msg = s"Invalid name[$name] - expected organization/application (e.g. flow/user)"
               addError("arguments", msg)
@@ -39,31 +49,43 @@ object Main extends App {
             }
           }
 
-          configOption.map { config =>
+          val services = configOption.map { config =>
             println("")
             println(s"$name")
             print(s"  Downloading...")
+
             dl.service(config.organization, config.application, config.version) match {
               case Left(error) => {
                 addError(config.organization, config.application, error)
-                println("\n  ** ERROR: " + error)
+                None
               }
+
               case Right(service) => {
-                print("  Done\n  Starting Linter... ")
-                linter.validate(service) match {
-                case Nil => println("\n  Valid!")
-                  case errors => {
-                    errors.size match {
-                      case 1 => println(" 1 error:")
-                      case n => println(s" $n errors:")
+                Some(service)
+              }
+            }
+          }
+
+          errors.toList match {
+            case Nil => {
+              services.flatten.toList match {
+                case Nil => {
+                  addError("At least one service must be specified")
+                }
+                case svcs => {
+                  OneApi(svcs).process match {
+                    case Left(errs) => {
+                      errs.foreach { addError(_) }
                     }
-                    errors.sorted.foreach { error =>
-                      addError(config.organization, config.application, error)
-                      println(s"    - $error")
+                    case Right(service) => {
+                      println("Done")
                     }
                   }
                 }
               }
+            }
+            case _ => {
+              // handled below
             }
           }
         }
