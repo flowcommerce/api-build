@@ -1,7 +1,7 @@
 package io.flow.oneapi
 
 import com.bryzek.apidoc.spec.v0.models._
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, JsString}
 
 case class ContextualValue(context: String, value: String)
 
@@ -10,27 +10,6 @@ case class OneApi(services: Seq[Service]) {
   private[this] val common = services.find(_.name == "common").getOrElse {
     sys.error("Must have a service named common")
   }
-
-  private[this] val General = "general"
-  private[this] val Localization = "localization"
-  private[this] val Logistics = "logistics"
-
-  private[this] val modules = Map(
-    "catalog" -> Localization,
-    "experience" -> Localization,
-    "" -> "landed cost",
-    "" -> "pricing",
-    "" -> "payments",
-    "fulfillment" -> Logistics,
-    "delivery_window" -> Logistics,
-    "tracking" -> Logistics,
-    "" -> "customer service",
-    "location" -> General,
-    "reference" -> General,
-    "organization" -> General,
-    "search" -> General,
-    "user" -> General
-  )
 
   def process(): Either[Seq[String], Service] = {
     val pathErrors = validatePaths()
@@ -60,19 +39,23 @@ case class OneApi(services: Seq[Service]) {
     info = common.info,
     headers = Nil,
     imports = Nil,
+    attributes = Nil,
+
     enums = services.flatMap { s =>
       s.enums.map(localize(s, _))
-    },
+    }.sortWith { _.name.toLowerCase < _.name.toLowerCase },
+
     models = services.flatMap { s =>
       s.models.map(localize(s, _))
-    },
+    }.sortWith { _.name.toLowerCase < _.name.toLowerCase },
+
     unions = services.flatMap { s =>
       s.unions.map(localize(s, _))
-    },
+    }.sortWith { _.name.toLowerCase < _.name.toLowerCase },
+
     resources = services.flatMap { s =>
       s.resources.map(localize(s, _))
-    },
-    attributes = Nil
+    }.sortWith { resourceSortKey(_) < resourceSortKey(_) }
   )
 
   def majorVersion(version: String): Int = {
@@ -109,26 +92,79 @@ case class OneApi(services: Seq[Service]) {
     )
   }
 
+  def resourceSortKey(resource: Resource) = {
+    val docs = resource.attributes.find(_.name == "docs").getOrElse {
+      sys.error("Resource is missing the 'docs' attribute")
+    }
+    val moduleName = (docs.value \ "module").as[JsString].value
+
+    Seq(
+      (10000 + Module.moduleSortIndex(moduleName)),
+      resource.`type`.toLowerCase
+    ).mkString(":")
+  }
+
   def localize(service: Service, resource: Resource): Resource = {
-    println(resource)
-    val moduleName = modules.get(service.name.toLowerCase).getOrElse {
-      println("** WARNING ** Service[${service.name}] is not mapped to a module. Using $General")
-      General  
+    val module = Module.findByServiceName(service.name.toLowerCase).getOrElse {
+      println(s"** WARNING ** Service[${service.name}] is not mapped to a module. Using ${Module.General.name}")
+      Module.General
     }
 
     resource.copy(
       `type` = localizeType(resource.`type`),
+      operations = resource.operations.map { localize(service, _) }.sortBy { op => (op.path.toLowerCase, methodSortOrder(op.method)) },
       attributes = resource.attributes ++ Seq(
         Attribute(
           name = "docs",
           value = Json.obj(
-            "module" -> moduleName
+            "module" -> module.name
           )
         )
       )
     )
   }
 
+  def methodSortOrder(method: Method): Int = {
+    method match {
+      case Method.Get => 1
+      case Method.Post => 2
+      case Method.Put => 3
+      case Method.Patch => 4
+      case Method.Delete => 5
+      case Method.Connect => 6
+      case Method.Head => 7
+      case Method.Options => 8
+      case Method.Trace => 9
+      case Method.UNDEFINED(_) => 10
+    }
+  }
+
+  def localize(service: Service, op: Operation): Operation = {
+    op.copy(
+      body = op.body.map(localize(service, _)),
+      parameters = op.parameters.map(localize(service, _)),
+      responses = op.responses.map(localize(service, _))
+    )
+  }
+
+  def localize(service: Service, body: Body): Body = {
+    body.copy(
+      `type` = localizeType(body.`type`)
+    )
+  }
+
+  def localize(service: Service, param: Parameter): Parameter = {
+    param.copy(
+      `type` = localizeType(param.`type`)
+    )
+  }
+
+  def localize(service: Service, response: Response): Response = {
+    response.copy(
+      `type` = localizeType(response.`type`)
+    )
+  }
+  
   def localizeType(name: String): String = {
     name.split("\\.").last
   }
