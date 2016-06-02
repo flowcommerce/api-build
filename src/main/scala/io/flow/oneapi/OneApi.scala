@@ -176,7 +176,7 @@ case class OneApi(services: Seq[Service]) {
   }
   
   def localizeType(name: String): String = {
-    name.split("\\.").last
+    TextDatatype.toString(TextDatatype.parse(name))
   }
 
   def validatePaths(): Seq[String] = {
