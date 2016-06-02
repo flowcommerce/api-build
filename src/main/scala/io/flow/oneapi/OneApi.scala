@@ -58,6 +58,10 @@ case class OneApi(services: Seq[Service]) {
     }.sortWith { resourceSortKey(_) < resourceSortKey(_) }
   )
 
+  /**
+    * Given a string version number in semver, e.g. 1.2.3, returns the
+    * major version number as an integer (e.g. 1)
+    */
   def majorVersion(version: String): Int = {
     version.split("\\.").headOption.getOrElse {
       sys.error(s"Version[$version] must be in semver")
