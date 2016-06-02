@@ -44,15 +44,15 @@ case class OneApi(services: Seq[Service]) {
 
     enums = services.flatMap { s =>
       s.enums.map(localize(s, _))
-    }.sortWith { _.name.toLowerCase < _.name.toLowerCase },
+    }.sortWith { _.name.toLowerCase },
 
     models = services.flatMap { s =>
       s.models.map(localize(s, _))
-    }.sortWith { _.name.toLowerCase < _.name.toLowerCase },
+    }.sortWith { _.name.toLowerCase },
 
     unions = services.flatMap { s =>
       s.unions.map(localize(s, _))
-    }.sortWith { _.name.toLowerCase < _.name.toLowerCase },
+    }.sortWith { _.name.toLowerCase },
 
     resources = services.flatMap { s =>
       s.resources.map(localize(s, _))
