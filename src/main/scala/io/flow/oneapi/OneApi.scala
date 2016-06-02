@@ -124,6 +124,11 @@ case class OneApi(services: Seq[Service]) {
     )
   }
 
+  /**
+    * Returns a numeric index by which we can sort methods. This
+    * allows us to present, for example, all operations with a GET
+    * Method first.
+    */
   def methodSortOrder(method: Method): Int = {
     method match {
       case Method.Get => 1
