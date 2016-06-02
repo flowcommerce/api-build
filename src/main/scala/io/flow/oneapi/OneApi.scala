@@ -1,6 +1,6 @@
 package io.flow.oneapi
 
-import com.bryzek.apidoc.spec.v0.models.{Application, Method, Service}
+import com.bryzek.apidoc.spec.v0.models._
 
 case class ContextualValue(context: String, value: String)
 
@@ -30,19 +30,48 @@ case class OneApi(services: Seq[Service]) {
     application = Application(
       key = "api"
     ),
-    namespace = common.namespace,
+    namespace = "io.flow.v" + majorVersion(common.version),
     version = common.version,
     baseUrl = common.baseUrl,
     description = common.description,
     info = common.info,
     headers = Nil,
     imports = Nil,
-    enums = services.flatMap(_.enums),
-    models = services.flatMap(_.models),
+    enums = services.flatMap(_.enums.map(localTypes(_))),
+    models = services.flatMap(_.models.map(localTypes(_))),
     unions = services.flatMap(_.unions),
     resources = Nil,
     attributes = Nil
   )
+
+  def majorVersion(version: String): Int = {
+    version.split("\\.").headOption.getOrElse {
+      sys.error(s"Version[$version] must be in semver")
+    }.toInt
+  }
+
+  def localTypes(enum: Enum): Enum = {
+    enum
+  }
+
+  def localTypes(model: Model): Model = {
+    model.copy(
+      fields = model.fields.map(localTypes(_))
+    )
+  }
+
+  def localTypes(field: Field): Field = {
+    field.copy(
+      `type` = localType(field.`type`)
+    )
+  }
+
+  def localType(name: String): String = {
+    //name.startsWith("io.flow") match {
+
+    //}
+    name
+  }
 
   def validatePaths(): Seq[String] = {
     val allPaths: Seq[ContextualValue] = services.flatMap { s =>

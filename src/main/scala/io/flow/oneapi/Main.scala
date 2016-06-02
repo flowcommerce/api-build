@@ -4,12 +4,12 @@ import io.flow.lint.{ApidocConfig, Config, Downloader}
 
 object Main extends App {
 
-  val SpecsAll = Seq(
+  val Specs = Seq(
     "flow/catalog-event", "flow/common", "flow/experience", "flow/location", "flow/reference", "flow/tracking",
     "flow/catalog", "flow/delivery_window", "flow/fulfillment", "flow/organization", "flow/search", "flow/user"
   )
 
-  val Specs = Seq(
+  val SpecsSmall = Seq(
     "flow/catalog-event", "flow/common", "flow/user"
   )
 
