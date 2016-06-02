@@ -1,13 +1,36 @@
 package io.flow.oneapi
 
 import com.bryzek.apidoc.spec.v0.models._
+import play.api.libs.json.Json
 
 case class ContextualValue(context: String, value: String)
 
 case class OneApi(services: Seq[Service]) {
+
   private[this] val common = services.find(_.name == "common").getOrElse {
     sys.error("Must have a service named common")
   }
+
+  private[this] val General = "general"
+  private[this] val Localization = "localization"
+  private[this] val Logistics = "logistics"
+
+  private[this] val modules = Map(
+    "catalog" -> Localization,
+    "experience" -> Localization,
+    "" -> "landed cost",
+    "" -> "pricing",
+    "" -> "payments",
+    "fulfillment" -> Logistics,
+    "delivery_window" -> Logistics,
+    "tracking" -> Logistics,
+    "" -> "customer service",
+    "location" -> General,
+    "reference" -> General,
+    "organization" -> General,
+    "search" -> General,
+    "user" -> General
+  )
 
   def process(): Either[Seq[String], Service] = {
     val pathErrors = validatePaths()
@@ -37,10 +60,18 @@ case class OneApi(services: Seq[Service]) {
     info = common.info,
     headers = Nil,
     imports = Nil,
-    enums = services.flatMap(_.enums.map(localize(_))),
-    models = services.flatMap(_.models.map(localize(_))),
-    unions = services.flatMap(_.unions.map(localize(_))),
-    resources = Nil,
+    enums = services.flatMap { s =>
+      s.enums.map(localize(s, _))
+    },
+    models = services.flatMap { s =>
+      s.models.map(localize(s, _))
+    },
+    unions = services.flatMap { s =>
+      s.unions.map(localize(s, _))
+    },
+    resources = services.flatMap { s =>
+      s.resources.map(localize(s, _))
+    },
     attributes = Nil
   )
 
@@ -50,31 +81,51 @@ case class OneApi(services: Seq[Service]) {
     }.toInt
   }
 
-  def localize(enum: Enum): Enum = {
+  def localize(service: Service, enum: Enum): Enum = {
     enum
   }
 
-  def localize(model: Model): Model = {
+  def localize(service: Service, model: Model): Model = {
     model.copy(
-      fields = model.fields.map(localize(_))
+      fields = model.fields.map(localize(service, _))
     )
   }
 
-  def localize(field: Field): Field = {
+  def localize(service: Service, field: Field): Field = {
     field.copy(
       `type` = localizeType(field.`type`)
     )
   }
 
-  def localize(union: Union): Union = {
+  def localize(service: Service, union: Union): Union = {
     union.copy(
-      types = union.types.map(localize(_))
+      types = union.types.map(localize(service, _))
     )
   }
 
-  def localize(ut: UnionType): UnionType = {
+  def localize(service: Service, ut: UnionType): UnionType = {
     ut.copy(
       `type` = localizeType(ut.`type`)
+    )
+  }
+
+  def localize(service: Service, resource: Resource): Resource = {
+    println(resource)
+    val moduleName = modules.get(service.name.toLowerCase).getOrElse {
+      println("** WARNING ** Service[${service.name}] is not mapped to a module. Using $General")
+      General  
+    }
+
+    resource.copy(
+      `type` = localizeType(resource.`type`),
+      attributes = resource.attributes ++ Seq(
+        Attribute(
+          name = "docs",
+          value = Json.obj(
+            "module" -> moduleName
+          )
+        )
+      )
     )
   }
 
