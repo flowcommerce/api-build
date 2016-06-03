@@ -1,4 +1,4 @@
-package io.flow.lint
+package io.flow.build
 
 import scala.util.{Failure, Success, Try}
 

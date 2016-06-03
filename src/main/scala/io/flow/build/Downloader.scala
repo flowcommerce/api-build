@@ -1,4 +1,4 @@
-package io.flow.lint
+package io.flow.build
 
 import com.bryzek.apidoc.spec.v0.models.Service
 import scala.util.{Failure, Success, Try}
@@ -24,20 +24,21 @@ case class Downloader(config: ApidocProfile) {
   }
 
   def service(
-    organization: String,
-    application: String,
-    version: String = "latest"
+    app: Application
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ): Either[String, Service] = {
-    Try(
-      Await.result(
-        client.versions.getByApplicationKeyAndVersion(organization, application, version).map { v =>
+    Try {
+      print(s"${app.label} Downloading...")
+      val result = Await.result(
+        client.versions.getByApplicationKeyAndVersion(app.organization, app.application, app.version).map { v =>
           v.service
         },
         Duration(5, "seconds")
       )
-    ) match {
+      println(" Done")
+      result
+    } match {
       case Success(value) => Right(value)
       case Failure(ex) => {
         ex match {
@@ -59,12 +60,12 @@ case class Downloader(config: ApidocProfile) {
 
 object Downloader {
 
-  def withClient(
-    config: ApidocProfile
+  def withClient[T](
+    profile: ApidocProfile
   ) (
-    f: Downloader => Unit
-  ) {
-    val downloader = Downloader(config)
+    f: Downloader => T
+  ) = {
+    val downloader = Downloader(profile)
     try {
       f(downloader)
     } finally {
@@ -73,7 +74,3 @@ object Downloader {
   }
 
 }
-
-
-
-

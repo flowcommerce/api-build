@@ -6,7 +6,8 @@ Runs a set of tests against an API defined in apidoc to ensure consistency
 ## Installation
 
   curl https://s3.amazonaws.com/io.flow.aws-s3-public/util/api-lint/api-lint.jar > ~/api-lint.jar
-  java -jar ~/api-lint.jar flow/carrier flow/user
+  java -jar ~/api-lint.jar lint flow/common flow/user
+  java -jar ~/api-lint.jar oneapi flow/common flow/user
 
 ## running locally
 
@@ -27,15 +28,17 @@ We are using one-jar to publish (see https://github.com/sbt/sbt-onejar)
 
 ## Running from the command line:
 
-    java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar flow/user
+    java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar lint flow/common flow/user
+    java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar oneapi flow/common flow/user
+    java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar all flow/common flow/user
 
 To specify a specific APIDOC Profile:
 
-    APIDOC_PROFILE=xxx java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar flow/user
+    APIDOC_PROFILE=xxx java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar all flow/common flow/user
 
 Or to specify a specific APIDOC URL and/or Token:
 
-    APIDOC_API_TOKEN=yyy APIDOC_API_URI=http://api.apidoc.mc java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar flow/user
+    APIDOC_API_TOKEN=yyy APIDOC_API_URI=http://api.apidoc.mc java -jar /web/api-lint/target/scala-2.11/api-lint_2.11-0.0.1-one-jar.jar all flow/user
 
 The default behavior is to use the default apidoc profile.
 
