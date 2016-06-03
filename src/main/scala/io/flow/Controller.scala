@@ -1,13 +1,11 @@
 package io.flow.build
 
+import com.bryzek.apidoc.spec.v0.models.Service
+
 trait Controller {
 
   private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
   private[this] val GlobalError = "Global"
-
-  protected[this] def addError(organization: String, application: String, error: String) {
-    addError(s"$organization/$application", error)
-  }
 
   protected[this] def addError(message: String) {
     addError(GlobalError, message)
@@ -30,7 +28,7 @@ trait Controller {
     * Run things and return a list of errors
     */
   def run(
-    args: Seq[String]
+    services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   )

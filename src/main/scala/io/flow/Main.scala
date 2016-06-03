@@ -1,11 +1,17 @@
 package io.flow.build
 
+import com.bryzek.apidoc.spec.v0.models.Service
 import io.flow.lint
 import io.flow.oneapi
 
 object Main extends App {
 
   import scala.concurrent.ExecutionContext.Implicits.global
+
+  private[this] val controllers = Seq(
+    lint.Controller(),
+    oneapi.Controller()
+  )
 
   ApidocConfig.load() match {
     case Left(error) => {
@@ -14,18 +20,43 @@ object Main extends App {
     }
 
     case Right(profile) => {
-      Downloader.withClient(profile) { dl =>
-        args.toList match {
-          case Nil => {
-            println("** ERROR: Specify lint | oneapi | all")
-          }
+      args.toList match {
+        case Nil => {
+          println("** ERROR: Specify lint | oneapi | all")
+        }
 
-          case one :: rest => {
-            one match {
-              case "lint" => run(Seq(lint.Controller(dl)), rest)
-              case "oneapi" => run(Seq(oneapi.Controller(dl)), rest)
-              case "all" => run(Seq(lint.Controller(dl), oneapi.Controller(dl)), rest)
-              case other => println(s"** ERROR: Invalid command[$other]. Must be one of: lint | build | all")
+        case one :: rest => {
+          val selected = if (one == "all") { controllers } else { controllers.filter(_.name == one) }
+          selected.toList match {
+            case Nil => {
+              println(s"** ERROR: Invalid command[$one]. Must be one of: lint | build | all")
+            }
+
+            case _ => {
+              val services = Downloader.withClient(profile) { dl =>
+                rest.flatMap { name =>
+                  Application.parse(name) match {
+                    case None => {
+                      println(s"** WARNING: Could not find application[$name]")
+                      None
+                    }
+
+                    case Some(app) => {
+                      dl.service(app) match {
+                        case Left(error) => {
+                          println(s"** WARNING: Failed to download app[${app.label}]: $error")
+                          None
+                        }
+                        case Right(service) => {
+                          Some(service)
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+
+              run(selected, services)
             }
           }
         }
@@ -33,11 +64,13 @@ object Main extends App {
     }
   }
 
-  private[this] def run(controllers: Seq[Controller], args: Seq[String]) {
+  private[this] def run(controllers: Seq[Controller], services: Seq[Service]) {
+
+
     var numberErrors = 0
 
     controllers.foreach { controller =>
-      controller.run(args)
+      controller.run(services)
       val errors = controller.errors()
       numberErrors += errors.size
 
