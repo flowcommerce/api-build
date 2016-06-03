@@ -66,32 +66,43 @@ object Main extends App {
 
   private[this] def run(controllers: Seq[Controller], services: Seq[Service]) {
 
-
-    var numberErrors = 0
+    var errors = scala.collection.mutable.Map[String, Seq[String]]()
 
     controllers.foreach { controller =>
-      controller.run(services)
-      val errors = controller.errors()
-      numberErrors += errors.size
+      println("==================================================")
+      println(s"${controller.name} Starting")
+      println("==================================================")
 
-      println("==================================================")
-      println(s"controller: ${controller.name}")
-      println("==================================================")
-      errors.size match {
-        case 0 => println(s"SUMMARY: NO ERRORS")
-        case 1 => println(s"SUMMARY: 1 ERROR")
-        case n => println(s"SUMMARY: $n ERRORS")
-      }
-      println("==================================================")
-      errors.keys.toSeq.sorted foreach { app =>
-        println(app)
-        errors(app).foreach { err =>
-          println(s"  - $err")
+      controller.run(services)
+      controller.errors.foreach {
+        case (key, errs) => {
+          errors.get(key) match {
+            case None => {
+              errors.put(key, errs)
+            }
+            case Some(existing) => {
+              errors.put(key, existing ++ errs)
+            }
+          }
         }
-        println("")
       }
     }
-    System.exit(numberErrors)
+
+    println("")
+    errors.size match {
+      case 0 => println(s"SUMMARY: NO ERRORS")
+      case 1 => println(s"SUMMARY: 1 ERROR")
+      case n => println(s"SUMMARY: $n ERRORS")
+    }
+    errors.keys.toSeq.sorted foreach { key =>
+      println(key)
+      errors(key).foreach { err =>
+        println(s"  - $err")
+      }
+      println("")
+    }
+    println("")
+    System.exit(errors.size)
   }
 
 }

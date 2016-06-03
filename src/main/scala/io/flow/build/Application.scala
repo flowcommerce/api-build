@@ -6,8 +6,8 @@ case class Application(
   version: String
 ) {
   val label = version match {
-    case Application.Latest => "$organization/$application"
-    case _ => "$organization/$application:$version"
+    case Application.Latest => s"$organization/$application"
+    case _ => s"$organization/$application:$version"
   }
 }
 

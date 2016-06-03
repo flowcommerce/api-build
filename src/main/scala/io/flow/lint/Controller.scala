@@ -15,8 +15,10 @@ case class Controller() extends io.flow.build.Controller {
     implicit ec: scala.concurrent.ExecutionContext
   ) {
     services.foreach { service =>
+      print(s"${service.name}...")
+
       linter.validate(service) match {
-        case Nil => println("\n  Valid!")
+        case Nil => println(" Valid!")
         case errors => {
           errors.size match {
             case 1 => println(" 1 error:")

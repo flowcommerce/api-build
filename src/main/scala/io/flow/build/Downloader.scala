@@ -10,8 +10,6 @@ import scala.concurrent.duration.Duration
   */
 case class Downloader(config: ApidocProfile) {
 
-println("CREATED DOWNLOADER")
-
   private[this] val client = {
     new com.bryzek.apidoc.api.v0.Client(
       baseUrl = config.baseUrl,

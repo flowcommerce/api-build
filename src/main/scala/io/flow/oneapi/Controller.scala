@@ -4,13 +4,6 @@ import com.bryzek.apidoc.spec.v0.models.Service
 
 case class Controller() extends io.flow.build.Controller {
 
-  private[this] val Org = "flow"
-
-  private[this] val Specs = Seq(
-    "common", "experience", "location", "reference", "tracking",
-    "catalog", "delivery_window", "fulfillment", "organization", "search", "user"
-  )
-
   override val name = "OneApi"
 
   def run(
@@ -18,6 +11,7 @@ case class Controller() extends io.flow.build.Controller {
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
+    println("Building single API from: " + services.map(_.name).mkString(", "))
     OneApi(services).process match {
       case Left(errs) => {
         errs.foreach { addError(_) }
@@ -27,11 +21,9 @@ case class Controller() extends io.flow.build.Controller {
         import com.bryzek.apidoc.spec.v0.models.json._
         import play.api.libs.json._
 
-        println("Done")
-
         val path = "/tmp/flow-api.json"
         new java.io.PrintWriter(path) { write(Json.prettyPrint(Json.toJson(service))); close }
-        println(s"See: $path")
+        println(s"One API file created. See: $path")
       }
     }
   }
