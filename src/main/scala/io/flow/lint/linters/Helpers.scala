@@ -1,7 +1,8 @@
 package io.flow.lint.linters
 
-import com.bryzek.apidoc.spec.v0.models.{Field, Model, Operation, Parameter, Resource, Response, Service, Union}
+import com.bryzek.apidoc.spec.v0.models.{Attribute, Field, Model, Operation, Parameter, Resource, Response, Service, Union}
 import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
+import play.api.libs.json.{JsError, JsSuccess}
 
 trait Helpers {
 
@@ -129,4 +130,23 @@ trait Helpers {
     }
   }
 
+  def ignored(attributes: Seq[Attribute], name: String): Boolean = {
+    attributeIgnore(attributes).contains(name)
+  }
+
+  private[this] def attributeIgnore(attributes: Seq[Attribute]): Seq[String] = {
+    attributes.find(_.name == "linter") match {
+      case None => {
+        Nil
+      }
+
+      case Some(attr) => {
+        (attr.value \ "ignore").validate[Seq[String]] match {
+          case e: JsError => Nil
+          case s: JsSuccess[Seq[String]] => s.get
+        }
+      }
+    }
+  }
+  
 }
