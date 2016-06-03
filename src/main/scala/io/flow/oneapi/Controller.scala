@@ -5,6 +5,7 @@ import com.bryzek.apidoc.spec.v0.models.Service
 case class Controller() extends io.flow.build.Controller {
 
   override val name = "OneApi"
+  override val command = "oneapi"
 
   def run(
     services: Seq[Service]

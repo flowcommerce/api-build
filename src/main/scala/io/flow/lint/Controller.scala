@@ -8,6 +8,7 @@ case class Controller() extends io.flow.build.Controller {
   private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
 
   override val name = "Linter"
+  override val command = "lint"
 
   def run(
     services: Seq[Service]

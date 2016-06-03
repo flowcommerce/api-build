@@ -26,10 +26,10 @@ object Main extends App {
         }
 
         case one :: rest => {
-          val selected = if (one == "all") { controllers } else { controllers.filter(_.name == one) }
+          val selected = if (one == "all") { controllers } else { controllers.filter(_.command == one) }
           selected.toList match {
             case Nil => {
-              println(s"** ERROR: Invalid command[$one]. Must be one of: lint | build | all")
+              println(s"** ERROR: Invalid command[$one]. Must be one of: " + controllers.map(_.command).mkString(", "))
             }
 
             case _ => {
