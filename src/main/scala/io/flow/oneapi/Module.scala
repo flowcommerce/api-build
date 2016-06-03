@@ -9,7 +9,7 @@ object Module {
   val All = Seq(
     Module("localization", Seq("catalog", "experience")),
     Module("pricing", Nil),
-    Module("payment", Nil),
+    Module("payment", Seq("payment")),
     Module("logistics", Seq("delivery_window", "fulfillment", "tracking")),
     Module("customer_service", Nil),
     General
