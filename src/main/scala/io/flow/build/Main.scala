@@ -29,7 +29,7 @@ object Main extends App {
           val selected = if (one == "all") { controllers } else { controllers.filter(_.command == one) }
           selected.toList match {
             case Nil => {
-              println(s"** ERROR: Invalid command[$one]. Must be one of: " + controllers.map(_.command).mkString(", "))
+              println(s"** ERROR: Invalid command[$one]. Must be one of: all, " + controllers.map(_.command).mkString(", "))
             }
 
             case _ => {
