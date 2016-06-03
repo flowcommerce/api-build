@@ -24,6 +24,8 @@ trait Controller {
 
   def name: String
 
+  def command: String
+
   /**
     * Run things and return a list of errors
     */

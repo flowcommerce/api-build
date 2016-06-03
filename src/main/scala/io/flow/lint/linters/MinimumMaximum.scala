@@ -80,10 +80,8 @@ case object MinimumMaximum extends Linter with Helpers {
           }
 
         case _ =>
-          max == GlobalMax match {
-            case true => Nil
-            case false => Seq(error(model, field, s"Maximum must be $GlobalMax and not $max"))
-          }
+          // Nothing else to validate for fields
+          Nil
       }
     }
 
