@@ -80,8 +80,10 @@ case object MinimumMaximum extends Linter with Helpers {
           }
 
         case _ =>
-          // Nothing else to validate for fields
-          Nil
+          (max > 0) match {
+            case true => Nil
+            case false => Seq(error(model, field, s"Maximum, if specified, must be > 0 and not $max"))
+          }
       }
     }
 
@@ -108,17 +110,35 @@ case object MinimumMaximum extends Linter with Helpers {
     }
 
     val maxErrors = param.maximum match {
-      case None => Nil
-      case Some(max) => {
-        max == GlobalMax match {
-          case true => Nil
+      case None => {
+        isArray(param.`type`) match {
           case false => {
-            param.name == ExpandName match {
+            Nil
+          }
+          case true => {
+            Seq(error(resource, operation, param, s"Missing maximum"))
+          }
+        }
+      }
+
+      case Some(max) => {
+        isArray(param.`type`) match {
+          case false => {
+            Nil
+          }
+
+          case true => {
+            max == GlobalMax match {
+              case true => Nil
               case false => {
-                Seq(error(resource, operation, param, s"Maximum must be $GlobalMax and not $max"))
-              }
-              case true => {
-                Nil
+                param.name == ExpandName match {
+                  case false => {
+                    Seq(error(resource, operation, param, s"Maximum must be $GlobalMax and not $max"))
+                  }
+                  case true => {
+                    Nil
+                  }
+                }
               }
             }
           }
@@ -126,27 +146,7 @@ case object MinimumMaximum extends Linter with Helpers {
       }
     }
 
-    val missingMaxErrors = param.maximum match {
-      case None => {
-        isArray(param.`type`) match {
-          case false => {
-            Nil
-          }
-          case true => {
-            Seq(error(resource, operation, param, s"Missing maximum. All parameters that are arrays must have a maximum set to $GlobalMax"))
-          }
-        }
-      }
-      case Some(_) => {
-        Nil
-      }
-    }
-
-    minErrors ++ maxErrors ++ missingMaxErrors
-  }
-
-  def isArray(datatype: String): Boolean = {
-    datatype.indexOf("[") >= 0
+    minErrors ++ maxErrors
   }
 
 }

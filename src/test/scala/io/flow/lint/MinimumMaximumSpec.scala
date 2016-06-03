@@ -72,7 +72,7 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
     linter.validate(buildServiceWithModel(minimum = Some(-1), maximum = Some(-1))) should be(
       Seq(
         "Model user Field[email]: Minimum must be >= 0 and not -1",
-        "Model user Field[email]: Maximum must be 100 and not -1"
+        "Model user Field[email]: Maximum, if specified, must be > 0 and not -1"
       )
     )
   }
@@ -124,6 +124,12 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
   it("Parameter w/ invalid min/max") {
     linter.validate(buildServiceWithParameter(minimum = Some(-1), maximum = Some(25))) should be(
       Seq(
+        "Resource users GET /users Parameter email: Minimum must be >= 0 and not -1"
+      )
+    )
+
+    linter.validate(buildServiceWithParameter(minimum = Some(-1), maximum = Some(25), paramType = "[string]")) should be(
+      Seq(
         "Resource users GET /users Parameter email: Minimum must be >= 0 and not -1",
         "Resource users GET /users Parameter email: Maximum must be 100 and not 25"
       )
@@ -133,7 +139,7 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
   it("Parameter w/ array type requires a max") {
     linter.validate(buildServiceWithParameter(paramType = "[string]")) should be(
       Seq(
-        "Resource users GET /users Parameter email: Missing maximum. All parameters that are arrays must have a maximum set to 100"
+        "Resource users GET /users Parameter email: Missing maximum"
       )
     )
   }

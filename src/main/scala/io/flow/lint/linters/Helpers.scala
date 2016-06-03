@@ -112,11 +112,18 @@ trait Helpers {
     */
   def returnsArray(operation: Operation): Boolean = {
     operation.responses.find { r =>
-      r.`type`.startsWith("[") && isSuccess(r)
+      isArray(r.`type`) && isSuccess(r)
     } match {
       case None => false
       case Some(_) => true
     }
+  }
+
+  /**
+    * Returns true if this type is an array, false otherwise
+    */
+  def isArray(typ: String): Boolean = {
+    typ.startsWith("[")
   }
 
   /**
