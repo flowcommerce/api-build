@@ -8,6 +8,8 @@ object Main extends App {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
+  private[this] var globalErrors = scala.collection.mutable.ListBuffer[String]()
+
   private[this] val controllers = Seq(
     lint.Controller(),
     oneapi.Controller()
@@ -37,14 +39,14 @@ object Main extends App {
                 rest.flatMap { name =>
                   Application.parse(name) match {
                     case None => {
-                      println(s"** WARNING: Could not find application[$name]")
+                      globalErrors += s"Could not parse application[$name]"
                       None
                     }
 
                     case Some(app) => {
                       dl.service(app) match {
                         case Left(error) => {
-                          println(s"** WARNING: Failed to download app[${app.label}]: $error")
+                          globalErrors += s"Failed to download app[${app.label}]: $error"
                           None
                         }
                         case Right(service) => {
@@ -67,6 +69,9 @@ object Main extends App {
   private[this] def run(controllers: Seq[Controller], services: Seq[Service]) {
 
     var errors = scala.collection.mutable.Map[String, Seq[String]]()
+    if (!globalErrors.isEmpty) {
+      errors += ("config" -> globalErrors)
+    }
 
     controllers.foreach { controller =>
       println("==================================================")
