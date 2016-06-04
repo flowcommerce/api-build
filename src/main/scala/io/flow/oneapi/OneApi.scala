@@ -16,7 +16,8 @@ case class OneApi(services: Seq[Service]) {
   private[this] val DefaultParameterDescriptions = Map(
     "id" -> "Filter by one or more IDs of this resource",
     "limit" -> "The maximum number of results to return",
-    "offset" -> "The number of results to skip before returning results"
+    "offset" -> "The number of results to skip before returning results",
+    "organization" -> "Refers to your organization's account identifier"
   )
 
   private[this] val DefaultResponseDescriptions = Map(
@@ -146,6 +147,12 @@ case class OneApi(services: Seq[Service]) {
     resource.copy(
       `type` = localizeType(resource.`type`),
       operations = resource.operations.map { localize(service, _) }.sortBy { op => (op.path.toLowerCase, methodSortOrder(op.method)) },
+      description = (
+        resource.description match {
+          case Some(d) => Some(d)
+          case None => recordDescription(service, resource.`type`)
+        }
+      ),
       attributes = resource.attributes ++ Seq(
         Attribute(
           name = "docs",
@@ -155,6 +162,30 @@ case class OneApi(services: Seq[Service]) {
         )
       )
     )
+  }
+
+  /**
+    * If this type refers to a valid enum, model, or union, returns
+    * the description associated with that record (if there is
+    * one). Initial use case was to populate the resource description,
+    * when empty, with the description from the model associated with
+    * the resource.
+    */
+  def recordDescription(service: Service, typ: String): Option[String] = {
+    service.enums.find(_.name == typ) match {
+      case Some(e) => e.description
+      case None => {
+        service.models.find(_.name == typ) match {
+          case Some(m) => m.description
+          case None => {
+            service.unions.find(_.name == typ) match {
+              case Some(u) => u.description
+              case None => None
+            }
+          }
+        }
+      }
+    }
   }
 
   /**
