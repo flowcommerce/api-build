@@ -139,9 +139,22 @@ case class OneApi(services: Seq[Service]) {
   }
 
   def localize(service: Service, resource: Resource): Resource = {
-    val module = Module.findByServiceName(service.name.toLowerCase).getOrElse {
-      println(s"** WARNING ** Service[${service.name}] is not mapped to a module. Using ${Module.General.name}")
-      Module.General
+    val additionalAttributes = resource.attributes.find(_.name == "docs") match {
+      case None => {
+        val module = Module.findByServiceName(service.name.toLowerCase).getOrElse {
+          println(s"** WARNING ** Service[${service.name}] is not mapped to a module. Using ${Module.General.name}")
+          Module.General
+        }
+        Seq(
+          Attribute(
+            name = "docs",
+            value = Json.obj(
+              "module" -> module.name
+            )
+          )
+        )
+      }
+      case Some(_) => Nil
     }
 
     resource.copy(
@@ -153,14 +166,7 @@ case class OneApi(services: Seq[Service]) {
           case None => recordDescription(service, resource.`type`)
         }
       ),
-      attributes = resource.attributes ++ Seq(
-        Attribute(
-          name = "docs",
-          value = Json.obj(
-            "module" -> module.name
-          )
-        )
-      )
+      attributes = resource.attributes ++ additionalAttributes
     )
   }
 
