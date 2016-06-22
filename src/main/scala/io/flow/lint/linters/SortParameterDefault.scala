@@ -6,7 +6,7 @@ import com.bryzek.apidoc.spec.v0.models.{Operation, Resource, Service}
 /**
   *  for resources w/ sort parameter:
   *    - default to created_at if path ends with /versions
-  *    - default to lower(name), -created_at if there is a name field of type string
+  *    - default to name, -created_at if there is a name field of type string
   *    - otherwise default to -created_at
   */
 case object SortParameterDefault extends Linter with Helpers {
@@ -51,12 +51,12 @@ case object SortParameterDefault extends Linter with Helpers {
       case false => {
         model(service, operation) match {
           case None => {
-            Seq("-created_at", "lower(name)")
+            Seq("-created_at", "name")
           }
           case Some(model) => {
             model.fields.find(f => f.name == "name" && f.`type` == "string") match {
               case None => Seq("-created_at")
-              case Some(_) => Seq("lower(name)")
+              case Some(_) => Seq("name")
             }
           }
         }
