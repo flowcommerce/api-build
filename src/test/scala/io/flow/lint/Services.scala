@@ -89,6 +89,7 @@ object Services {
     method: Method,
     path: String,
     parameters: Seq[Parameter] = Nil,
+    attributes: Seq[Attribute] = Nil,
     responseCode: Int,
     responseType: String
   ): Resource = {
@@ -100,6 +101,7 @@ object Services {
           method = method,
           path = path,
           parameters = parameters,
+          attributes = attributes,
           responses = Seq(
             buildResponse(responseCode, responseType)
           )

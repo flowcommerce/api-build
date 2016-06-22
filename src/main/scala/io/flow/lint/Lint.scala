@@ -28,6 +28,7 @@ object Lint {
     linters.MinimumMaximum,
     linters.ModelsWithOrganizationField,
     linters.PrimaryResourcesHaveVersionsOperation,
+    linters.SortAttribute,
     linters.SortParameterDefault,
     linters.StandardResponse,
     linters.UnionTypesHaveCommonDiscriminator,
