@@ -20,8 +20,8 @@ case class ProxyBuilder(service: Service) {
 
     Seq(
       s"${service.name}:",
-      s"  - host: $host",
-      s"  - operations:",
+      s"  host: $host",
+      s"  operations:",
       routes.sorted.map { _.yaml }.mkString("    - ", "\n    - ", "")
     ).mkString("\n")
   }
