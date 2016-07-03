@@ -1,8 +1,7 @@
 package io.flow.build
 
 import com.bryzek.apidoc.spec.v0.models.Service
-import io.flow.lint
-import io.flow.oneapi
+import io.flow.{oneapi, lint, proxy}
 
 object Main extends App {
 
@@ -12,7 +11,8 @@ object Main extends App {
 
   private[this] val controllers = Seq(
     lint.Controller(),
-    oneapi.Controller()
+    oneapi.Controller(),
+    proxy.Controller()
   )
 
   ApidocConfig.load() match {
