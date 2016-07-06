@@ -2,11 +2,7 @@ package io.flow.proxy
 
 import com.bryzek.apidoc.spec.v0.models.Service
 
-case class ProxyBuilder(service: Service) {
-
-  private[this] val host = service.baseUrl.getOrElse {
-    s"https://${service.name.toLowerCase}.api.flow.io"
-  }
+case class ProxyBuilder(service: Service, host: String) {
 
   def yaml(): String = {
     val routes = service.resources.map { resource =>

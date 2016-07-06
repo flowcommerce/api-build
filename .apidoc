@@ -16,4 +16,12 @@ code:
       version: latest
       generators:
         ning_1_9_client: src/main/scala/io/flow/generated
-
+  flow:
+    common:
+      version: latest
+      generators:
+        play_2_x_standalone_json: src/main/scala/io/flow/generated
+    registry:
+      version: latest
+      generators:
+        ning_1_9_client: src/main/scala/io/flow/generated
