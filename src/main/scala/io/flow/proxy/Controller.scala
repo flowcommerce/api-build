@@ -41,9 +41,7 @@ case class Controller() extends io.flow.build.Controller {
 
     try {
       build(services, version, "production") { service =>
-        service.baseUrl.getOrElse {
-          s"https://${service.name.toLowerCase}.api.flow.io"
-        }
+        s"https://${service.name.toLowerCase}.api.flow.io"
       }
 
       build(services, version, "development") { service =>
