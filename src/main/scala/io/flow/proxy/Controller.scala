@@ -12,7 +12,7 @@ case class Controller() extends io.flow.build.Controller {
   /**
     * Whitelist of applications in the 'api' repo that do not exist in registry
     */
-  private[this] val ExcludeWhiteList = Seq("common")
+  private[this] val ExcludeWhiteList = Seq("common", "delivery_window")
 
   override val name = "Proxy"
   override val command = "proxy"
