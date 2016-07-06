@@ -31,19 +31,18 @@ case class Controller() extends io.flow.build.Controller {
       }
 
       build(services, version, "development") { service =>
-        Await.result(
+        val app = Await.result(
           getFromRegistry(registryClient, service.name),
           Duration(3, "seconds")
-        ) match {
-          case None => {
-            sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]")
-          }
-
-          case Some(app) => {
-            println(s"APP: $app")
-            sys.error("TODO")
-          }
+        ).getOrElse {
+          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]")
         }
+
+        val port = app.ports.headOption.getOrElse {
+          sys.error(s"Application named[${service.name}] does not have any ports in Registry at[${registryClient.baseUrl}]")
+        }.external
+
+        s"http://localhost:$port"
       }
     } finally {
       registryClient.closeAsyncHttpClient()
@@ -60,23 +59,6 @@ case class Controller() extends io.flow.build.Controller {
     }.recover {
       case io.flow.registry.v0.errors.UnitResponse(404) => {
         None
-      }
-
-      case io.flow.registry.v0.errors.UnitResponse(401) => {
-        // TODO: Remove
-        Some(
-          Application(
-            id = name,
-            ports = Seq(
-              Port(
-                service = io.flow.registry.v0.models.ServiceReference("play"),
-                external = 9000,
-                external = 6081
-              )
-            ),
-            dependencies = Nil
-          )
-        )
       }
 
       case ex: Throwable => {
