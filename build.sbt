@@ -2,7 +2,7 @@ import com.github.retronym.SbtOneJar._
 
 oneJarSettings
 
-name := "api-lint"
+name := "api-build"
 
 organization := "io.flow"
 
