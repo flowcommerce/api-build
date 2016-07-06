@@ -2,6 +2,9 @@ package io.flow.proxy
 
 import com.bryzek.apidoc.spec.v0.models.Service
 import io.flow.registry.v0.{Client => RegistryClient}
+import io.flow.registry.v0.models.Application
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.Duration
 import Text._
 
 case class Controller() extends io.flow.build.Controller {
@@ -28,18 +31,57 @@ case class Controller() extends io.flow.build.Controller {
       }
 
       build(services, version, "development") { service =>
-        registryClient.applications.getById(service.name).map { app =>
-          println(s"${service.name} => APP: $app")
-        }.recover {
-          case io.flow.registry.v0.errors.UnitResponse(404) => {
-            sys.error(s"Service[${service.name}] not found in registry at ${registryClient.baseUrl}")
+        Await.result(
+          getFromRegistry(registryClient, service.name),
+          Duration(3, "seconds")
+        ) match {
+          case None => {
+            sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]")
+          }
+
+          case Some(app) => {
+            println(s"APP: $app")
+            sys.error("TODO")
           }
         }
-
-        s"http://localhost:TODO"
       }
     } finally {
       registryClient.closeAsyncHttpClient()
+    }
+  }
+
+  private[this] def getFromRegistry(
+    client: RegistryClient, name: String
+  ) (
+    implicit ec: scala.concurrent.ExecutionContext
+  ): Future[Option[Application]] = {
+    client.applications.getById(name).map { app =>
+      Some(app)
+    }.recover {
+      case io.flow.registry.v0.errors.UnitResponse(404) => {
+        None
+      }
+
+      case io.flow.registry.v0.errors.UnitResponse(401) => {
+        // TODO: Remove
+        Some(
+          Application(
+            id = name,
+            ports = Seq(
+              Port(
+                service = io.flow.registry.v0.models.ServiceReference("play"),
+                external = 9000,
+                external = 6081
+              )
+            ),
+            dependencies = Nil
+          )
+        )
+      }
+
+      case ex: Throwable => {
+        sys.error(s"Error fetching application[$name] from registry at[${client.baseUrl}]; $ex")
+      }
     }
   }
 
