@@ -30,6 +30,7 @@ trait Controller {
     * Run things and return a list of errors
     */
   def run(
+    downloader: Downloader,
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
