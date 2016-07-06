@@ -35,8 +35,8 @@ object Main extends App {
             }
 
             case _ => {
-              val services = Downloader.withClient(profile) { dl =>
-                rest.flatMap { name =>
+              Downloader.withClient(profile) { dl =>
+                val services = rest.flatMap { name =>
                   Application.parse(name) match {
                     case None => {
                       globalErrors += s"Could not parse application[$name]"
@@ -56,9 +56,8 @@ object Main extends App {
                     }
                   }
                 }
+                run(dl, selected, services)
               }
-
-              run(selected, services)
             }
           }
         }
@@ -66,7 +65,7 @@ object Main extends App {
     }
   }
 
-  private[this] def run(controllers: Seq[Controller], services: Seq[Service]) {
+  private[this] def run(downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]) {
 
     var errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (!globalErrors.isEmpty) {
@@ -78,7 +77,7 @@ object Main extends App {
       println(s"${controller.name} Starting")
       println("==================================================")
 
-      controller.run(services)
+      controller.run(downloader, services)
       controller.errors.foreach {
         case (key, errs) => {
           errors.get(key) match {

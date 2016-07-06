@@ -1,8 +1,8 @@
 package io.flow.proxy
 
 import com.bryzek.apidoc.spec.v0.models.Service
+import io.flow.build.{Application, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
-import io.flow.registry.v0.models.Application
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import Text._
@@ -13,17 +13,27 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "proxy"
 
   def run(
+    downloader: Downloader,
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
+    val version = downloader.service(Application("flow", "api", "latest")) match {
+      case Left(error) => {
+        sys.error(s"Failed to download 'api' service from apidoc: $error")
+      }
+      case Right(svc) => {
+        svc.version
+      }
+    }
+
+    println(s"VERSION: $version")
+
     val registryClient = new RegistryClient()
 
     try {
-      val version = "0.0.40" // todo
-
       build(services, version, "production") { service =>
         service.baseUrl.getOrElse {
           s"https://${service.name.toLowerCase}.api.flow.io"
@@ -53,7 +63,7 @@ case class Controller() extends io.flow.build.Controller {
     client: RegistryClient, name: String
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  ): Future[Option[Application]] = {
+  ): Future[Option[io.flow.registry.v0.models.Application]] = {
     client.applications.getById(name).map { app =>
       Some(app)
     }.recover {
