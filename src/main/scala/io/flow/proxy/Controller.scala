@@ -9,15 +9,21 @@ import Text._
 
 case class Controller() extends io.flow.build.Controller {
 
+  /**
+    * Whitelist of applications in the 'api' repo that do not exist in registry
+    */
+  private[this] val ExcludeWhiteList = Seq("common")
+
   override val name = "Proxy"
   override val command = "proxy"
 
   def run(
     downloader: Downloader,
-    services: Seq[Service]
+    allServices: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
+    val services = allServices.filter { s => !ExcludeWhiteList.contains(s.name) }
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
     val version = downloader.service(Application("flow", "api", "latest")) match {
