@@ -23,7 +23,10 @@ case class Controller() extends io.flow.build.Controller {
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
-    val services = allServices.filter { s => !ExcludeWhiteList.contains(s.name) && s.resources.length > 0 }
+    val services = allServices.
+      filter { s => s.resources.nonEmpty }.
+      filter { s => !ExcludeWhiteList.contains(s.name) }
+
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
     val version = downloader.service(Application("flow", "api", "latest")) match {
