@@ -23,7 +23,7 @@ case class Controller() extends io.flow.build.Controller {
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
-    val services = allServices.filter { s => !ExcludeWhiteList.contains(s.name) }
+    val services = allServices.filter { s => !ExcludeWhiteList.contains(s.name) || s.resources.length > 0 }
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
     val version = downloader.service(Application("flow", "api", "latest")) match {
@@ -49,7 +49,7 @@ case class Controller() extends io.flow.build.Controller {
           getFromRegistry(registryClient, service.name),
           Duration(3, "seconds")
         ).getOrElse {
-          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]")
+          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or to the proxy whitelist.")
         }
 
         val port = app.ports.headOption.getOrElse {
