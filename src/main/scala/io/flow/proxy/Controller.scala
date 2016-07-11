@@ -49,7 +49,7 @@ case class Controller() extends io.flow.build.Controller {
           getFromRegistry(registryClient, service.name),
           Duration(3, "seconds")
         ).getOrElse {
-          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or to the proxy whitelist.")
+          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
         }
 
         val port = app.ports.headOption.getOrElse {
