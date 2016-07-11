@@ -24,7 +24,7 @@ case class Controller() extends io.flow.build.Controller {
     implicit ec: scala.concurrent.ExecutionContext
   ) {
     val services = allServices.
-      filter { s => !s.resources.isEmpty }.
+      filter { s => s.resources.nonEmpty }.
       filter { s => !ExcludeWhiteList.contains(s.name) }
 
     println("Building proxy from: " + services.map(_.name).mkString(", "))
