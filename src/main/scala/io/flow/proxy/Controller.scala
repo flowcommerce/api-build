@@ -13,6 +13,7 @@ case class Controller() extends io.flow.build.Controller {
     * Whitelist of applications in the 'api' repo that do not exist in registry
     */
   private[this] val ExcludeWhiteList = Seq("common", "delivery_window")
+  private[this] val DockerGateway = "172.17.0.1"
 
   override val name = "Proxy"
   override val command = "proxy"
@@ -60,6 +61,21 @@ case class Controller() extends io.flow.build.Controller {
         }.external
 
         s"http://localhost:$port"
+      }
+
+      build(services, version, "workstation") { service =>
+        val app = Await.result(
+          getFromRegistry(registryClient, service.name),
+          Duration(3, "seconds")
+        ).getOrElse {
+          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
+        }
+
+        val port = app.ports.headOption.getOrElse {
+          sys.error(s"Application named[${service.name}] does not have any ports in Registry at[${registryClient.baseUrl}]")
+        }.external
+
+        s"http://$DockerGateway:$port"
       }
     } finally {
       registryClient.closeAsyncHttpClient()
