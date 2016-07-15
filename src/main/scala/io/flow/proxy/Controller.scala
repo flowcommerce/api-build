@@ -50,13 +50,13 @@ case class Controller() extends io.flow.build.Controller {
         s"https://${service.name.toLowerCase}.api.flow.io"
       }
 
-      val servicePortCache = ServicePortCache(registryClient)
+      val cache = RegistryApplicationCache(registryClient)
       build(services, version, "development") { service =>
-        s"http://$DevelopmentHostname:${servicePortCache.get(service.name.toLowerCase)}"
+        s"http://$DevelopmentHostname:${cache.externalPort(service.name.toLowerCase)}"
       }
 
       build(services, version, "workstation") { service =>
-        s"http://$DockerHostname:${servicePortCache.get(service.name.toLowerCase)}"
+        s"http://$DockerHostname:${cache.externalPort(service.name.toLowerCase)}"
       }
     } finally {
       registryClient.closeAsyncHttpClient()
