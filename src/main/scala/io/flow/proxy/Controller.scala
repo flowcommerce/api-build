@@ -6,6 +6,9 @@ import io.flow.registry.v0.{Client => RegistryClient}
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import Text._
+import org.yaml.snakeyaml.Yaml
+import scala.collection.JavaConverters._
+import scala.util.{Failure, Success, Try}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -48,54 +51,78 @@ case class Controller() extends io.flow.build.Controller {
         s"https://${service.name.toLowerCase}.api.flow.io"
       }
 
-      build(services, version, "development") { service =>
-        val app = Await.result(
-          getFromRegistry(registryClient, service.name),
+      val serviceToPortMapping =
+        Await.result(
+          buildServiceToPortMappingFromRegistry(registryClient),
           Duration(3, "seconds")
-        ).getOrElse {
-          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
+        )
+
+      build(services, version, "development") { service =>
+
+        val svc = serviceToPortMapping.find(_.service == service).getOrElse {
+          sys.error(s"Could not find application named[$service] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
         }
 
-        val port = app.ports.headOption.getOrElse {
-          sys.error(s"Application named[${service.name}] does not have any ports in Registry at[${registryClient.baseUrl}]")
-        }.external
-
-        s"http://localhost:$port"
+        s"http://localhost:${svc.port}"
       }
 
       build(services, version, "workstation") { service =>
-        val app = Await.result(
-          getFromRegistry(registryClient, service.name),
-          Duration(3, "seconds")
-        ).getOrElse {
-          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
+
+        val svc = serviceToPortMapping.find(_.service == service).getOrElse {
+          sys.error(s"Could not find application named[$service] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
         }
 
-        val port = app.ports.headOption.getOrElse {
-          sys.error(s"Application named[${service.name}] does not have any ports in Registry at[${registryClient.baseUrl}]")
-        }.external
-
-        s"http://$DockerGateway:$port"
+        s"http://$DockerGateway:${svc.port}"
       }
     } finally {
       registryClient.closeAsyncHttpClient()
     }
   }
 
-  private[this] def getFromRegistry(
-    client: RegistryClient, name: String
+  case class ServicePort(
+    service: String,
+    port: String
+  )
+
+  /**
+    * Hit Registry YAML endpoint to retrieve full list of applications (services, ports).
+    * The entire list of applications is returned as Registry does the work of paginating all applications
+    * into the YAML.
+    * @param client
+    * @param ec
+    * @return
+    */
+  private[this] def buildServiceToPortMappingFromRegistry(
+    client: RegistryClient
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  ): Future[Option[io.flow.registry.v0.models.Application]] = {
-    client.applications.getById(name).map { app =>
-      Some(app)
-    }.recover {
-      case io.flow.registry.v0.errors.UnitResponse(404) => {
-        None
-      }
+  ): Future[Seq[ServicePort]] = {
+    client.applications.getYaml().map { registryYaml =>
+      val yaml = new Yaml()
 
-      case ex: Throwable => {
-        sys.error(s"Error fetching application[$name] from registry at[${client.baseUrl}]; $ex")
+      Try {
+        val y = Option(yaml.load(registryYaml))
+
+        y match {
+          case None => Map[String, Object]()
+          case Some(data) => data.asInstanceOf[java.util.ArrayList[_]].asScala
+        }
+
+      } match {
+        case Success(mapping) => {
+          mapping.map(a => a match {
+            case application: java.util.LinkedHashMap[String, Object] => {
+              ServicePort(
+                service = application.getOrDefault("id", sys.error(s"Could not find service name for application [$application]")).toString,
+                port = application.get("ports").asInstanceOf[java.util.ArrayList[_]].asScala.map(p => p match {
+                  case ports: java.util.LinkedHashMap[String, Object] => ports.getOrDefault("external", sys.error(s"Could not find external port in [$ports]")).toString
+                  case _ => sys.error(s"Could not find ports in [$p]")
+                }).head
+              )
+            }
+            case Failure(ex) => sys.error(s"Could not find application in [$a].  Error(s): [${ex.getMessage}]")
+          })
+        }.toSeq
       }
     }
   }
