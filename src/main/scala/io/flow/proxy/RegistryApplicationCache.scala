@@ -2,7 +2,6 @@ package io.flow.proxy
 
 import io.flow.registry.v0.{Client => RegistryClient}
 import io.flow.registry.v0.models.Application
-
 import scala.annotation.tailrec
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
@@ -22,7 +21,6 @@ private[proxy] case class RegistryApplicationCache(client: RegistryClient)(impli
     * @param name Application name in registry
     */
   def get(name: String): Option[Application] = {
-    println(cache)
     cache.getOrElse(
       name, {
         //attempt to load/reload cache and 'get' again, otherwise, fail
