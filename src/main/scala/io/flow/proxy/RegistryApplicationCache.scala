@@ -2,6 +2,8 @@ package io.flow.proxy
 
 import io.flow.registry.v0.{Client => RegistryClient}
 import io.flow.registry.v0.models.Application
+
+import scala.annotation.tailrec
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
 
@@ -41,17 +43,21 @@ private[proxy] case class RegistryApplicationCache(client: RegistryClient)(impli
   }
 
   def loadCache(limit: Long, offset: Long): Unit = {
+
+    @tailrec
     def load(limit: Long, offset: Long): Unit = {
       Await.result(
         getFromRegistry(limit, offset),
         Duration(5, "seconds")
-      ).foreach{ apps =>
-        if (apps.nonEmpty)
-          load(limit, offset + limit)
-
+      ).map{ apps =>
         apps.map(app =>
           cache += (app.id -> Some(app))
         )
+
+        apps.isEmpty
+      }.head match {
+        case true => //no-op
+        case false => load(limit, offset + limit)
       }
     }
 
