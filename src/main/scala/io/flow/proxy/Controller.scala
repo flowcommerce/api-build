@@ -51,6 +51,13 @@ case class Controller() extends io.flow.build.Controller {
       }
 
       val cache = RegistryApplicationCache(registryClient)
+
+      /**
+        * Pre-Load Cache - Paginate through Registry applications (100 results/page) and load into cache
+        * If cache is not pre-loaded, it will be loaded on first attempt to 'get'
+        */
+      cache.loadCache(100, 0)
+
       build(services, version, "development") { service =>
         s"http://$DevelopmentHostname:${cache.externalPort(service.name.toLowerCase)}"
       }

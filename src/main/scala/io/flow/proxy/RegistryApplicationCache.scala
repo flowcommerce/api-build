@@ -17,13 +17,19 @@ private[proxy] case class RegistryApplicationCache(client: RegistryClient)(impli
     * Get the port for the specified service, caching the
     * result. Throw an error if there is no port.
     *
-    * @param name Application name in registy
+    * @param name Application name in registry
     */
   def get(name: String): Option[Application] = {
-    cache.get(name).getOrElse {
-      fetch(name)
-    }
+    println(cache)
+    cache.getOrElse(
+      name, {
+        //attempt to load/reload cache and 'get' again, otherwise, fail
+        loadCache(100, 0)
+        cache.getOrElse(name, sys.error(s"After loading the cache, application named[$name] was still not available"))
+      }
+    )
   }
+
 
   def externalPort(name: String): Long = {
     val app = get(name).getOrElse {
@@ -34,29 +40,52 @@ private[proxy] case class RegistryApplicationCache(client: RegistryClient)(impli
     }
   }
 
-  private[this] def fetch(name: String): Option[Application] = {
-    val app = Await.result(
-      getFromRegistry(name),
-      Duration(3, "seconds")
-    )
-    cache += (name -> app)
-    app
+  def loadCache(limit: Long, offset: Long): Unit = {
+    def load(limit: Long, offset: Long): Unit = {
+      Await.result(
+        getFromRegistry(limit, offset),
+        Duration(5, "seconds")
+      ).foreach{ apps =>
+        if (apps.nonEmpty)
+          load(limit, offset + limit)
+
+        apps.map(app =>
+          cache += (app.id -> Some(app))
+        )
+      }
+    }
+
+    load(limit, offset)
+  }
+
+  def loadCacheWithFold(limit: Long, offset: Long): Unit = {
+    Await.result(
+      getFromRegistry(limit, offset),
+      Duration(5, "seconds")
+    ).foldLeft(cache){ (acc, apps) =>
+      apps.isEmpty match {
+        case false => loadCacheWithFold(limit, offset + limit)
+        case true => //no-op
+      }
+      apps.map(app =>
+        cache += (app.id -> Some(app))
+      )
+      cache
+    }
   }
   
-  private[this] def getFromRegistry(
-    name: String
-  ) (
+  private[this] def getFromRegistry(limit: Long, offset: Long) (
     implicit ec: scala.concurrent.ExecutionContext
-  ): Future[Option[Application]] = {
-    client.applications.getById(name).map { app =>
-      Some(app)
+  ): Future[Option[Seq[Application]]] = {
+    client.applications.get(limit = limit, offset = offset).map { apps =>
+      Some(apps)
     }.recover {
       case io.flow.registry.v0.errors.UnitResponse(404) => {
         None
       }
 
       case ex: Throwable => {
-        sys.error(s"Error fetching application[$name] from registry at[${client.baseUrl}]; $ex")
+        sys.error(s"Error fetching applications from registry at[${client.baseUrl}]; $ex")
       }
     }
   }
