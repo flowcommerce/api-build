@@ -34,7 +34,7 @@ case class Downloader(config: ApidocProfile) {
         client.versions.getByApplicationKeyAndVersion(app.organization, app.application, app.version).map { v =>
           v.service
         },
-        Duration(5, "seconds")
+        Duration(15, "seconds")
       )
       println(" Done")
       result

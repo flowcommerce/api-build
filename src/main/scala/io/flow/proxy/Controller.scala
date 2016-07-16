@@ -3,8 +3,6 @@ package io.flow.proxy
 import com.bryzek.apidoc.spec.v0.models.Service
 import io.flow.build.{Application, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration.Duration
 import Text._
 
 case class Controller() extends io.flow.build.Controller {
@@ -13,6 +11,14 @@ case class Controller() extends io.flow.build.Controller {
     * Whitelist of applications in the 'api' repo that do not exist in registry
     */
   private[this] val ExcludeWhiteList = Seq("common", "delivery_window")
+
+  /**
+    * This is the hostname of the services when running in docker on
+    * our development machines.
+    */
+  private[this] val DockerHostname = "172.17.0.1"
+
+  private[this] val DevelopmentHostname = "localhost"
 
   override val name = "Proxy"
   override val command = "proxy"
@@ -38,49 +44,22 @@ case class Controller() extends io.flow.build.Controller {
       }
     }
 
-    println(s"VERSION: $version")
-
     val registryClient = new RegistryClient()
-
     try {
       build(services, version, "production") { service =>
         s"https://${service.name.toLowerCase}.api.flow.io"
       }
 
+      val cache = RegistryApplicationCache(registryClient)
       build(services, version, "development") { service =>
-        val app = Await.result(
-          getFromRegistry(registryClient, service.name),
-          Duration(3, "seconds")
-        ).getOrElse {
-          sys.error(s"Could not find application named[${service.name}] in Registry at[${registryClient.baseUrl}]. Either add the service to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
-        }
+        s"http://$DevelopmentHostname:${cache.externalPort(service.name.toLowerCase)}"
+      }
 
-        val port = app.ports.headOption.getOrElse {
-          sys.error(s"Application named[${service.name}] does not have any ports in Registry at[${registryClient.baseUrl}]")
-        }.external
-
-        s"http://localhost:$port"
+      build(services, version, "workstation") { service =>
+        s"http://$DockerHostname:${cache.externalPort(service.name.toLowerCase)}"
       }
     } finally {
       registryClient.closeAsyncHttpClient()
-    }
-  }
-
-  private[this] def getFromRegistry(
-    client: RegistryClient, name: String
-  ) (
-    implicit ec: scala.concurrent.ExecutionContext
-  ): Future[Option[io.flow.registry.v0.models.Application]] = {
-    client.applications.getById(name).map { app =>
-      Some(app)
-    }.recover {
-      case io.flow.registry.v0.errors.UnitResponse(404) => {
-        None
-      }
-
-      case ex: Throwable => {
-        sys.error(s"Error fetching application[$name] from registry at[${client.baseUrl}]; $ex")
-      }
     }
   }
 
