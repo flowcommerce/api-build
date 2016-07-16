@@ -2,29 +2,38 @@ package io.flow.proxy
 
 import io.flow.registry.v0.{Client => RegistryClient}
 import io.flow.registry.v0.models.Application
+import scala.annotation.tailrec
 import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
 
 /**
-  * Cache to lookup information from the registry, ensuring that we
-  * contact the registry at most once per service.
+  * Cache to lookup information from the registry.  This cache is
+  * filled on instantiation and will not pick up any applications
+  * added to the registry after loading (i.e. there is no refresh).
   */
 private[proxy] case class RegistryApplicationCache(client: RegistryClient)(implicit ec: ExecutionContext) {
 
-  private[this] var cache = scala.collection.mutable.Map[String, Option[Application]]()
+  private[this] val cache: Map[String, Application] = load(
+    cache = scala.collection.mutable.Map[String, Application](),
+    offset = 0
+  )
 
   /**
-    * Get the port for the specified service, caching the
-    * result. Throw an error if there is no port.
+    * Get the application with the specified name from the registry.
     *
-    * @param name Application name in registy
+    * @param name Application name in registry
     */
   def get(name: String): Option[Application] = {
-    cache.get(name).getOrElse {
-      fetch(name)
-    }
+    cache.get(name)
   }
 
+  /**
+    * Returns the external port for the application with the specified
+    * name, throwing an error if the application does not exist in the
+    * registry.
+    *
+    * @param name Application name in registry
+    */
   def externalPort(name: String): Long = {
     val app = get(name).getOrElse {
       sys.error(s"Could not find application named[$name] in Registry at[${client.baseUrl}]. Either add the application to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
@@ -34,29 +43,41 @@ private[proxy] case class RegistryApplicationCache(client: RegistryClient)(impli
     }
   }
 
-  private[this] def fetch(name: String): Option[Application] = {
-    val app = Await.result(
-      getFromRegistry(name),
-      Duration(3, "seconds")
+  @tailrec
+  private[this] def load(cache: scala.collection.mutable.Map[String, Application], offset: Long): Map[String, Application] = {
+    val limit = 100
+    val results = Await.result(
+      getFromRegistry(
+        limit = limit,
+        offset = offset
+      ),
+      Duration(5, "seconds")
     )
-    cache += (name -> app)
-    app
+
+    results.map { apps =>
+      apps.map { app =>
+        cache += (app.id -> app)
+      }
+    }
+
+    results.size >= limit match {
+      case true => load(cache, offset + limit)
+      case false => cache.toMap
+    }
   }
-  
-  private[this] def getFromRegistry(
-    name: String
-  ) (
+
+  private[this] def getFromRegistry(limit: Long, offset: Long) (
     implicit ec: scala.concurrent.ExecutionContext
-  ): Future[Option[Application]] = {
-    client.applications.getById(name).map { app =>
-      Some(app)
+  ): Future[Option[Seq[Application]]] = {
+    client.applications.get(limit = limit, offset = offset).map { apps =>
+      Some(apps)
     }.recover {
       case io.flow.registry.v0.errors.UnitResponse(404) => {
         None
       }
 
       case ex: Throwable => {
-        sys.error(s"Error fetching application[$name] from registry at[${client.baseUrl}]; $ex")
+        sys.error(s"Error fetching applications from registry at[${client.baseUrl}]; $ex")
       }
     }
   }

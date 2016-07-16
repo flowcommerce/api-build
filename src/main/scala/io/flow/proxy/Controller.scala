@@ -51,6 +51,7 @@ case class Controller() extends io.flow.build.Controller {
       }
 
       val cache = RegistryApplicationCache(registryClient)
+
       build(services, version, "development") { service =>
         s"http://$DevelopmentHostname:${cache.externalPort(service.name.toLowerCase)}"
       }
