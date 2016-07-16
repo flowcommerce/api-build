@@ -7,30 +7,33 @@ import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
 
 /**
-  * Cache to lookup information from the registry, ensuring that we
-  * contact the registry at most once per service.
+  * Cache to lookup information from the registry.  This cache is
+  * filled on instantiation and will not pick up any applications
+  * added to the registry after loading (i.e. there is no refresh).
   */
 private[proxy] case class RegistryApplicationCache(client: RegistryClient)(implicit ec: ExecutionContext) {
 
-  private[this] var cache = scala.collection.mutable.Map[String, Option[Application]]()
+  private[this] val cache: Map[String, Application] = load(
+    cache = scala.collection.mutable.Map[String, Application](),
+    offset = 0
+  )
 
   /**
-    * Get the port for the specified service, caching the
-    * result. Throw an error if there is no port.
+    * Get the application with the specified name from the registry.
     *
     * @param name Application name in registry
     */
   def get(name: String): Option[Application] = {
-    cache.getOrElse(
-      name, {
-        //attempt to load/reload cache and 'get' again, otherwise, fail
-        loadCache(100, 0)
-        cache.getOrElse(name, sys.error(s"After loading the cache, application named[$name] was still not available"))
-      }
-    )
+    cache.get(name)
   }
 
-
+  /**
+    * Returns the external port for the application with the specified
+    * name, throwing an error if the application does not exist in the
+    * registry.
+    *
+    * @param name Application name in registry
+    */
   def externalPort(name: String): Long = {
     val app = get(name).getOrElse {
       sys.error(s"Could not find application named[$name] in Registry at[${client.baseUrl}]. Either add the application to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
@@ -40,44 +43,29 @@ private[proxy] case class RegistryApplicationCache(client: RegistryClient)(impli
     }
   }
 
-  def loadCache(limit: Long, offset: Long): Unit = {
-
-    @tailrec
-    def load(limit: Long, offset: Long): Unit = {
-      Await.result(
-        getFromRegistry(limit, offset),
-        Duration(5, "seconds")
-      ).map{ apps =>
-        apps.map(app =>
-          cache += (app.id -> Some(app))
-        )
-
-        apps.isEmpty
-      }.head match {
-        case true => //no-op
-        case false => load(limit, offset + limit)
-      }
-    }
-
-    load(limit, offset)
-  }
-
-  def loadCacheWithFold(limit: Long, offset: Long): Unit = {
-    Await.result(
-      getFromRegistry(limit, offset),
+  @tailrec
+  private[this] def load(cache: scala.collection.mutable.Map[String, Application], offset: Long): Map[String, Application] = {
+    val limit = 100
+    val results = Await.result(
+      getFromRegistry(
+        limit = limit,
+        offset = offset
+      ),
       Duration(5, "seconds")
-    ).foldLeft(cache){ (acc, apps) =>
-      apps.isEmpty match {
-        case false => loadCacheWithFold(limit, offset + limit)
-        case true => //no-op
+    )
+
+    results.map { apps =>
+      apps.map { app =>
+        cache += (app.id -> app)
       }
-      apps.map(app =>
-        cache += (app.id -> Some(app))
-      )
-      cache
+    }
+
+    results.size >= limit match {
+      case true => load(cache, offset + limit)
+      case false => cache.toMap
     }
   }
-  
+
   private[this] def getFromRegistry(limit: Long, offset: Long) (
     implicit ec: scala.concurrent.ExecutionContext
   ): Future[Option[Seq[Application]]] = {
