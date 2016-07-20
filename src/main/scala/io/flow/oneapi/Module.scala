@@ -11,7 +11,7 @@ object Module {
     Module("pricing", Seq()),
     Module("landed cost", Seq("harmonization")),
     Module("payment", Seq("payment")),
-    Module("logistics", Seq("delivery_window", "fulfillment", "tracking")),
+    Module("logistics", Seq("delivery_window", "fulfillment", "inventory", "tracking")),
     Module("customer service", Nil),
     Module("reference", Seq("reference")),
     General
