@@ -4,7 +4,7 @@ case class Module(name: String, serviceNames: Seq[String])
 
 object Module {
 
-  val General = Module("general", Seq("common", "location", "organization", "search", "user"))
+  val General = Module("general", Seq("common", "location", "organization", "search", "token", "user"))
 
   val All = Seq(
     Module("localization", Seq("catalog", "experience")),
