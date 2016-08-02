@@ -25,6 +25,7 @@ object Lint {
     linters.ExpandableUnionsAreConsistent,
     linters.Get,
     linters.GetByIdIsExpandable,
+    linters.LowerCasePaths,
     linters.MinimumMaximum,
     linters.ModelsWithOrganizationField,
     linters.PrimaryResourcesHaveVersionsOperation,
