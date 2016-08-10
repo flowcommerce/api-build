@@ -15,4 +15,21 @@ object Text {
     }
   }
 
+  /**
+    * Return the name up to the last dash. E.g. "currency-internal" ->
+    * Some("currency")
+    */
+  def shortenName(name: String): Option[String] = {
+    val i = name.lastIndexOf("-")
+    if (i > 0) {
+      name.substring(0, i) match {
+        case "" => None
+        case v => Some(v)
+      }
+    } else {
+      None
+    }
+  }
+
+  
 }

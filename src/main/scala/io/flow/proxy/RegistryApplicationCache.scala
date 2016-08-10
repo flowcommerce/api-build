@@ -24,7 +24,15 @@ private[proxy] case class RegistryApplicationCache(client: RegistryClient)(impli
     * @param name Application name in registry
     */
   def get(name: String): Option[Application] = {
-    cache.get(name)
+    cache.get(name) match {
+      case None => {
+        Text.shortenName(name) match {
+          case None => None
+          case Some(n) => get(n)
+        }
+      }
+      case Some(app) => Some(app)
+    }
   }
 
   /**
