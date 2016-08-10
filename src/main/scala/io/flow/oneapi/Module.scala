@@ -8,10 +8,10 @@ object Module {
 
   val All = Seq(
     Module("localization", Seq("catalog", "experience")),
-    Module("pricing", Seq()),
+    Module("pricing", Seq("currency")),
     Module("landed cost", Seq("harmonization")),
     Module("payment", Seq("payment")),
-    Module("logistics", Seq("delivery_window", "fulfillment", "inventory", "tracking")),
+    Module("logistics", Seq("delivery_window", "fulfillment", "inventory", "ratecard", "tracking")),
     Module("customer service", Nil),
     Module("geolocation", Seq("location")),
     Module("reference", Seq("reference")),
