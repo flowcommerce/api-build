@@ -5,7 +5,7 @@ sealed trait BuildType
 object BuildType {
 
   case object Api extends BuildType { override def toString = "api" }
-  case object Internal extends BuildType { override def toString = "internal" }
+  case object Internal extends BuildType { override def toString = "api-internal" }
 
   val all = Seq(Api, Internal)
 

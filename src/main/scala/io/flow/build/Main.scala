@@ -38,7 +38,6 @@ object Main extends App {
             }
 
             case Some(buildType) => {
-
               val selected = if (command == "all") { controllers } else { controllers.filter(_.command == command) }
               selected.toList match {
                 case Nil => {

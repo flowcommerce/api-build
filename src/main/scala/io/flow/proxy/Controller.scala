@@ -54,17 +54,17 @@ case class Controller() extends io.flow.build.Controller {
 
     val registryClient = new RegistryClient()
     try {
-      build(services, version, "production") { service =>
+      build(buildType, services, version, "production") { service =>
         s"https://${serviceHost(service.name)}.api.flow.io"
       }
 
       val cache = RegistryApplicationCache(registryClient)
 
-      build(services, version, "development") { service =>
+      build(buildType, services, version, "development") { service =>
         s"http://$DevelopmentHostname:${cache.externalPort(serviceHost(service.name))}"
       }
 
-      build(services, version, "workstation") { service =>
+      build(buildType, services, version, "workstation") { service =>
         s"http://$DockerHostname:${cache.externalPort(serviceHost(service.name))}"
       }
     } finally {
@@ -73,6 +73,7 @@ case class Controller() extends io.flow.build.Controller {
   }
 
   private[this] def build(
+    buildType: BuildType,
     services: Seq[Service],
     version: String,
     env: String
@@ -92,7 +93,7 @@ services:
 ${servicesYaml.indent(2)}
 """
 
-    val path = s"/tmp/api-proxy.$env.config"
+    val path = s"/tmp/${buildType}-proxy.$env.config"
     writeToFile(path, all)
     println(s" - $env: $path")
   }
