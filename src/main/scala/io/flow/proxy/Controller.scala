@@ -1,7 +1,7 @@
 package io.flow.proxy
 
 import com.bryzek.apidoc.spec.v0.models.Service
-import io.flow.build.{Application, Downloader}
+import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
 import Text._
 
@@ -24,6 +24,7 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "proxy"
 
   def run(
+    buildType: BuildType,
     downloader: Downloader,
     allServices: Seq[Service]
   ) (
@@ -35,6 +36,13 @@ case class Controller() extends io.flow.build.Controller {
 
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
+    def serviceHost(name: String): String = {
+      buildType match {
+        case BuildType.Api => name.toLowerCase
+        case BuildType.Internal => Text.stripSuffix(name.toLowerCase, "-internal")
+      }
+    }
+    
     val version = downloader.service(Application("flow", "api", "latest")) match {
       case Left(error) => {
         sys.error(s"Failed to download 'api' service from apidoc: $error")
@@ -46,18 +54,18 @@ case class Controller() extends io.flow.build.Controller {
 
     val registryClient = new RegistryClient()
     try {
-      build(services, version, "production") { service =>
-        s"https://${service.name.toLowerCase}.api.flow.io"
+      build(buildType, services, version, "production") { service =>
+        s"https://${serviceHost(service.name)}.api.flow.io"
       }
 
       val cache = RegistryApplicationCache(registryClient)
 
-      build(services, version, "development") { service =>
-        s"http://$DevelopmentHostname:${cache.externalPort(service.name.toLowerCase)}"
+      build(buildType, services, version, "development") { service =>
+        s"http://$DevelopmentHostname:${cache.externalPort(serviceHost(service.name))}"
       }
 
-      build(services, version, "workstation") { service =>
-        s"http://$DockerHostname:${cache.externalPort(service.name.toLowerCase)}"
+      build(buildType, services, version, "workstation") { service =>
+        s"http://$DockerHostname:${cache.externalPort(serviceHost(service.name))}"
       }
     } finally {
       registryClient.closeAsyncHttpClient()
@@ -65,6 +73,7 @@ case class Controller() extends io.flow.build.Controller {
   }
 
   private[this] def build(
+    buildType: BuildType,
     services: Seq[Service],
     version: String,
     env: String
@@ -84,7 +93,7 @@ services:
 ${servicesYaml.indent(2)}
 """
 
-    val path = s"/tmp/api-proxy.$env.config"
+    val path = s"/tmp/${buildType}-proxy.$env.config"
     writeToFile(path, all)
     println(s" - $env: $path")
   }

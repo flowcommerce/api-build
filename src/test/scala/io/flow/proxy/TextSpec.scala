@@ -5,11 +5,11 @@ import org.scalatest.{FunSpec, Matchers}
 
 class TextSpec extends FunSpec with Matchers {
 
-  it("shortenName") {
-    Text.shortenName("") should be(None)
-    Text.shortenName("currency") should be(None)
-    Text.shortenName("currency-internal") should be(Some("currency"))
-    Text.shortenName("currency-internal-spec") should be(Some("currency-internal"))
+  it("stripSuffix") {
+    Text.stripSuffix("", "-internal") should be("")
+    Text.stripSuffix("currency", "-internal") should be("currency")
+    Text.stripSuffix("currency-internal", "-internal") should be("currency")
+    Text.stripSuffix("currency-internal-foo", "-internal") should be("currency-internal-foo")
   }
   
 }
