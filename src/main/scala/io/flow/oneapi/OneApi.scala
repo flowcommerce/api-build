@@ -363,7 +363,7 @@ case class OneApi(
     val event = createEventUnion(service.unions)
     val eventType = createEventTypeEnum(event)
     service.copy(
-      enums = Seq(eventType),
+      enums = service.enums ++ Seq(eventType),
       unions = Seq(event)
     )
   }
