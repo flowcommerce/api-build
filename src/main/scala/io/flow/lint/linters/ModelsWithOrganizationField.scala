@@ -26,6 +26,7 @@ case object ModelsWithOrganizationField extends Linter with Helpers {
       }
       case false => {
         val position = fieldNames.take(3) match {
+          case "event_id" :: "organization" :: rest => 1
           case "id" :: "timestamp" :: "type" :: Nil => 3
           case "id" :: rest => 1
           case _ => 0
