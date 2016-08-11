@@ -1,5 +1,6 @@
 package io.flow.proxy
 
+import io.flow.build.BuildType
 import io.flow.registry.v0.{Client => RegistryClient}
 import io.flow.registry.v0.models.Application
 import scala.annotation.tailrec
@@ -11,7 +12,9 @@ import scala.concurrent.duration.Duration
   * filled on instantiation and will not pick up any applications
   * added to the registry after loading (i.e. there is no refresh).
   */
-private[proxy] case class RegistryApplicationCache(client: RegistryClient)(implicit ec: ExecutionContext) {
+private[proxy] case class RegistryApplicationCache(
+  client: RegistryClient
+)(implicit ec: ExecutionContext) {
 
   private[this] val cache: Map[String, Application] = load(
     cache = scala.collection.mutable.Map[String, Application](),
@@ -24,15 +27,7 @@ private[proxy] case class RegistryApplicationCache(client: RegistryClient)(impli
     * @param name Application name in registry
     */
   def get(name: String): Option[Application] = {
-    cache.get(name) match {
-      case None => {
-        Text.shortenName(name) match {
-          case None => None
-          case Some(n) => get(n)
-        }
-      }
-      case Some(app) => Some(app)
-    }
+    cache.get(name)
   }
 
   /**

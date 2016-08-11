@@ -1,11 +1,15 @@
 package io.flow.oneapi
 
 import com.bryzek.apidoc.spec.v0.models._
+import io.flow.build.BuildType
 import play.api.libs.json.{Json, JsString}
 
 private[oneapi] case class ContextualValue(context: String, value: String)
 
-case class OneApi(services: Seq[Service]) {
+case class OneApi(
+  buildType: BuildType,
+  services: Seq[Service]
+) {
 
   private[this] val DefaultFieldDescriptions = Map(
     "id" -> "Globally unique identifier",
@@ -49,38 +53,47 @@ case class OneApi(services: Seq[Service]) {
     }
   }
 
-  def buildOneApi() = Service(
-    apidoc = canonical.apidoc,
-    name = "API",
-    organization = canonical.organization,
-    application = Application(
-      key = "api"
-    ),
-    namespace = "io.flow.v" + majorVersion(canonical.version),
-    version = canonical.version,
-    baseUrl = canonical.baseUrl,
-    description = canonical.description,
-    info = canonical.info,
-    headers = Nil,
-    imports = Nil,
-    attributes = Nil,
+  def buildOneApi() = {
+    val imports = buildType match {
+      case BuildType.Api => Nil
+      case BuildType.Internal => services.flatMap { s =>
+        s.imports
+      }
+    }
 
-    enums = services.flatMap { s =>
-      s.enums.map(localize(s, _))
-    }.sortBy { _.name.toLowerCase },
+    Service(
+      apidoc = canonical.apidoc,
+      name = "API",
+      organization = canonical.organization,
+      application = Application(
+        key = "api"
+      ),
+      namespace = "io.flow.v" + majorVersion(canonical.version),
+      version = canonical.version,
+      baseUrl = canonical.baseUrl,
+      description = canonical.description,
+      info = canonical.info,
+      headers = Nil,
+      imports = imports,
+      attributes = Nil,
 
-    models = services.flatMap { s =>
-      s.models.map(localize(s, _))
-    }.sortBy { _.name.toLowerCase },
+      enums = services.flatMap { s =>
+        s.enums.map(localize(s, _))
+      }.sortBy { _.name.toLowerCase },
 
-    unions = services.flatMap { s =>
-      s.unions.map(localize(s, _))
-    }.sortBy { _.name.toLowerCase },
+      models = services.flatMap { s =>
+        s.models.map(localize(s, _))
+      }.sortBy { _.name.toLowerCase },
 
-    resources = services.flatMap { s =>
-      s.resources.map(localize(s, _))
-    }.sortBy { resourceSortKey(_) }
-  )
+      unions = services.flatMap { s =>
+        s.unions.map(localize(s, _))
+      }.sortBy { _.name.toLowerCase },
+
+      resources = services.flatMap { s =>
+        s.resources.map(localize(s, _))
+      }.sortBy { resourceSortKey(_) }
+    )
+  }
 
   /**
     * Given a string version number in semver, e.g. 1.2.3, returns the

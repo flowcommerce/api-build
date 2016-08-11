@@ -24,39 +24,52 @@ object Main extends App {
     case Right(profile) => {
       args.toList match {
         case Nil => {
-          println("** ERROR: Specify lint | oneapi | all")
+          println("** ERROR: Specify type[api|internal] and command[lint|oneapi|all]")
         }
 
-        case one :: rest => {
-          val selected = if (one == "all") { controllers } else { controllers.filter(_.command == one) }
-          selected.toList match {
-            case Nil => {
-              println(s"** ERROR: Invalid command[$one]. Must be one of: all, " + controllers.map(_.command).mkString(", "))
+        case one :: Nil => {
+          println("** ERROR: Specify type[api|internal] and command[lint|oneapi|all]")
+        }
+
+        case typ :: command :: rest => {
+          BuildType.fromString(typ) match {
+            case None => {
+              println(s"** ERROR: Invalid buildType[$typ]. Must be one of: " + BuildType.all.mkString(", "))
             }
 
-            case _ => {
-              Downloader.withClient(profile) { dl =>
-                val services = rest.flatMap { name =>
-                  Application.parse(name) match {
-                    case None => {
-                      globalErrors += s"Could not parse application[$name]"
-                      None
-                    }
+            case Some(buildType) => {
 
-                    case Some(app) => {
-                      dl.service(app) match {
-                        case Left(error) => {
-                          globalErrors += s"Failed to download app[${app.label}]: $error"
+              val selected = if (command == "all") { controllers } else { controllers.filter(_.command == command) }
+              selected.toList match {
+                case Nil => {
+                  println(s"** ERROR: Invalid command[$command]. Must be one of: all, " + controllers.map(_.command).mkString(", "))
+                }
+
+                case _ => {
+                  Downloader.withClient(profile) { dl =>
+                    val services = rest.flatMap { name =>
+                      Application.parse(name) match {
+                        case None => {
+                          globalErrors += s"Could not parse application[$name]"
                           None
                         }
-                        case Right(service) => {
-                          Some(service)
+
+                        case Some(app) => {
+                          dl.service(app) match {
+                            case Left(error) => {
+                              globalErrors += s"Failed to download app[${app.label}]: $error"
+                              None
+                            }
+                            case Right(service) => {
+                              Some(service)
+                            }
+                          }
                         }
                       }
                     }
+                    run(buildType, dl, selected, services)
                   }
                 }
-                run(dl, selected, services)
               }
             }
           }
@@ -65,7 +78,7 @@ object Main extends App {
     }
   }
 
-  private[this] def run(downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]) {
+  private[this] def run(buildType: BuildType, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]) {
 
     var errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (!globalErrors.isEmpty) {
@@ -77,7 +90,7 @@ object Main extends App {
       println(s"${controller.name} Starting")
       println("==================================================")
 
-      controller.run(downloader, services)
+      controller.run(buildType, downloader, services)
       controller.errors.foreach {
         case (key, errs) => {
           errors.get(key) match {

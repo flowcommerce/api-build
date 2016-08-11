@@ -1,7 +1,7 @@
 package io.flow.oneapi
 
 import com.bryzek.apidoc.spec.v0.models.Service
-import io.flow.build.Downloader
+import io.flow.build.{BuildType, Downloader}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -9,13 +9,14 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "oneapi"
 
   def run(
+    buildType: BuildType,
     downloader: Downloader,
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
     println("Building single API from: " + services.map(_.name).mkString(", "))
-    OneApi(services).process match {
+    OneApi(buildType, services).process match {
       case Left(errs) => {
         errs.foreach { addError(_) }
       }

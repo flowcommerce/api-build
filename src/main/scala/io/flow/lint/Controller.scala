@@ -1,7 +1,7 @@
 package io.flow.lint
 
 import com.bryzek.apidoc.spec.v0.models.Service
-import io.flow.build.Downloader
+import io.flow.build.{BuildType, Downloader}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -12,6 +12,7 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "lint"
 
   def run(
+    buildType: BuildType,
     downloader: Downloader,
     services: Seq[Service]
   ) (
