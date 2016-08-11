@@ -55,16 +55,26 @@ case class OneApi(
 
   def buildOneApi() = {
     val (name, key, ns, imports) = buildType match {
-      case BuildType.Api => ("API", "api", "io.flow", Nil)
-      case BuildType.Internal => {
-        val imports = services.flatMap { s =>
-          s.imports
-        }
+      case BuildType.Api => {
+        ("API", "api", "io.flow", Nil)
+      }
+
+      case BuildType.ApiEvent => {
+        ("API Event", "api-event", "io.flow.event", Nil)
+      }
+
+      case BuildType.ApiInternal => {
+        val imports = services.flatMap { _.imports }
         ("API Internal", "api-internal", "io.flow.internal", imports)
+      }
+
+      case BuildType.ApiInternalEvent => {
+        val imports = services.flatMap { _.imports }
+        ("API Internal Event", "api-internal-event", "io.flow.internal.event", imports)
       }
     }
 
-    Service(
+    val service = Service(
       apidoc = canonical.apidoc,
       name = name,
       organization = canonical.organization,
@@ -96,6 +106,11 @@ case class OneApi(
         s.resources.map(localize(s, _))
       }.sortBy { resourceSortKey(_) }
     )
+
+    buildType match {
+      case BuildType.Api | BuildType.ApiInternal => service
+      case BuildType.ApiEvent | BuildType.ApiInternalEvent => createEventService(service)
+    }
   }
 
   /**
@@ -161,14 +176,7 @@ case class OneApi(
           println(s"** WARNING ** Service[${service.name}] is not mapped to a module. Using ${Module.General.name}")
           Module.General
         }
-        Seq(
-          Attribute(
-            name = "docs",
-            value = Json.obj(
-              "module" -> module.name
-            )
-          )
-        )
+        Seq(docsAttribute(module))
       }
       case Some(_) => Nil
     }
@@ -277,8 +285,8 @@ case class OneApi(
 
   def localizeType(name: String): String = {
     buildType match {
-      case BuildType.Api => TextDatatype.toString(TextDatatype.parse(name))
-      case BuildType.Internal => name
+      case BuildType.Api | BuildType.ApiEvent => TextDatatype.toString(TextDatatype.parse(name))
+      case BuildType.ApiInternal | BuildType.ApiInternalEvent => name
     }
   }
 
@@ -350,4 +358,54 @@ case class OneApi(
       s"Duplicate $label[$dup] in: " + dupValues.map(_.context).sorted.mkString(", ")
     }
   }
+
+  def createEventService(service: Service): Service = {
+    val event = createEventUnion(service.unions)
+    val eventType = createEventTypeEnum(event)
+    service.copy(
+      enums = Seq(eventType),
+      unions = Seq(event)
+    )
+  }
+
+  def createEventUnion(unions: Seq[Union]): Union = {
+    unions.map(_.discriminator).distinct.toList match {
+      case discriminator :: Nil => {
+        Union(
+          name = "event",
+          plural = "events",
+          discriminator = discriminator,
+          types = unions.flatMap { _.types },
+          deprecation = None,
+          attributes = Seq(docsAttribute(Module.Webhook))
+        )
+      }
+
+      case discriminators => {
+        sys.error("Service must have exactly 1 discriminator, but we found: " + discriminators.mkString(", "))
+      }
+    }
+  }
+
+  def createEventTypeEnum(event: Union): Enum = {
+    Enum(
+      name = "event_type",
+      plural = "event_types",
+      values = event.types.map { t =>
+        EnumValue( 
+          name = t.`type`
+        )
+      },
+      deprecation = None,
+      attributes = Seq(docsAttribute(Module.Webhook))
+    )
+  }
+
+  def docsAttribute(module: Module) = Attribute(
+    name = "docs",
+    value = Json.obj(
+      "module" -> module.name
+    )
+  )
+
 }

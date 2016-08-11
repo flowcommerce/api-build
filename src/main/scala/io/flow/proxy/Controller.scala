@@ -39,13 +39,15 @@ case class Controller() extends io.flow.build.Controller {
     def serviceHost(name: String): String = {
       buildType match {
         case BuildType.Api => name.toLowerCase
-        case BuildType.Internal => Text.stripSuffix(name.toLowerCase, "-internal")
+        case BuildType.ApiEvent => name.toLowerCase
+        case BuildType.ApiInternal => Text.stripSuffix(name.toLowerCase, "-internal")
+        case BuildType.ApiInternalEvent => Text.stripSuffix(name.toLowerCase, "-internal-event")
       }
     }
     
-    val version = downloader.service(Application("flow", "api", "latest")) match {
+    val version = downloader.service(Application("flow", buildType.toString, "latest")) match {
       case Left(error) => {
-        sys.error(s"Failed to download 'api' service from apidoc: $error")
+        sys.error(s"Failed to download '$buildType' service from apidoc: $error")
       }
       case Right(svc) => {
         svc.version
@@ -82,20 +84,27 @@ case class Controller() extends io.flow.build.Controller {
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
-  
-    val servicesYaml = services.map { service =>
-      val host = hostProvider(service)
-      ProxyBuilder(service, host).yaml()
-    }.mkString("\n")
+    services.toList match {
+      case Nil => {
+        println(s" - $env: No services - skipping proxy file")
+      }
 
-    val all = s"""version: $version
+      case _ => {
+        val servicesYaml = services.map { service =>
+          val host = hostProvider(service)
+          ProxyBuilder(service, host).yaml()
+        }.mkString("\n")
+
+        val all = s"""version: $version
 services:
 ${servicesYaml.indent(2)}
 """
 
-    val path = s"/tmp/${buildType}-proxy.$env.config"
-    writeToFile(path, all)
-    println(s" - $env: $path")
+        val path = s"/tmp/${buildType}-proxy.$env.config"
+        writeToFile(path, all)
+        println(s" - $env: $path")
+      }
+    }
   }
 
   private[this] def writeToFile(path: String, contents: String) {

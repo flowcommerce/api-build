@@ -5,9 +5,11 @@ sealed trait BuildType
 object BuildType {
 
   case object Api extends BuildType { override def toString = "api" }
-  case object Internal extends BuildType { override def toString = "api-internal" }
+  case object ApiEvent extends BuildType { override def toString = "api-event" }
+  case object ApiInternal extends BuildType { override def toString = "api-internal" }
+  case object ApiInternalEvent extends BuildType { override def toString = "api-internal-event" }
 
-  val all = Seq(Api, Internal)
+  val all = Seq(Api, ApiEvent, ApiInternal, ApiInternalEvent)
 
   private[this] val byName = all.map(x => x.toString.toLowerCase -> x).toMap
 

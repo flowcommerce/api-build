@@ -5,6 +5,7 @@ case class Module(name: String, serviceNames: Seq[String])
 object Module {
 
   val General = Module("general", Seq("common", "organization", "search", "token", "user"))
+  val Webhook = Module("webhook", Seq("webhook"))
 
   val All = Seq(
     Module("localization", Seq("catalog", "experience")),
@@ -12,6 +13,7 @@ object Module {
     Module("landed cost", Seq("harmonization")),
     Module("payment", Seq("payment")),
     Module("logistics", Seq("delivery_window", "fulfillment", "inventory", "ratecard", "tracking")),
+    Webhook,
     Module("customer service", Nil),
     Module("geolocation", Seq("location")),
     Module("reference", Seq("reference")),
