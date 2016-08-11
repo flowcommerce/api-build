@@ -25,7 +25,7 @@ case class Controller() extends io.flow.build.Controller {
         import com.bryzek.apidoc.spec.v0.models.json._
         import play.api.libs.json._
 
-        val path = "/tmp/flow-api.json"
+        val path = s"/tmp/flow-${buildType}.json"
         new java.io.PrintWriter(path) { write(Json.prettyPrint(Json.toJson(service))); close }
         println(s"One API file created. See: $path")
       }

@@ -54,21 +54,24 @@ case class OneApi(
   }
 
   def buildOneApi() = {
-    val imports = buildType match {
-      case BuildType.Api => Nil
-      case BuildType.Internal => services.flatMap { s =>
-        s.imports
+    val (name, key, ns, imports) = buildType match {
+      case BuildType.Api => ("API", "api", "io.flow", Nil)
+      case BuildType.Internal => {
+        val imports = services.flatMap { s =>
+          s.imports
+        }
+        ("API Internal", "api-internal", "io.flow.internal", imports)
       }
     }
 
     Service(
       apidoc = canonical.apidoc,
-      name = "API",
+      name = name,
       organization = canonical.organization,
       application = Application(
-        key = "api"
+        key = key
       ),
-      namespace = "io.flow.v" + majorVersion(canonical.version),
+      namespace = s"${ns}.v" + majorVersion(canonical.version),
       version = canonical.version,
       baseUrl = canonical.baseUrl,
       description = canonical.description,
@@ -273,7 +276,10 @@ case class OneApi(
   }
 
   def localizeType(name: String): String = {
-    TextDatatype.toString(TextDatatype.parse(name))
+    buildType match {
+      case BuildType.Api => TextDatatype.toString(TextDatatype.parse(name))
+      case BuildType.Internal => name
+    }
   }
 
   def validatePaths(): Seq[String] = {
