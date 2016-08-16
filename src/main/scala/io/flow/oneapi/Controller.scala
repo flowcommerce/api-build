@@ -15,18 +15,23 @@ case class Controller() extends io.flow.build.Controller {
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
-    val eventService: Seq[Service] = buildType match {
-      case BuildType.Api | BuildType.ApiInternal => Seq(
-        downloader.service(Application("flow", buildType.toString, "latest")) match {
-          case Left(errors) => sys.error(s"Failed to download events: $errors")
-          case Right(service) => service
-        }
-      )
-      case BuildType.ApiEvent | BuildType.ApiInternalEvent => Nil
+    val eventService: Seq[Service] = (
+      buildType match {
+        case BuildType.ApiEvent | BuildType.ApiInternalEvent => None
+        case BuildType.Api => Some(BuildType.ApiEvent.toString)
+        case BuildType.ApiInternal => Some(BuildType.ApiInternalEvent.toString)
+      }
+    ) match {
+      case None => Nil
+      case Some(name) => downloader.service(Application("flow", name, "latest")) match {
+        case Left(errors) => sys.error(s"Failed to download apidoc application flow/$name: $errors")
+        case Right(service) => Seq(service)
+      }
     }
-    
-    println("Building single API from: " + services.map(_.name).mkString(", "))
-    OneApi(buildType, services ++ eventService).process match {
+
+    val all = services ++ eventService
+    println("Building single API from: " + all.map(_.name).mkString(", "))
+    OneApi(buildType, all).process match {
       case Left(errs) => {
         errs.foreach { addError(_) }
       }
