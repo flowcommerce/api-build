@@ -1,7 +1,7 @@
 package io.flow.oneapi
 
 import com.bryzek.apidoc.spec.v0.models.Service
-import io.flow.build.{BuildType, Downloader}
+import io.flow.build.{Application, BuildType, Downloader}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -15,8 +15,18 @@ case class Controller() extends io.flow.build.Controller {
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
+    val eventService: Seq[Service] = buildType match {
+      case BuildType.Api | BuildType.ApiInternal => Seq(
+        downloader.service(Application("flow", buildType.toString, "latest")) match {
+          case Left(errors) => sys.error(s"Failed to download events: $errors")
+          case Right(service) => service
+        }
+      )
+      case BuildType.ApiEvent | BuildType.ApiInternalEvent => Nil
+    }
+    
     println("Building single API from: " + services.map(_.name).mkString(", "))
-    OneApi(buildType, services).process match {
+    OneApi(buildType, services ++ eventService).process match {
       case Left(errs) => {
         errs.foreach { addError(_) }
       }

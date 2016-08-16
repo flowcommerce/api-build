@@ -1,7 +1,7 @@
 package io.flow.oneapi
 
 import com.bryzek.apidoc.spec.v0.models._
-import io.flow.build.BuildType
+import io.flow.build.{BuildType, Downloader}
 import play.api.libs.json.{Json, JsString}
 
 private[oneapi] case class ContextualValue(context: String, value: String)
