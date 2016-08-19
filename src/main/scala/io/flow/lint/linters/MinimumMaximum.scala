@@ -135,7 +135,11 @@ case object MinimumMaximum extends Linter with Helpers {
 
             max == desiredMax match {
               case true => Nil
-              case false => Seq(error(resource, operation, param, s"Maximum must be $desiredMax and not $max"))
+              case false =>
+                param.name == ExpandName match {
+                  case false => Seq(error(resource, operation, param, s"Maximum must be $desiredMax and not $max"))
+                  case true => Nil
+                }
             }
           }
         }
