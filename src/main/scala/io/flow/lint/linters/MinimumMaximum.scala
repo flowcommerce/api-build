@@ -133,7 +133,15 @@ case object MinimumMaximum extends Linter with Helpers {
               case false => {
                 param.name == ExpandName match {
                   case false => {
-                    Seq(error(resource, operation, param, s"Maximum must be $GlobalMax and not $max"))
+                    service.enums.find(_.name == param.`type`.substring(1, param.`type`.length-1)) match {
+                      case Some(enum) =>
+                        max == enum.values.size match {
+                        case true => Nil
+                        case false => Seq(error(resource, operation, param, s"Maximum must be ${enum.values.size} and not $max"))
+                      }
+
+                      case None => Seq(error(resource, operation, param, s"Maximum must be $GlobalMax and not $max"))
+                    }
                   }
                   case true => {
                     Nil

@@ -20,6 +20,24 @@ object Services {
     info = Info()
   )
 
+  def buildEnum(
+    name: String,
+    plural: String,
+    description: Option[String] = None,
+    deprecation: Option[Deprecation] = None,
+    values: Seq[EnumValue] = Nil,
+    attributes: Seq[Attribute] = Nil
+  ): Enum = {
+    Enum(
+      name,
+      plural,
+      description,
+      deprecation,
+      values,
+      attributes
+    )
+  }
+
   def buildUnion(
     name: String,
     discriminator: Option[String] = None,
@@ -80,6 +98,14 @@ object Services {
     Services.buildModel(
       name = name,
       fields = fields.map(Services.buildField(_))
+    )
+  }
+
+  def buildSimpleEnum(name: String, plural: String, values: Seq[EnumValue] = Nil): Enum = {
+    Services.buildEnum(
+      name = name,
+      plural = plural,
+      values = values
     )
   }
 

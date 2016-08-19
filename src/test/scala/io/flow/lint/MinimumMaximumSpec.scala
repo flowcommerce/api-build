@@ -64,6 +64,42 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
     )
   }
 
+  def buildServiceWithParameterAsEnum(
+    paramName: String = "test_enum",
+    paramType: String = "test_enum_value",
+    minimum: Option[Long] = None,
+    maximum: Option[Long] = None
+  ): Service = {
+    Services.Base.copy(
+      enums = Seq(
+        Services.buildSimpleEnum(paramName, paramName, Seq(EnumValue(name = paramType)))
+      ),
+      models = Seq(
+        Services.buildSimpleModel("user")
+      ),
+      resources = Seq(
+        Services.buildSimpleResource(
+          `type` = "user",
+          plural = "users",
+          method = Method.Get,
+          path = "/users",
+          responseCode = 200,
+          responseType = "[organization]",
+          parameters = Seq(
+            Parameter(
+              name = paramName,
+              `type` = s"[$paramName]",
+              location = ParameterLocation.Query,
+              required = false,
+              minimum = minimum,
+              maximum = maximum
+            )
+          )
+        )
+      )
+    )
+  }
+
   it("Model w/out min/max is fine") {
     linter.validate(buildServiceWithModel()) should be(Nil)
   }
@@ -152,6 +188,14 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
     linter.validate(buildServiceWithParameter(paramName = "expand", minimum = Some(-1))) should be(
       Seq(
         "Resource users GET /users Parameter expand: Minimum must be >= 0 and not -1"
+      )
+    )
+  }
+
+  it("Parameter enum has max validated") {
+    linter.validate(buildServiceWithParameterAsEnum(maximum = Some(5))) should be(
+      Seq(
+        "Resource users GET /users Parameter test_enum: Maximum must be 1 and not 5"
       )
     )
   }
