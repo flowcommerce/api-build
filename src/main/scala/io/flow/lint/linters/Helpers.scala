@@ -133,6 +133,11 @@ trait Helpers {
     typ.startsWith("[")
   }
 
+  private[this] val PrimitiveTypes = Set("boolean", "decimal", "integer", "double", "long", "object", "string", "date-iso8601", "date-time-iso8601", "uuid", "unit")
+  def isPrimitiveType(typ: String): Boolean = {
+    PrimitiveTypes.contains(baseType(typ))
+  }
+
   /**
     * Returns true if this response represents a 2xx
     */

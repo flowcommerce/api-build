@@ -67,6 +67,7 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
   def buildServiceWithParameterAsEnum(
     paramName: String = "test_enum",
     paramType: String = "test_enum_value",
+    operationParamType: String = "test_enum",
     minimum: Option[Long] = None,
     maximum: Option[Long] = None
   ): Service = {
@@ -88,7 +89,7 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
           parameters = Seq(
             Parameter(
               name = paramName,
-              `type` = s"[$paramName]",
+              `type` = s"[$operationParamType]",
               location = ParameterLocation.Query,
               required = false,
               minimum = minimum,
@@ -198,5 +199,9 @@ class MinimumMaximumSpec extends FunSpec with Matchers {
         "Resource users GET /users Parameter test_enum: Maximum must be 1 and not 5"
       )
     )
+  }
+
+  it("Imported enum has max ignored") {
+    linter.validate(buildServiceWithParameterAsEnum(operationParamType = "io.flow.common.v0.enums.test", maximum = Some(5))) should be(Nil)
   }
 }
