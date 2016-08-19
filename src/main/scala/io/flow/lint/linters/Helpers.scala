@@ -59,15 +59,22 @@ trait Helpers {
     */
   def responseType(service: Service, operation: Operation): Option[String] = {
     operation.responses.find(isSuccess(_)).map { response =>
-      val i = response.`type`.lastIndexOf("[")
-      if (i < 0) {
-        response.`type`
-      } else {
-        response.`type`.substring(i + 1, response.`type`.indexOf("]"))
-      }
+      baseType(response.`type`)
     }
   }
 
+  /**
+    * For collections, parses out the base type of the collection.
+    */
+  def baseType(typ: String): String = {
+    val i = typ.lastIndexOf("[")
+    if (i < 0) {
+      typ
+    } else {
+      typ.substring(i + 1, typ.indexOf("]"))
+    }
+  }
+  
   def nonHealthcheckResources(service: Service): Seq[Resource] = {
     service.resources.filter( _.plural != "healthchecks")
   }

@@ -128,27 +128,14 @@ case object MinimumMaximum extends Linter with Helpers {
           }
 
           case true => {
-            max == GlobalMax match {
-              case true => Nil
-              case false => {
-                param.name == ExpandName match {
-                  case false => {
-                    // use substring to parse out "[" and "]"
-                    service.enums.find(_.name == param.`type`.substring(1, param.`type`.length-1)) match {
-                      case Some(enum) =>
-                        max == enum.values.size match {
-                        case true => Nil
-                        case false => Seq(error(resource, operation, param, s"Maximum must be ${enum.values.size} and not $max"))
-                      }
+            val desiredMax = service.enums.find(_.name == baseType(param.`type`)) match {
+              case Some(enum) => enum.values.size
+              case None => GlobalMax
+            }
 
-                      case None => Seq(error(resource, operation, param, s"Maximum must be $GlobalMax and not $max"))
-                    }
-                  }
-                  case true => {
-                    Nil
-                  }
-                }
-              }
+            max == desiredMax match {
+              case true => Nil
+              case false => Seq(error(resource, operation, param, s"Maximum must be $desiredMax and not $max"))
             }
           }
         }
