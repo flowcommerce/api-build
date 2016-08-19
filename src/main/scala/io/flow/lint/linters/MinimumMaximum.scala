@@ -133,6 +133,7 @@ case object MinimumMaximum extends Linter with Helpers {
               case false => {
                 param.name == ExpandName match {
                   case false => {
+                    // use substrint to parse out "[" and "]"
                     service.enums.find(_.name == param.`type`.substring(1, param.`type`.length-1)) match {
                       case Some(enum) =>
                         max == enum.values.size match {
