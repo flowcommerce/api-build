@@ -9,9 +9,11 @@ import com.bryzek.apidoc.spec.v0.models.{Operation, Resource, Service}
 case object SortAttribute extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.resources.flatMap { resource: Resource =>
+    service.resources
+      .flatMap { resource: Resource =>
       resource.operations
         .filter(_.parameters.exists(_.name == "sort"))
+        .filter(op => !ignored(op.attributes, "sort"))
         .flatMap(validateOperationHasSortAttribute(resource, _))
     }
   }

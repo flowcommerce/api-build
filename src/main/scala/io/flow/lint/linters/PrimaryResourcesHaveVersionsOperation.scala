@@ -29,14 +29,16 @@ case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
   }
 
   private[this] def doValidate(service: Service): Seq[String] = {
-    val data: Seq[Data] = nonHealthcheckResources(service).flatMap { resource =>
-      resource.operations.
-        filter(_.method == Method.Get).
-        filter(returnsArray(_)).
-        map { operation =>
-          Data(resource, operation)
-        }
-    }
+    val data: Seq[Data] = nonHealthcheckResources(service).
+      filter(r => !ignored(r.attributes, "versions")).
+      flatMap { resource =>
+        resource.operations.
+          filter(_.method == Method.Get).
+          filter(returnsArray(_)).
+          map { operation =>
+            Data(resource, operation)
+          }
+      }
 
     val versionsOperationErrors = data.filter(_.operation.path.endsWith("/versions")).flatMap { item =>
       responseType(service, item.operation) match {

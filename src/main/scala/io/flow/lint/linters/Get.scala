@@ -22,6 +22,11 @@ case object Get extends Linter with Helpers {
     trailingParams = Seq("limit", "offset", "sort")
   )
 
+  private[this] val PrimaryWithoutSort = Sublinter(
+    leadingParam = "id",
+    trailingParams = Seq("limit", "offset")
+  )
+
   private[this] val Query = Sublinter(
     leadingParam = "q",
     trailingParams = Nil
@@ -41,7 +46,12 @@ case object Get extends Linter with Helpers {
       flatMap { op =>
         queryParameters(op).headOption.map(_.name) match {
           case Some("q") => Query.validateOperation(service, resource, op)
-          case _ => Primary.validateOperation(service, resource, op)
+          case _ => {
+            ignored(op.attributes, "sort") match {
+              case true => PrimaryWithoutSort.validateOperation(service, resource, op)
+              case false => Primary.validateOperation(service, resource, op)
+            }
+          }
         }
       }
   }

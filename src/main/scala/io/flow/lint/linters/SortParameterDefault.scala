@@ -16,7 +16,10 @@ case object SortParameterDefault extends Linter with Helpers {
   }
 
   def validateResource(service: Service, resource: Resource): Seq[String] = {
-    resource.operations.filter(r => !ignored(r.attributes, "sort_parameter_default")).flatMap(validateOperation(service, resource, _))
+    resource.operations.
+      filter(r => !ignored(r.attributes, "sort")).
+      filter(r => !ignored(r.attributes, "sort_parameter_default")).
+      flatMap(validateOperation(service, resource, _))
   }
 
   def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
