@@ -12,7 +12,7 @@ object Module {
     Module("pricing", Seq("currency")),
     Module("landed cost", Seq("harmonization")),
     Module("payment", Seq("payment")),
-    Module("logistics", Seq("delivery_window", "fulfillment", "inventory", "ratecard", "tracking")),
+    Module("logistics", Seq("delivery_window", "fulfillment", "inventory", "label", "ratecard", "tracking")),
     Webhook,
     Module("customer service", Nil),
     Module("geolocation", Seq("location")),
