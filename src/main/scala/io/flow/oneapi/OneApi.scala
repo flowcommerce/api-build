@@ -102,15 +102,46 @@ case class OneApi(
         s.unions.map(localize(s, _))
       }.sortBy { _.name.toLowerCase },
 
-      resources = services.flatMap { s =>
-        s.resources.map(localize(s, _))
-      }.sortBy { resourceSortKey(_) }
+      resources = mergeResources(
+        services.flatMap { s =>
+          s.resources.map(localize(s, _))
+        }
+      ).sortBy { resourceSortKey(_) }
     )
 
     buildType match {
       case BuildType.Api | BuildType.ApiInternal => service
       case BuildType.ApiEvent | BuildType.ApiInternalEvent => createEventService(service)
     }
+  }
+
+  @scala.annotation.tailrec
+  private[this] def mergeResources(resources: Seq[Resource], merged: Seq[Resource] = Nil): Seq[Resource] = {
+    resources.toList match {
+      case Nil => merged
+      case one :: rest => {
+        merged.find(_.`type` == one.`type`) match {
+          case None => mergeResources(rest, merged ++ Seq(one))
+          case Some(r) => mergeResources(rest, merged.filter(_.`type` != one.`type`) ++ Seq(merge(r, one)))
+        }
+      }
+    }
+  }
+
+  /**
+    * Merges the two resources, preferring data from a where available
+    */
+  private[this] def merge(a: Resource, b: Resource): Resource = {
+    val attributeNames = a.attributes.map(_.name)
+
+    a.copy(
+      description = a.description match {
+        case Some(desc) => Some(desc)
+        case None => b.description
+      },
+      operations = a.operations ++ b.operations,
+      attributes = a.attributes ++ b.attributes.filter(attr => !attributeNames.contains(attr.name))
+    )
   }
 
   /**
