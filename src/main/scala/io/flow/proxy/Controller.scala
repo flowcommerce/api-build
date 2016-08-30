@@ -90,14 +90,30 @@ case class Controller() extends io.flow.build.Controller {
       }
 
       case _ => {
-        val servicesYaml = services.map { service =>
-          val host = hostProvider(service)
-          ProxyBuilder(service, host).yaml()
+        val serversYaml = services.map { service =>
+          Seq(
+            s"- name: ${service.name}",
+            s"  host: ${hostProvider(service)}"
+          ).mkString("\n")
+        }.mkString("\n")
+
+        val operationsYaml = services.flatMap { service =>
+          service.resources.flatMap(_.operations).map { op =>
+            Seq(
+              s"- method: ${op.method.toString.toUpperCase}",
+              s"  path: ${op.path}",
+              s"  server: ${service.name}"
+            ).mkString("\n")
+          }
         }.mkString("\n")
 
         val all = s"""version: $version
-services:
-${servicesYaml.indent(2)}
+
+servers:
+${serversYaml.indent(2)}
+
+operations:
+${operationsYaml.indent(2)}
 """
 
         val path = s"/tmp/${buildType}-proxy.$env.config"
