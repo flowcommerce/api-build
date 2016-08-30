@@ -94,7 +94,7 @@ case class Controller() extends io.flow.build.Controller {
           Seq(
             s"- name: ${service.name}",
             s"  host: ${hostProvider(service)}"
-          )
+          ).mkString("\n")
         }.mkString("\n")
 
         val operationsYaml = services.flatMap { service =>
@@ -103,7 +103,7 @@ case class Controller() extends io.flow.build.Controller {
               s"- method: ${op.method.toString.toUpperCase}",
               s"  path: ${op.path}",
               s"  server: ${service.name}"
-            )
+            ).mkString("\n")
           }
         }.mkString("\n")
 
