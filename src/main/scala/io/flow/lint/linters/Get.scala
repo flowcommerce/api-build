@@ -1,9 +1,8 @@
 package io.flow.lint.linters
 
+import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Service}
 import io.flow.lint.Linter
 import io.flow.lint.util.Expansions
-import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Response, Service}
-import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
 /**
   * Enforces that each resource has a top level GET method where one
@@ -15,7 +14,7 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   */
 case object Get extends Linter with Helpers {
 
-  private[this] val ExcludedApplications = Seq("location", "search")
+  private[this] val ExcludedApplications = Seq("location", "organization", "search")
 
   private[this] val Primary = Sublinter(
     leadingParam = "id",
