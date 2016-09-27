@@ -153,4 +153,38 @@ class StandardResponseSpec extends FunSpec with Matchers {
     }
   }
 
+  it("Handles invalid error types") {
+    Seq("error", "[error]").foreach { typ =>
+      linter.validate(
+        buildService(
+          Method.Post,
+          Seq(
+            Response(ResponseCodeInt(200), "[organization]"),
+            Response(ResponseCodeInt(401), "unit"),
+            Response(ResponseCodeInt(422), typ)
+          )
+        )
+      ) should be(
+        Seq(
+          s"Resource organizations POST /organizations Response 422: response must be of type io.flow.error.v0.models.* and not $typ"
+        )
+      )
+    }
+  }
+
+  it("Handles valid error types") {
+    Seq("validation_error", "order_error").foreach { typ =>
+      linter.validate(
+        buildService(
+          Method.Post,
+          Seq(
+            Response(ResponseCodeInt(200), "[organization]"),
+            Response(ResponseCodeInt(401), "unit"),
+            Response(ResponseCodeInt(422), s"io.flow.error.v0.models.$typ")
+          )
+        )
+      ) should be(Nil)
+    }
+  }
+  
 }
