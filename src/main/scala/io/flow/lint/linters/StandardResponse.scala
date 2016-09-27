@@ -15,7 +15,7 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   * 
   *   - 204 - verify type: unit
   *   - 401 - verify type: unit, description: "unauthorized request"
-  *   - 422 - verify type: "[io.flow.common.v0.models.error]"
+  *   - 422 - verify type: "io.flow.error.v0.models.*"
   */
 case object StandardResponse extends Linter with Helpers {
 
@@ -93,7 +93,7 @@ case object StandardResponse extends Linter with Helpers {
         n match {
           case 204 => compare(resource, operation, response, "unit")
           case 401 => compare(resource, operation, response, "unit")
-          case 422 => compare(resource, operation, response, "[io.flow.common.v0.models.error]")
+          case 422 => compare(resource, operation, response, "io.flow.error.v0.models.*")
           case _ => Nil
         }
       }
@@ -106,11 +106,23 @@ case object StandardResponse extends Linter with Helpers {
     response: Response,
     datatype: String
   ): Seq[String] = {
-    response.`type` == datatype match {
-      case true => Nil
+    typeMatches(response.`type`, datatype) match {
+      case true => {
+        Nil
+      }
       case false => {
         Seq(error(resource, operation, response, s"response must be of type ${datatype} and not ${response.`type`}"))
       }
+    }
+  }
+
+  def typeMatches(
+    typ: String,
+    pattern: String
+  ): Boolean = {
+    typ == pattern match {
+      case true => true
+      case false => pattern.endsWith("*") && typ.startsWith(pattern.dropRight(1))
     }
   }
 }
