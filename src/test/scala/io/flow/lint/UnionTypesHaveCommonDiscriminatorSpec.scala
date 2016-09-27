@@ -7,11 +7,14 @@ class UnionTypesHaveCommonDiscriminatorSpec extends FunSpec with Matchers {
 
   val linter = linters.UnionTypesHaveCommonDiscriminator
 
-  def buildService(discriminator: Option[String]): Service = {
+  def buildService(
+    typeName: String,
+    discriminator: Option[String]
+  ): Service = {
     Services.Base.copy(
       unions = Seq(
         Services.buildUnion(
-          name = "expandable_user",
+          name = typeName,
           discriminator = discriminator,
           types = Seq(
             Services.buildUnionType("string"),
@@ -23,19 +26,27 @@ class UnionTypesHaveCommonDiscriminatorSpec extends FunSpec with Matchers {
   }
 
   it("with no discriminator") {
-    linter.validate(buildService(None)) should be (
+    linter.validate(buildService("expandable_user", None)) should be (
       Seq("Union expandable_user: Must have a discriminator with value 'discriminator'")
     )
   }
 
   it("with invalid discriminator") {
-    linter.validate(buildService(Some("foo"))) should be (
-      Seq("Union expandable_user: Discriminator must have value 'discriminator' and not foo")
+    linter.validate(buildService("expandable_user", Some("foo"))) should be (
+      Seq("Union expandable_user: Discriminator must have value 'discriminator' and not 'foo'")
     )
   }
 
   it("with valid discriminator") {
-    linter.validate(buildService(Some("discriminator"))) should be (Nil)
+    linter.validate(buildService("expandable_user", Some("discriminator"))) should be (Nil)
+  }
+
+  it("with valid discriminator for error types") {
+    linter.validate(buildService("example_error", Some("discriminator"))) should be (
+      Seq("Union example_error: Discriminator must have value 'code' and not 'discriminator'")
+    )
+
+    linter.validate(buildService("example_error", Some("code"))) should be (Nil)
   }
 
 }
