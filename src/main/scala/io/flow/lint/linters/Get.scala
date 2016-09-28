@@ -14,8 +14,6 @@ import io.flow.lint.util.Expansions
   */
 case object Get extends Linter with Helpers {
 
-  private[this] val ExcludedApplications = Seq("location", "organization", "search")
-
   private[this] val Primary = Sublinter(
     leadingParam = "id",
     trailingParams = Seq("limit", "offset", "sort")
@@ -32,19 +30,20 @@ case object Get extends Linter with Helpers {
   )
 
   override def validate(service: Service): Seq[String] = {
-    ExcludedApplications.contains(service.name.toLowerCase) match {
-      case true => Nil
-      case false => nonHealthcheckResources(service).map(validateResource(service, _)).flatten
-    }
+    nonHealthcheckResources(service).map(validateResource(service, _)).flatten
   }
 
   def validateResource(service: Service, resource: Resource): Seq[String] = {
     resource.operations.
+      filter(op => !ignored(op.attributes, "get")).
       filter(_.method == Method.Get).
       filter(returnsArray(_)).
       flatMap { op =>
         queryParameters(op).headOption.map(_.name) match {
-          case Some("q") => Query.validateOperation(service, resource, op)
+          case Some("q") => {
+            Query.validateOperation(service, resource, op)
+          }
+
           case _ => {
             ignored(op.attributes, "sort") match {
               case true => PrimaryWithoutSort.validateOperation(service, resource, op)
