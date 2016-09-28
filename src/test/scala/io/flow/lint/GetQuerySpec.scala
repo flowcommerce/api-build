@@ -74,22 +74,4 @@ class GetQuerySpec extends FunSpec with Matchers {
     ) should be(Nil)
   }
 
-  it("successfully validate excluded applications") {
-    Seq("location", "organization", "search").foreach { applicationName =>
-      linter.validate(
-        buildResourceWithSearch(
-          Seq(
-            Parameter(
-              name = "q",
-              `type` = "string",
-              location = ParameterLocation.Query,
-              required = true
-            )
-          )
-        ).copy(name = applicationName)
-      ) should be(
-        Nil
-      )
-    }
-  }
 }
