@@ -15,7 +15,7 @@ import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, Re
   * 
   *   - 204 - verify type: unit
   *   - 401 - verify type: unit, description: "unauthorized request"
-  *   - 422 - verify type: "io.flow.error.v0.models.*"
+  *   - 422 - verify type: "io.flow.error.v0.*"
   */
 case object StandardResponse extends Linter with Helpers {
 
@@ -93,7 +93,7 @@ case object StandardResponse extends Linter with Helpers {
         n match {
           case 204 => compare(resource, operation, response, "unit")
           case 401 => compare(resource, operation, response, "unit")
-          case 422 => compare(resource, operation, response, "io.flow.error.v0.models.*")
+          case 422 => compare(resource, operation, response, "io.flow.error.v0.*")
           case _ => Nil
         }
       }
