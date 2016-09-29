@@ -21,6 +21,10 @@ code:
       version: latest
       generators:
         play_2_x_standalone_json: src/main/scala/io/flow/generated
+    error:
+      version: latest
+      generators:
+        play_2_x_standalone_json: src/main/scala/io/flow/generated
     registry:
       version: latest
       generators:
