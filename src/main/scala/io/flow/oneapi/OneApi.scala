@@ -11,6 +11,11 @@ case class OneApi(
   services: Seq[Service]
 ) {
 
+  private[this] val MergeResourcePathsHack = Map(
+    "organization" -> "/organizations",
+    "timezone" -> "/"
+  )
+
   private[this] val DefaultFieldDescriptions = Map(
     "id" -> "Globally unique identifier",
     "number" -> "Client's unique identifier for this object",
@@ -129,12 +134,48 @@ case class OneApi(
   }
 
   /**
-    * Merges the two resources, preferring data from a where available
+    * Merges the two resources:
+    *   - Takes fields from the first resource if both provide (e.g. decription)
+    *   - If paths are different, raises an error
     */
   private[this] def merge(a: Resource, b: Resource): Resource = {
+    assert(a.`type` == b.`type`)
+
+    // Ideally the resource paths are the same; if not we have to
+    // explicitly choose the resource path we want. This will
+    // influence method names in the code generators and thus
+    // important to get right.
+    val allPaths = Seq(a.path, b.path).flatten.distinct
+    val path: Option[String] = allPaths.toList match {
+      case Nil => None
+      case one :: Nil => Some(one)
+      case multiple => {
+        MergeResourcePathsHack.lift(a.`type`) match {
+          case Some(defaultPath) => {
+            allPaths.contains(defaultPath) match {
+              case true => Some(defaultPath)
+              case false => {
+                defaultPath == "/" match {
+                  case true => Some(defaultPath)
+                  case false => sys.error(s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]")
+                }
+              }
+            }
+          }
+          case None => {
+            sys.error(s"Cannot merge resources of type[${a.`type`}] with different paths: " +
+              multiple.sorted.mkString(", ") +
+              "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack"
+            )
+          }
+        }
+      }
+    }
+
     val attributeNames = a.attributes.map(_.name)
 
     a.copy(
+      path = path,
       description = a.description match {
         case Some(desc) => Some(desc)
         case None => b.description
