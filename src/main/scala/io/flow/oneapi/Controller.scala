@@ -17,10 +17,9 @@ case class Controller() extends io.flow.build.Controller {
   ) {
     val eventService: Seq[Service] = (
       buildType match {
-        case BuildType.ApiEvent | BuildType.ApiInternalEvent => None
+        case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiPartner => None
         case BuildType.Api => Some(BuildType.ApiEvent.toString)
         case BuildType.ApiInternal => Some(BuildType.ApiInternalEvent.toString)
-        case BuildType.ApiPartner => Some(BuildType.ApiPartner.toString)
       }
     ) match {
       case None => Nil
