@@ -20,6 +20,7 @@ case class Controller() extends io.flow.build.Controller {
         case BuildType.ApiEvent | BuildType.ApiInternalEvent => None
         case BuildType.Api => Some(BuildType.ApiEvent.toString)
         case BuildType.ApiInternal => Some(BuildType.ApiInternalEvent.toString)
+        case BuildType.ApiPartner => Some(BuildType.ApiPartner.toString)
       }
     ) match {
       case None => Nil
