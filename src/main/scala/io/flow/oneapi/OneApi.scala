@@ -77,6 +77,11 @@ case class OneApi(
         val imports = services.flatMap { _.imports }
         ("API Internal Event", "api-internal-event", "io.flow.internal.event", imports)
       }
+
+      case BuildType.ApiPartner => {
+        val imports = services.flatMap { _.imports }
+        ("API Partner", "api-partner", "io.flow.partner", imports)
+      }
     }
 
     val service = Service(
@@ -115,7 +120,7 @@ case class OneApi(
     )
 
     buildType match {
-      case BuildType.Api | BuildType.ApiInternal => service
+      case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner => service
       case BuildType.ApiEvent | BuildType.ApiInternalEvent => createEventService(service)
     }
   }
@@ -358,7 +363,7 @@ case class OneApi(
   def localizeType(name: String): String = {
     buildType match {
       case BuildType.Api | BuildType.ApiEvent => TextDatatype.toString(TextDatatype.parse(name))
-      case BuildType.ApiInternal | BuildType.ApiInternalEvent => name
+      case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner => name
     }
   }
 

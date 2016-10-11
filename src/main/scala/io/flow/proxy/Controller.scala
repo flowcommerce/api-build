@@ -42,6 +42,7 @@ case class Controller() extends io.flow.build.Controller {
         case BuildType.ApiEvent => name.toLowerCase
         case BuildType.ApiInternal => Text.stripSuffix(name.toLowerCase, "-internal")
         case BuildType.ApiInternalEvent => Text.stripSuffix(name.toLowerCase, "-internal-event")
+        case BuildType.ApiPartner => Text.stripSuffix(name.toLowerCase, "-partner")
       }
     }
     
