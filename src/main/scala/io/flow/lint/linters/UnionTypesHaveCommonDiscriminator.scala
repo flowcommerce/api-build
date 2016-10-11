@@ -19,7 +19,10 @@ case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
   def validateUnion(union: Union): Seq[String] = {
     val target = union.name.endsWith("_error") match {
       case true => ErrorName
-      case false => StandardName
+      case false => union.name == "localized_price" match {
+        case true => "key" // hack for now for catalog.localized_price...
+        case false => StandardName
+      }
     }
 
     union.discriminator match {
@@ -36,5 +39,3 @@ case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
   }
 
 }
-
-
