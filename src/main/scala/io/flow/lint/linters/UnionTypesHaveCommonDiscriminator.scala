@@ -13,16 +13,15 @@ case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
   private[this] val ErrorName = "code"
 
   override def validate(service: Service): Seq[String] = {
-    service.unions.flatMap(validateUnion(_))
+    service.unions.
+      filter(op => !ignored(op.attributes, "discriminator")).
+      flatMap(validateUnion(_))
   }
 
   def validateUnion(union: Union): Seq[String] = {
     val target = union.name.endsWith("_error") match {
       case true => ErrorName
-      case false => union.name == "localized_price" match {
-        case true => "key" // hack for now for catalog.localized_price...
-        case false => StandardName
-      }
+      case false => StandardName
     }
 
     union.discriminator match {
