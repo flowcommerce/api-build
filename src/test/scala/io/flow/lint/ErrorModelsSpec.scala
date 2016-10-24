@@ -8,7 +8,7 @@ class ErrorModelsSpec extends FunSpec with Matchers {
   val linter = linters.ErrorModels
 
   val code = Services.buildField("code")
-  val messages = Services.buildField("messages", "[string]")
+  val messages = Services.buildField("messages", "[string]", minimum = Some(1))
 
   def buildService(
     fields: Seq[Field]
@@ -75,6 +75,15 @@ class ErrorModelsSpec extends FunSpec with Matchers {
     ))
   }
 
+  it("messages must have a minimum >= 1") {
+    linter.validate(buildService(Seq(code, messages.copy(minimum=None)))) should be(Seq(
+      "Model test_error Field[messages]: missing minimum"
+    ))
+    linter.validate(buildService(Seq(code, messages.copy(minimum=Some(0))))) should be(Seq(
+      "Model test_error Field[messages]: minimum must be >= 1"
+    ))
+  }
+  
   it("unions") {
     linter.validate(buildServiceWithUnion(Seq(messages))) should be(Nil)
 

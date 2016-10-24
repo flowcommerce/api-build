@@ -42,10 +42,7 @@ case object ErrorModels extends Linter with Helpers {
           case false => Nil
         }
 
-        val messagesErrors = model.fields(0).`type` == "[string]" match {
-          case true => Nil
-          case false => Seq(error(model, model.fields(0), "type must be '[string]'"))
-        }
+        val messagesErrors = validateMessageField(model, model.fields(0))
 
         codeErrors ++ messagesErrors
       }
@@ -73,10 +70,7 @@ case object ErrorModels extends Linter with Helpers {
           case false => Seq(error(model, model.fields(0), "type must be 'string'"))
         }
 
-        val messagesErrors = model.fields(1).`type` == "[string]" match {
-          case true => Nil
-          case false => Seq(error(model, model.fields(1), "type must be '[string]'"))
-        }
+        val messagesErrors = validateMessageField(model, model.fields(1))
 
         codeErrors ++ messagesErrors
       }
@@ -111,5 +105,26 @@ case object ErrorModels extends Linter with Helpers {
       }
     }
   }
-  
+
+  def validateMessageField(model: Model, field: Field): Seq[String] = {
+    val typeErrors = field.`type` == "[string]" match {
+      case true => Nil
+      case false => Seq(error(model, field, "type must be '[string]'"))
+    }
+
+    val minimumErrors = field.minimum match {
+      case Some(n) => {
+        n >= 1 match {
+          case true => Nil
+          case false => Seq(error(model, field, "minimum must be >= 1"))
+        }
+      }
+      case None => {
+        Seq(error(model, field, "missing minimum"))
+      }
+    }
+
+    typeErrors ++ minimumErrors
+  }
+
 }
