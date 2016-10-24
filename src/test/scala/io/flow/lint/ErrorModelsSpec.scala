@@ -27,29 +27,29 @@ class ErrorModelsSpec extends FunSpec with Matchers {
     linter.validate(buildService(Seq(code, messages))) should be(Nil)
 
     linter.validate(buildService(Nil)) should be(Seq(
-      "error models require a field named 'code'",
-      "error models require a field named 'messages'"
+      "Model test_error: requires a field named 'code'",
+      "Model test_error: requires a field named 'messages'"
     ))
 
     linter.validate(buildService(Seq(messages))) should be(Seq(
-      "error models require a field named 'code'",
-      "error models require the the second field to be named 'messages'"
+      "Model test_error: requires a field named 'code'",
+      "Model test_error: second field must be 'messages'"
     ))
     linter.validate(buildService(Seq(code))) should be(Seq(
-      "error models require a field named 'messages'"
+      "Model test_error: requires a field named 'messages'"
     ))
     linter.validate(buildService(Seq(messages, code))) should be(Seq(
-      "error models require the the first field to be named 'code'",
-      "error models require the the second field to be named 'messages'"
+      "Model test_error: first field must be 'code'",
+      "Model test_error: second field must be 'messages'"
     ))
   }
 
   it("validated type of 'code' field") {
     linter.validate(buildService(Seq(code.copy(`type` = "integer"), messages))) should be(Seq(
-      "error models require the type of the 'code' field to be 'string'"
+      "Model test_error Field[code]: type must be 'string'"
     ))
     linter.validate(buildService(Seq(code, messages.copy(`type` = "integer")))) should be(Seq(
-      "error models require the type of the 'messages' field to be '[string]'"
+      "Model test_error Field[messages]: type must be '[string]'"
     ))
   }
 

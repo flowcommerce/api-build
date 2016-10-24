@@ -26,12 +26,12 @@ case object ErrorModels extends Linter with Helpers {
       case "code" :: "messages" :: rest => {
         val codeErrors = model.fields(0).`type` == "string" match {
           case true => Nil
-          case false => Seq("error models require the type of the 'code' field to be 'string'")
+          case false => Seq(error(model, model.fields(0), "type must be 'string'"))
         }
 
         val messagesErrors = model.fields(1).`type` == "[string]" match {
           case true => Nil
-          case false => Seq("error models require the type of the 'messages' field to be '[string]'")
+          case false => Seq(error(model, model.fields(1), "type must be '[string]'"))
         }
 
         codeErrors ++ messagesErrors
@@ -39,21 +39,21 @@ case object ErrorModels extends Linter with Helpers {
 
       case _ => {
         val codeErrors = fieldNames.contains("code") match {
-          case false => Seq("error models require a field named 'code'")
+          case false => Seq(error(model, "requires a field named 'code'"))
           case true => {
             fieldNames match {
               case "code" :: rest => Nil
-              case _ => Seq("error models require the the first field to be named 'code'")
+              case _ => Seq(error(model, "first field must be 'code'"))
             }
           }
         }
 
         val messagesErrors = fieldNames.contains("messages") match {
-          case false => Seq("error models require a field named 'messages'")
+          case false => Seq(error(model, "requires a field named 'messages'"))
           case true => {
             fieldNames match {
               case f :: "messages" :: rest => Nil
-              case _ => Seq("error models require the the second field to be named 'messages'")
+              case _ => Seq(error(model, "second field must be 'messages'"))
             }
           }
         }
