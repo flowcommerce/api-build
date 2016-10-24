@@ -32,8 +32,7 @@ class ErrorModelsSpec extends FunSpec with Matchers {
     ))
 
     linter.validate(buildService(Seq(messages))) should be(Seq(
-      "Model test_error: requires a field named 'code'",
-      "Model test_error: second field must be 'messages'"
+      "Model test_error: requires a field named 'code'"
     ))
     linter.validate(buildService(Seq(code))) should be(Seq(
       "Model test_error: requires a field named 'messages'"

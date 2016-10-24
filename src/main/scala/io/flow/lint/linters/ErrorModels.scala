@@ -53,7 +53,12 @@ case object ErrorModels extends Linter with Helpers {
           case true => {
             fieldNames match {
               case f :: "messages" :: rest => Nil
-              case _ => Seq(error(model, "second field must be 'messages'"))
+              case _ => {
+                fieldNames.contains("code") match {
+                  case false => Nil
+                  case true => Seq(error(model, "second field must be 'messages'"))
+                }
+              }
             }
           }
         }
