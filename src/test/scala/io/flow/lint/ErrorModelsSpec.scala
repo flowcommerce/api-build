@@ -45,7 +45,7 @@ class ErrorModelsSpec extends FunSpec with Matchers {
 
   it("standalone model validates type of 'code' field") {
     linter.validate(buildService(Seq(code.copy(`type` = "integer"), messages))) should be(Seq(
-      "Model test_error Field[code]: type must be 'string'"
+      "Model test_error Field[code]: type must be 'string' or a valid enum"
     ))
     linter.validate(buildService(Seq(code, messages.copy(`type` = "integer")))) should be(Seq(
       "Model test_error Field[messages]: type must be '[string]'"
@@ -59,6 +59,17 @@ class ErrorModelsSpec extends FunSpec with Matchers {
     linter.validate(buildService(Seq(code, messages.copy(minimum=Some(0))))) should be(Seq(
       "Model test_error Field[messages]: minimum must be >= 1"
     ))
+  }
+
+  it("code can be an enum") {
+    val baseService = buildService(Seq(code.copy(`type` = "error_code"), messages))
+    linter.validate(baseService) should be(Seq(
+      "Model test_error Field[code]: type must be 'string' or a valid enum"
+    ))
+
+    val errorCode = Services.buildEnum("error_code", "error_codes")
+    linter.validate(baseService.copy(enums = Seq(errorCode))) should be(Nil)
+
   }
   
 }

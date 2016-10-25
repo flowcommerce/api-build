@@ -13,20 +13,26 @@ import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
 case object ErrorModels extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.models.filter(isError(_)).flatMap(validateModel(_))
+    service.models.filter(isError(_)).flatMap(validateModel(service, _))
   }
 
   def isError(model: Model): Boolean = {
     model.name.endsWith("_error")
   }
 
-  private[this] def validateModel(model: Model): Seq[String] = {
+  private[this] def validateModel(service: Service, model: Model): Seq[String] = {
     val fieldNames = model.fields.map(_.name)
     fieldNames match {
       case "code" :: "messages" :: rest => {
         val codeErrors = model.fields(0).`type` == "string" match {
           case true => Nil
-          case false => Seq(error(model, model.fields(0), "type must be 'string'"))
+          case false => {
+            println("ENUMS: " + service.enums.map(_.name))
+            service.enums.find(_.name == model.fields(0).`type`) match {
+              case None => Seq(error(model, model.fields(0), "type must be 'string' or a valid enum"))
+              case Some(_) => Nil
+            }
+          }
         }
 
         val messagesErrors = validateMessageField(model, model.fields(1))
