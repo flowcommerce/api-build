@@ -10,7 +10,6 @@ import com.bryzek.apidoc.spec.v0.models.{Service, Union}
 case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
 
   private[this] val StandardName = "discriminator"
-  private[this] val ErrorName = "code"
 
   override def validate(service: Service): Seq[String] = {
     service.unions.
@@ -19,21 +18,10 @@ case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
   }
 
   def validateUnion(union: Union): Seq[String] = {
-    val target = union.name.endsWith("_error") match {
-      case true => ErrorName
-      case false => StandardName
-    }
-
     union.discriminator match {
-      case None => {
-        Seq(error(union, s"Must have a discriminator with value '$target'"))
-      }
-      case Some(actual) => {
-        (actual == target) match {
-          case true => Nil
-          case false => Seq(error(union, s"Discriminator must have value '$target' and not '$actual'"))
-        }
-      }
+      case None => Seq(error(union, s"Must have a discriminator with value '$StandardName'"))
+      case Some(StandardName) => Nil
+      case Some(actual) => Seq(error(union, s"Discriminator must have value '$StandardName' and not '$actual'"))
     }
   }
 
