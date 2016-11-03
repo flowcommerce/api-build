@@ -3,9 +3,9 @@ package io.flow.lint
 import com.bryzek.apidoc.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
 
-class JsonpQueryParametersSpec extends FunSpec with Matchers {
+class ProxyQueryParametersSpec extends FunSpec with Matchers {
 
-  val linter = linters.JsonpQueryParameters
+  val linter = linters.ProxyQueryParameters
 
   def buildService(
     paramName: String
@@ -43,11 +43,13 @@ class JsonpQueryParametersSpec extends FunSpec with Matchers {
   }
 
   it("validates reserved words") {
-    linter.validate(
-      buildService("method")
-    ) should be(
-      Seq("Resource users GET /users Parameter method: name is reserved for use only in jsonp")
-    )
+    Seq("callback", "envelope", "method").foreach { word =>
+      linter.validate(
+        buildService(word)
+      ) should be(
+        Seq(s"Resource users GET /users Parameter $word: name is reserved for use only in https://github.com/flowvault/proxy")
+      )
+    }
   }
 
 }
