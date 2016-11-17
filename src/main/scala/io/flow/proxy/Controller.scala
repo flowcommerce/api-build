@@ -10,7 +10,7 @@ case class Controller() extends io.flow.build.Controller {
   /**
     * Whitelist of applications in the 'api' repo that do not exist in registry
     */
-  private[this] val ExcludeWhiteList = Seq("common", "delivery_window", "healthcheck")
+  private[this] val ExcludeWhiteList = Seq("common", "healthcheck")
 
   /**
     * This is the hostname of the services when running in docker on
@@ -45,7 +45,7 @@ case class Controller() extends io.flow.build.Controller {
         case BuildType.ApiPartner => name.toLowerCase
       }
     }
-    
+
     val version = downloader.service(Application("flow", buildType.toString, "latest")) match {
       case Left(error) => {
         sys.error(s"Failed to download '$buildType' service from apidoc: $error")
@@ -134,5 +134,5 @@ ${operationsYaml.indent(2)}
       bw.close()
     }
   }
-  
+
 }
