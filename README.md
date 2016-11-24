@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/flowcommerce/api-lint.png?branch=master)](https://travis-ci.org/flowcommerce/api-lint)
+[![Build Status](https://travis-ci.org/flowcommerce/api-build.png?branch=master)](https://travis-ci.org/flowcommerce/api-build)
 
 # api-build
 
@@ -19,15 +19,15 @@ Main features:
 ## Examples:
 
 ```
-  java -jar ~/api-lint.jar lint flow/common flow/user
-  java -jar ~/api-lint.jar oneapi flow/common flow/user
-  java -jar ~/api-lint.jar build flow/common flow/user
+  java -jar ~/api-build.jar lint flow/common flow/user
+  java -jar ~/api-build.jar oneapi flow/common flow/user
+  java -jar ~/api-build.jar build flow/common flow/user
 ```
 
 Or run the full build:
 
 ```
-  java -jar ~/api-lint.jar all flow/common flow/user
+  java -jar ~/api-build.jar all flow/common flow/user
 ```
 
 ## running locally
