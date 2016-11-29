@@ -34,7 +34,8 @@ case class TextDatatypeParser(namespace: Option[String] = None) {
           case true => Some("internal")
           case false => None
         }
-        Seq(TextDatatype.Singleton(Seq(prefix.getOrElse(""), value.split ("\\.").last).mkString("_")))
+        val name = Seq(prefix, Some(value.split ("\\.").last)).flatten.mkString("_")
+        Seq(TextDatatype.Singleton(name))
       }
     }
   }
