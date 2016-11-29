@@ -1,28 +1,47 @@
 package io.flow.oneapi
 
+import io.flow.build.BuildType
+
 sealed trait TextDatatype
 
-/**
-  * Parses a text datatype, removing any namespaces as all names are
-  * expected to be local
-  */
 object TextDatatype {
-
   case object List extends TextDatatype
   case object Map extends TextDatatype
   case class Singleton(name: String) extends TextDatatype
 
-  private val ListRx = "^\\[(.*)\\]$".r
-  private val MapRx = "^map\\[(.*)\\]$".r
-  private val MapDefaultRx = "^map$".r
+  val ListRx = "^\\[(.*)\\]$".r
+  val MapRx = "^map\\[(.*)\\]$".r
+  val MapDefaultRx = "^map$".r
+}
+
+/**
+  * Parses a text datatype, removing any namespaces as all names are
+  * expected to be local
+  *
+  * @param namespace - service namespace
+  *
+  */
+case class TextDatatypeParser(namespace: Option[String] = None) {
+  import TextDatatype._
 
   def parse(value: String): Seq[TextDatatype] = {
     value match {
       case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
       case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
       case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
-      case _ => Seq(TextDatatype.Singleton(value.split("\\.").last))
+      case _ => {
+        val prefix = namespace.exists(ns => ns.contains("internal")) match {
+          case true => Some("internal")
+          case false => None
+        }
+        val name = Seq(prefix, Some(value.split ("\\.").last)).flatten.mkString("_")
+        Seq(TextDatatype.Singleton(name))
+      }
     }
+  }
+
+  def parseString(value: String): String = {
+    toString(parse(value))
   }
 
   def toString(parts: Seq[TextDatatype]): String = {
