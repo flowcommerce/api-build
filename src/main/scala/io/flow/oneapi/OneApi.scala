@@ -170,7 +170,7 @@ case class OneApi(
           case None => {
             sys.error(s"Cannot merge resources of type[${a.`type`}] with different paths: " +
               multiple.sorted.mkString(", ") +
-              " To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack"
+              "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack"
             )
           }
         }
@@ -259,8 +259,7 @@ case class OneApi(
     }
 
     resource.copy(
-      `type` = localizeType(resource.`type`, Some(service.namespace)),
-      plural = localizePlural(resource.plural, service.namespace),
+      `type` = localizeType(resource.`type`),
       operations = resource.operations.map { localize(service, _) }.sortBy { op => (op.path.toLowerCase, methodSortOrder(op.method)) },
       description = (
         resource.description match {
@@ -361,14 +360,10 @@ case class OneApi(
     }
   }
 
-  def localizeType(name: String, namespace: Option[String] = None): String = {
-    TextDatatypeParser(namespace).parseString(name)
-  }
-
-  def localizePlural(plural: String, namespace: String): String = {
-    namespace.contains("internal") match {
-      case true => Seq("internal", plural).mkString("_")
-      case false => plural
+  def localizeType(name: String): String = {
+    buildType match {
+      case BuildType.Api | BuildType.ApiEvent => TextDatatype.toString(TextDatatype.parse(name))
+      case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner => name
     }
   }
 
