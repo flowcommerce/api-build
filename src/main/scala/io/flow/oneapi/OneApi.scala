@@ -155,22 +155,36 @@ case class OneApi(
       case Nil => None
       case one :: Nil => Some(one)
       case multiple => {
-        MergeResourcePathsHack.lift(a.`type`) match {
-          case Some(defaultPath) => {
-            allPaths.contains(defaultPath) match {
-              case true => Some(defaultPath)
-              case false => {
-                defaultPath == "/" match {
+        val (internal, external) = multiple.partition(p => p.startsWith("/internal"))
+        external match {
+          case justOne :: Nil => {
+
+            // TODO: This feels wrong now, since there's going to be just the one external now..
+            MergeResourcePathsHack.lift(a.`type`) match {
+              case Some(defaultPath) => {
+                allPaths.contains(defaultPath) match {
                   case true => Some(defaultPath)
-                  case false => sys.error(s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]")
+                  case false => {
+                    defaultPath == "/" match {
+                      case true => Some(defaultPath)
+                      case false => sys.error(s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]")
+                    }
+                  }
                 }
+              }
+              case None => {
+                Some(justOne)
+//                sys.error(s"Cannot merge resources of type[${a.`type`}] with different paths: " +
+//                  multiple.sorted.mkString(", ") +
+//                  " To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack"
+//                )
               }
             }
           }
-          case None => {
-            sys.error(s"Cannot merge resources of type[${a.`type`}] with different paths: " +
-              multiple.sorted.mkString(", ") +
-              "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack"
+          case multipleExternal => {
+            sys.error(s"Cannot merge multiple external resources of type[${a.`type`}]; Found: " +
+              multipleExternal.sorted.mkString(", ") +
+              " To resolve, please make sure that paths for public service endpoint only exist in one place"
             )
           }
         }
@@ -259,7 +273,7 @@ case class OneApi(
     }
 
     resource.copy(
-      `type` = localizeType(resource.`type`),
+      `type` = localizeType(resource.`type`, Some(service.namespace)),
       operations = resource.operations.map { localize(service, _) }.sortBy { op => (op.path.toLowerCase, methodSortOrder(op.method)) },
       description = (
         resource.description match {
@@ -360,10 +374,15 @@ case class OneApi(
     }
   }
 
-  def localizeType(name: String): String = {
-    buildType match {
-      case BuildType.Api | BuildType.ApiEvent => TextDatatype.toString(TextDatatype.parse(name))
-      case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner => name
+  def localizeType(name: String, namespace: Option[String] = None): String = {
+    namespace.exists(ns => ns.contains("internal")) match {
+      case true => TextDatatype.toString(TextDatatype.parse(name))
+      case false => {
+        buildType match {
+          case BuildType.Api | BuildType.ApiEvent | BuildType.ApiInternal => TextDatatype.toString(TextDatatype.parse(name))
+          case BuildType.ApiInternalEvent | BuildType.ApiPartner => name
+        }
+      }
     }
   }
 
