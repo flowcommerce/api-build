@@ -25,9 +25,7 @@ case class TextDatatypeParser() {
       case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
       case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
       case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
-      case _ => {
-        Seq(TextDatatype.Singleton(value.split("\\.").last))
-      }
+      case _ => Seq(TextDatatype.Singleton(value.split("\\.").last))
     }
   }
 

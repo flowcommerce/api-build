@@ -91,15 +91,18 @@ case class OneApi(
 
     val enums = services.flatMap { s =>
       s.enums.map(localize(parser, s, _))
-    }.sortBy { _.name.toLowerCase },
+    }.sortBy { _.name.toLowerCase }
 
     val models = services.flatMap { s =>
       s.models.map(localize(parser, s, _))
-    }.sortBy { _.name.toLowerCase },
+    }.sortBy { _.name.toLowerCase }
 
     val unions = services.flatMap { s =>
       s.unions.map(localize(parser, s, _))
-    }.sortBy { _.name.toLowerCase },
+    }.sortBy { _.name.toLowerCase }
+
+    val localTypes = enums.map(e => s"$ns.enums.${e.name}") ++ models.map(m => s"$ns.models.${m.name}") ++ unions.map(u => s"$ns.unions.${u.name}")
+    println(s"localTypes: $localTypes")
 
     val service = Service(
       apidoc = canonical.apidoc,
@@ -123,7 +126,7 @@ case class OneApi(
       resources = mergeResources(
         services.flatMap { s =>
           s.resources.
-            map(withNamespace(s, _)).
+            map(normalizeName(localTypes, s, _)).
             map(localize(parser, s, _))
         }
       ).sortBy { resourceSortKey(_) }
@@ -148,16 +151,23 @@ case class OneApi(
     }
   }
 
-  private[this] def withNamespace(service: Service, resource: Resource): Resource = {
-    apidocType(service, resource.`type`) match {
-      case None => resource
-      case Some(apidocType) => {
-        println(s"${resource.`type`} => ${service.namespace}.$apidocType.${resource.`type`}")
-        resource.copy(
-          `type` = s"${service.namespace}.$apidocType.${resource.`type`}"
-        )
-      }
+  private[this] def normalizeName(localTypes: Seq[String], service: Service, resource: Resource): Resource = {
+    val qualifiedName = apidocType(service, resource.`type`) match {
+      case None => resource.`type`
+      case Some(apidocType) => s"${service.namespace}.$apidocType.${resource.`type`}"
     }
+
+    val parser = TextDatatypeParser()
+    val finalType = localTypes.contains(qualifiedName) match {
+      case true => parser.toString(parser.parse(qualifiedName))
+      case false => qualifiedName
+    }
+
+    println(s"${resource.`type`} => $finalType")
+    resource.copy(
+      `type` = finalType
+    )
+
   }
 
   private[this] def apidocType(service: Service, name: String): Option[String] = {
