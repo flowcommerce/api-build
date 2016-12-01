@@ -214,8 +214,8 @@ case class OneApi(
               case Nil => internal.headOption
               case one :: Nil => Some(one)
               case multiplePublic => {
-                sys.error(s"Cannot merge resources of type[${a.`type`}] with more than one non internal path: " +
-                  multiplePublic.sorted.mkString(", ") +
+                sys.error(s"Cannot merge resources of type[${a.`type`}] with more than one non internal path:\n" +
+                  multiplePublic.sorted.mkString("  - ", "\n  - ", "\n") +
                   "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack to add an explicit path for this resource"
                 )
               }
