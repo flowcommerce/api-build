@@ -13,10 +13,7 @@ case class OneApi(
 
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
-    "timezone" -> "/",
-    "invoice" -> "/:organization/invoices",
-    "payment" -> "/:organization/payments",
-    "account" -> "/:organization/accounts"
+    "timezone" -> "/"
   )
 
   private[this] val DefaultFieldDescriptions = Map(
@@ -212,10 +209,17 @@ case class OneApi(
             }
           }
           case None => {
-            sys.error(s"Cannot merge resources of type[${a.`type`}] with different paths: " +
-              multiple.sorted.mkString(", ") +
-              "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack"
-            )
+            val (internal, public) = multiple.partition(p => p.startsWith("/internal"))
+            public.toList match {
+              case Nil => internal.headOption
+              case one :: Nil => Some(one)
+              case multiplePublic => {
+                sys.error(s"Cannot merge resources of type[${a.`type`}] with more than one non internal path: " +
+                  multiplePublic.sorted.mkString(", ") +
+                  "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack to add an explicit path for this resource"
+                )
+              }
+            }
           }
         }
       }
