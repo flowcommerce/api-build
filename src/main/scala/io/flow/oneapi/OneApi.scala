@@ -14,9 +14,9 @@ case class OneApi(
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
     "timezone" -> "/",
-    "io.flow.invoice.v0.models.invoice" -> "/:organization/invoices",
-    "io.flow.invoice.v0.models.payment" -> "/:organization/payments",
-    "io.flow.invoice.v0.models.account" -> "/:organization/accounts"
+    "invoice" -> "/:organization/invoices",
+    "payment" -> "/:organization/payments",
+    "account" -> "/:organization/accounts"
   )
 
   private[this] val DefaultFieldDescriptions = Map(
@@ -88,21 +88,9 @@ case class OneApi(
     }
 
     val parser = TextDatatypeParser()
-zzz
-    val enums = services.flatMap { s =>
-      s.enums.map(localize(parser, s, _))
-    }.sortBy { _.name.toLowerCase }
-
-    val models = services.flatMap { s =>
-      s.models.map(localize(parser, s, _))
-    }.sortBy { _.name.toLowerCase }
-
-    val unions = services.flatMap { s =>
-      s.unions.map(localize(parser, s, _))
-    }.sortBy { _.name.toLowerCase }
-
-    val localTypes = enums.map(e => s"$ns.enums.${e.name}") ++ models.map(m => s"$ns.models.${m.name}") ++ unions.map(u => s"$ns.unions.${u.name}")
-    println(s"localTypes: $localTypes")
+    val localTypes: Seq[String] = services.flatMap { s =>
+      s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
+    }
 
     val service = Service(
       apidoc = canonical.apidoc,
@@ -135,7 +123,7 @@ zzz
       resources = mergeResources(
         services.flatMap { s =>
           s.resources.
-            map(normalizeName(localTypes, s, _)).
+            map(normalizeName(parser, localTypes, s, _)).
             map(localize(parser, s, _))
         }
       ).sortBy { resourceSortKey(_) }
@@ -160,23 +148,25 @@ zzz
     }
   }
 
-  private[this] def normalizeName(localTypes: Seq[String], service: Service, resource: Resource): Resource = {
-    val qualifiedName = apidocType(service, resource.`type`) match {
-      case None => resource.`type`
-      case Some(apidocType) => s"${service.namespace}.$apidocType.${resource.`type`}"
-    }
 
-    val parser = TextDatatypeParser()
+  private[this] def withNamespace(service: Service, name: String): String = {
+    apidocType(service, name) match {
+      case None => name
+      case Some(apidocType) => s"${service.namespace}.$apidocType.$name"
+    }
+  }
+
+  private[this] def normalizeName(parser: TextDatatypeParser, localTypes: Seq[String], service: Service, resource: Resource): Resource = {
+    val qualifiedName = withNamespace(service, resource.`type`)
+
     val finalType = localTypes.contains(qualifiedName) match {
       case true => parser.toString(parser.parse(qualifiedName))
       case false => qualifiedName
     }
 
-    println(s"${resource.`type`} => $finalType")
     resource.copy(
       `type` = finalType
     )
-
   }
 
   private[this] def apidocType(service: Service, name: String): Option[String] = {
