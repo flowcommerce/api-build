@@ -2,26 +2,32 @@ package io.flow.oneapi
 
 sealed trait TextDatatype
 
-/**
-  * Parses a text datatype, removing any namespaces as all names are
-  * expected to be local
-  */
 object TextDatatype {
 
   case object List extends TextDatatype
   case object Map extends TextDatatype
   case class Singleton(name: String) extends TextDatatype
 
-  private val ListRx = "^\\[(.*)\\]$".r
-  private val MapRx = "^map\\[(.*)\\]$".r
-  private val MapDefaultRx = "^map$".r
+  val ListRx = "^\\[(.*)\\]$".r
+  val MapRx = "^map\\[(.*)\\]$".r
+  val MapDefaultRx = "^map$".r
+}
+
+/**
+  * Parses a text datatype, removing specific namespaces as those
+  * names are expected to be local
+  */
+case class TextDatatypeParser() {
+  import TextDatatype._
 
   def parse(value: String): Seq[TextDatatype] = {
     value match {
       case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
       case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
       case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
-      case _ => Seq(TextDatatype.Singleton(value.split("\\.").last))
+      case _ => {
+        Seq(TextDatatype.Singleton(value.split("\\.").last))
+      }
     }
   }
 
