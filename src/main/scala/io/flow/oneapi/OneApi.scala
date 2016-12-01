@@ -88,7 +88,7 @@ case class OneApi(
     }
 
     val parser = TextDatatypeParser()
-
+zzz
     val enums = services.flatMap { s =>
       s.enums.map(localize(parser, s, _))
     }.sortBy { _.name.toLowerCase }
@@ -119,9 +119,18 @@ case class OneApi(
       headers = Nil,
       imports = imports,
       attributes = Nil,
-      enums = enums,
-      models = models,
-      unions = unions,
+
+      enums = services.flatMap { s =>
+        s.enums.map(localize(parser, s, _))
+      }.sortBy { _.name.toLowerCase },
+
+      models = services.flatMap { s =>
+        s.models.map(localize(parser, s, _))
+      }.sortBy { _.name.toLowerCase },
+
+      unions = services.flatMap { s =>
+        s.unions.map(localize(parser, s, _))
+      }.sortBy { _.name.toLowerCase },
      
       resources = mergeResources(
         services.flatMap { s =>
