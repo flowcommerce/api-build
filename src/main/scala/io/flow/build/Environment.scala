@@ -9,8 +9,13 @@ case class ApidocProfile(name: String, baseUrl: String, token: Option[String] = 
   */
 object ApidocConfig {
 
-  private[this] val DefaultBaseUrl = "http://api.apidoc.me"
   private[this] val DefaultPath = "~/.apidoc/config"
+
+  private[this] val DefaultApidocProfile = ApidocProfile(
+    name = "default",
+    baseUrl = "http://api.apidoc.me",
+    token = None
+  )
 
   /**
     * Loads apidoc configuration from the apidoc configuration file,
@@ -23,31 +28,50 @@ object ApidocConfig {
   def load(
     path: String = DefaultPath
   ): Either[String, ApidocProfile] = {
-    val profile = Environment.optionalString("APIDOC_PROFILE").getOrElse("default")
-    val envToken = Environment.optionalString("APIDOC_API_TOKEN")
+    val profileName = Environment.optionalString("APIDOC_PROFILE").getOrElse(DefaultApidocProfile.name)
+    val envToken = Environment.optionalString("APIDOC_TOKEN")
     val envBaseUrl = Environment.optionalString("APIDOC_API_BASE_URL")
 
-    Seq(envToken, envBaseUrl).flatten match {
-      case Nil => {
-        loadAllProfiles(path) match {
-          case Left(errors) => Left(errors)
-          case Right(profiles) => {
-            profiles.find(_.name == profile) match {
-              case None => Left(s"apidoc profile named[$profile] not found")
-              case Some(p) => Right(p)
+    val profileOrErrors: Either[String, ApidocProfile] = loadAllProfiles(path) match {
+      case Left(errors) => {
+        Left(errors)
+      }
+
+      case Right(profiles) => {
+        profiles.find(_.name == profileName) match {
+          case None => {
+            profileName == DefaultApidocProfile.name match {
+              case true => Right(DefaultApidocProfile)
+              case false => Left(s"apidoc profile named[$profileName] not found")
             }
+          }
+          case Some(p) => {
+            Right(p)
           }
         }
       }
-      case _ => {
-        println("Creating profile from environment variables")
-        Right(
-          ApidocProfile(
-            name = "environment",
-            baseUrl = envBaseUrl.getOrElse(DefaultBaseUrl),
-            token = envToken
-          )
-        )
+    }
+
+    profileOrErrors match {
+      case Left(errors) => Left(errors)
+      case Right(profile) => {
+        val p2 = envToken match {
+          case None => profile
+          case Some(token) => {
+            println("Using apidoc token from environment variable")
+            profile.copy(token = Some(token))
+          }
+        }
+
+        val p3 = envBaseUrl match {
+          case None => p2
+          case Some(url) => {
+            println("Using apidoc baseUrl[$url] from environment variable")
+            profile.copy(baseUrl = url)
+          }
+        }
+
+        Right(p3)
       }
     }
   }
@@ -67,11 +91,11 @@ object ApidocConfig {
           l match {
             case Profile(name) => {
               currentProfile.map { p => allProfiles += p }
-              currentProfile = Some(ApidocProfile(name = name, baseUrl = DefaultBaseUrl))
+              currentProfile = Some(ApidocProfile(name = name, baseUrl = DefaultApidocProfile.baseUrl))
             }
             case Default() => {
               currentProfile.map { p => allProfiles += p }
-              currentProfile = Some(ApidocProfile(name = "default", baseUrl = DefaultBaseUrl))
+              currentProfile = Some(DefaultApidocProfile)
             }
             case _ => {
               l.split("=").map(_.trim).toList match {
