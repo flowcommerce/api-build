@@ -17,6 +17,7 @@ object Module {
     Module("customer service", Nil),
     Module("geolocation", Seq("location")),
     Module("reference", Seq("reference")),
+    Module("partner", Seq("partner")),
     General
   )
 
