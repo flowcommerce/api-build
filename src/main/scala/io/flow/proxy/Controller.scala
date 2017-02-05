@@ -10,7 +10,7 @@ case class Controller() extends io.flow.build.Controller {
   /**
     * Whitelist of applications in the 'api' repo that do not exist in registry
     */
-  private[this] val ExcludeWhiteList = Seq("common", "healthcheck")
+  private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "session")
 
   /**
     * This is the hostname of the services when running in docker on
