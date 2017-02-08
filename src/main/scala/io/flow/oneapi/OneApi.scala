@@ -431,7 +431,7 @@ case class OneApi(
   }
 
   def normalizePath(method: Method, path: String): String = {
-    val pathParts: Seq[String] = path.split("/").map { name =>
+    val pathParts: Seq[String] = path.split("[/.]").map { name =>
       if (name.startsWith(":")) {
         // Use a standard name here as this is a pattern - doesn't
         // matter what name the developer actually assigned in terms
@@ -534,3 +534,4 @@ case class OneApi(
   )
 
 }
+
