@@ -27,7 +27,6 @@ case object ErrorModels extends Linter with Helpers {
         val codeErrors = model.fields(0).`type` == "string" match {
           case true => Nil
           case false => {
-            println("ENUMS: " + service.enums.map(_.name))
             service.enums.find(_.name == model.fields(0).`type`) match {
               case None => Seq(error(model, model.fields(0), "type must be 'string' or a valid enum"))
               case Some(_) => Nil
