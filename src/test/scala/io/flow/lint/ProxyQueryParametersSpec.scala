@@ -43,7 +43,7 @@ class ProxyQueryParametersSpec extends FunSpec with Matchers {
   }
 
   it("validates reserved words") {
-    Seq("callback", "envelope", "method", "session").foreach { word =>
+    Seq("callback", "envelope", "method").foreach { word =>
       linter.validate(
         buildService(word)
       ) should be(
