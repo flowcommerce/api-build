@@ -11,7 +11,7 @@ import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, Resource,
   */
 case object ProxyQueryParameters extends Linter with Helpers {
 
-  val ReservedNames = Seq("callback", "envelope", "method")
+  val ReservedNames = Seq("callback", "envelope", "method", "session")
 
   override def validate(service: Service): Seq[String] = {
     nonHealthcheckResources(service).map(validateResource(service, _)).flatten
