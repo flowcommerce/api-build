@@ -48,17 +48,15 @@ case object EventModels extends Linter with Helpers {
   }
 
   private[this] def validateOrgAndNumber(model: Model, fieldNames: Seq[String]): Seq[String] = {
-    val orgErrors = fieldNames.contains("organization") match {
+    fieldNames.contains("organization") match {
       case true => Seq(error(model, "organization field must come after timestamp in event models"))
-      case false => Nil
+      case false => {
+        fieldNames.contains("number") match {
+          case true => Seq(error(model, "organization field is required if event model has a field named number"))
+          case false => Nil
+        }
+      }
     }
-
-    val numberErrors = fieldNames.contains("number") match {
-      case true => Seq(error(model, "organization field is required if event model has a field named number"))
-      case false => Nil
-    }
-
-    orgErrors ++ numberErrors
   }
 
   
