@@ -37,4 +37,11 @@ class ModelsWithOrganizationFieldSpec extends FunSpec with Matchers {
     ))
   }
 
+  it("w/ event_id, timestamp, id fields") {
+    linter.validate(buildService(Seq("event_id", "timestamp", "id", "other", "organization"))) should be(Seq(
+      "Model user: Field[organization] must be in position[3] and not[4]"
+    ))
+  }
+
+  
 }
