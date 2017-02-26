@@ -40,6 +40,17 @@ class EventModelsSpec extends FunSpec with Matchers {
       "Model org_upserted: organization field must come after timestamp in event models"
     ))
 
+    linter.validate(buildService(Seq("event_id", "timestamp", "id", "foo", "organization"))) should be(Seq(
+      "Model org_upserted: organization field must come after id in event models"
+    ))
+
+    linter.validate(buildService(Seq("event_id", "timestamp", "id", "organization", "number"))) should be(Nil)
+    linter.validate(buildService(Seq("event_id", "timestamp", "id", "organization", "number", "foo"))) should be(Nil)
+
+    linter.validate(buildService(Seq("event_id", "timestamp", "id", "organization", "foo", "number"))) should be(Seq(
+      "Model org_upserted: number field must come after organization in event models"
+    ))
+
     linter.validate(buildService(Seq("event_id", "timestamp", "organization", "number"))) should be(Nil)
     linter.validate(buildService(Seq("event_id", "timestamp", "organization", "number", "foo"))) should be(Nil)
 

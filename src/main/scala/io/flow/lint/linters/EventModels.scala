@@ -32,8 +32,21 @@ case object EventModels extends Linter with Helpers {
         }
       }
 
+      case "event_id" :: "timestamp" :: "id" :: "organization" :: "number" :: rest => Nil
+
+      case "event_id" :: "timestamp" :: "id" :: "organization" :: rest => {
+        fieldNames.contains("number") match {
+          case true => Seq(error(model, "number field must come after organization in event models"))
+          case false => Nil
+        }
+      }
+
+      case "event_id" :: "timestamp" :: "id" :: rest => {
+        validateOrgAndNumber(model, rest, "id")
+      }
+
       case "event_id" :: "timestamp" :: rest => {
-        validateOrgAndNumber(model, rest)
+        validateOrgAndNumber(model, rest, "timestamp")
       }
 
       case _ => {
@@ -42,14 +55,14 @@ case object EventModels extends Linter with Helpers {
           case false => error(model, "timestamp field is required in event models")
         }
 
-        Seq(timestampErrors) ++ validateOrgAndNumber(model, fieldNames)
+        Seq(timestampErrors) ++ validateOrgAndNumber(model, fieldNames, "timestamp")
       }
     }
   }
 
-  private[this] def validateOrgAndNumber(model: Model, fieldNames: Seq[String]): Seq[String] = {
+  private[this] def validateOrgAndNumber(model: Model, fieldNames: Seq[String], priorFieldName: String): Seq[String] = {
     fieldNames.contains("organization") match {
-      case true => Seq(error(model, "organization field must come after timestamp in event models"))
+      case true => Seq(error(model, s"organization field must come after $priorFieldName in event models"))
       case false => {
         fieldNames.contains("number") match {
           case true => Seq(error(model, "organization field is required if event model has a field named number"))
