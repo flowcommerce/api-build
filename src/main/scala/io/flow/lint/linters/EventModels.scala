@@ -27,38 +27,49 @@ case object EventModels extends Linter with Helpers {
 
       case "event_id" :: "timestamp" :: "organization" :: rest => {
         fieldNames.contains("number") match {
-          case true => Seq("number field must come after organization in event models")
+          case true => Seq(error(model, "number field must come after organization in event models"))
           case false => Nil
         }
       }
 
+      case "event_id" :: "timestamp" :: "id" :: "organization" :: "number" :: rest => Nil
+
+      case "event_id" :: "timestamp" :: "id" :: "organization" :: rest => {
+        fieldNames.contains("number") match {
+          case true => Seq(error(model, "number field must come after organization in event models"))
+          case false => Nil
+        }
+      }
+
+      case "event_id" :: "timestamp" :: "id" :: rest => {
+        validateOrgAndNumber(model, rest, "id")
+      }
+
       case "event_id" :: "timestamp" :: rest => {
-        validateOrgAndNumber(rest)
+        validateOrgAndNumber(model, rest, "timestamp")
       }
 
       case _ => {
         val timestampErrors = fieldNames.contains("timestamp") match {
-          case true => Seq("timestamp field must come after event_id in event models")
-          case false => Seq("timestamp field is required in event models")
+          case true => error(model, "timestamp field must come after event_id in event models")
+          case false => error(model, "timestamp field is required in event models")
         }
 
-        timestampErrors ++ validateOrgAndNumber(fieldNames)
+        Seq(timestampErrors) ++ validateOrgAndNumber(model, fieldNames, "timestamp")
       }
     }
   }
 
-  private[this] def validateOrgAndNumber(fieldNames: Seq[String]): Seq[String] = {
-    val orgErrors = fieldNames.contains("organization") match {
-      case true => Seq("organization field must come after timestamp in event models")
-      case false => Nil
+  private[this] def validateOrgAndNumber(model: Model, fieldNames: Seq[String], priorFieldName: String): Seq[String] = {
+    fieldNames.contains("organization") match {
+      case true => Seq(error(model, s"organization field must come after $priorFieldName in event models"))
+      case false => {
+        fieldNames.contains("number") match {
+          case true => Seq(error(model, "organization field is required if event model has a field named number"))
+          case false => Nil
+        }
+      }
     }
-
-    val numberErrors = fieldNames.contains("number") match {
-      case true => Seq("organization field is required if event model has a field named number")
-      case false => Nil
-    }
-
-    orgErrors ++ numberErrors
   }
 
   
