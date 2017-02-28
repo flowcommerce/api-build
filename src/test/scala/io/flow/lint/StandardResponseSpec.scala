@@ -2,6 +2,7 @@ package io.flow.lint
 
 import com.bryzek.apidoc.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
+import play.api.libs.json.{JsObject, Json}
 
 class StandardResponseSpec extends FunSpec with Matchers {
 
@@ -192,6 +193,36 @@ class StandardResponseSpec extends FunSpec with Matchers {
         )
       ) should be(Nil)
     }
+  }
+
+  it("Missing 422 on POST is validated when 'response_codes' attribute is listed as ignored") {
+    linter.validate(
+      Services.Base.copy(
+        resources = Seq(
+          Resource(
+            `type` = "organization",
+            plural = "organizations",
+            operations = Seq(
+              Operation(
+                method = Method.Post,
+                path = "/organizations",
+                parameters = Nil,
+                responses = Seq(
+                  Response(ResponseCodeInt(200), "[organization]"),
+                  Response(ResponseCodeInt(401), "unit")
+                ),
+                attributes = Seq(
+                  Attribute(
+                    name = "linter",
+                    value = Json.parse("""{ "ignore": ["response_codes"] }""").as[JsObject]
+                  )
+                )
+              )
+            )
+          )
+        )
+      )
+    ) should be(Nil)
   }
   
 }

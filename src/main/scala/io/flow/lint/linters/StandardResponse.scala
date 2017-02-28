@@ -35,7 +35,9 @@ case object StandardResponse extends Linter with Helpers {
   }
 
   def validateResource(resource: Resource): Seq[String] = {
-    resource.operations.flatMap(validateOperation(resource, _))
+    resource.operations.
+      filter(op => !ignored(op.attributes, "response_codes")).
+      flatMap(validateOperation(resource, _))
   }
 
   def validateOperation(resource: Resource, operation: Operation): Seq[String] = {
