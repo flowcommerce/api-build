@@ -18,7 +18,9 @@ case object CommonFieldTypes extends Linter with Helpers {
   )
 
   override def validate(service: Service): Seq[String] = {
-    service.models.flatMap(validateModel(service, _))
+    service.models.
+      filter(m => !ignored(m.attributes, "common_field_types")).
+      flatMap(validateModel(service, _))
   }
 
   def validateModel(service: Service, model: Model): Seq[String] = {
