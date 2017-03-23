@@ -29,7 +29,6 @@ case object CommonParameterTypes extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
     nonHealthcheckResources(service).
-      filter(r => !ignored(r.attributes, "common_parameter_types")).
       map(validateResource(service, _)).flatten
   }
 
@@ -37,6 +36,7 @@ case object CommonParameterTypes extends Linter with Helpers {
     resource.operations.
       filter(_.method == Method.Get).
       filter(returnsArray(_)).
+      filter(op => !ignored(op.attributes, "common_parameter_types")).
       flatMap { op =>
         op.parameters.flatMap { param =>
           validateParameter(service, resource, op, param)
