@@ -76,7 +76,7 @@ case object Get extends Linter with Helpers {
         }.flatten
       }.getOrElse(Nil)
 
-      val expansions = (modelExpansions ++ unionExpansions).distinct
+      val expansions = (modelExpansions ++ unionExpansions).distinct.sorted
 
       val requiredParams =
         /** If operation has attribute with name 'non-crud', no id parameter is required.
