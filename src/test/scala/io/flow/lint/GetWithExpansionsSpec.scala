@@ -117,5 +117,67 @@ class GetWithExpansionsSpec extends FunSpec with Matchers {
 
     )
   }
-  
+
+  def buildServiceWithUnion(): Service = {
+    val card = Services.buildModel("card", Seq(
+      Services.buildField("id"),
+      Services.buildField("name")
+    ))
+
+    val cardReference = Services.buildModel("card_reference", Seq(
+      Services.buildField("id")
+    ))
+
+    val cardAuthorization = Services.buildModel("card_authorization", Seq(
+      Services.buildField("id"),
+      Services.buildField("card", `type` = "expandable_card")
+    ))
+
+    val resource = Services.buildResource(
+      "authorization",
+      "authorizations",
+      Seq(
+        Services.buildSimpleOperation(
+          path = "/authorizations",
+          parameters = Seq(
+            Services.buildParameter(name = "id"),
+            Services.buildParameter(name = "limit", `type` = "long"),
+            Services.buildParameter(name = "offset", `type` = "long"),
+            Services.buildParameter(name = "sort"),
+            Services.buildParameter(name = "expand", `type` = "[string]", maximum = Some(1), example = Some("card"))
+          ),
+          responseType = "[authorization]"
+        )
+      )
+    )
+    
+    Services.Base.copy(
+      models = Seq(card, cardReference, cardAuthorization),
+      unions = Seq(
+        Services.buildUnion(
+          name = "expandable_card",
+          discriminator = Some("discriminator"),
+          types = Seq(
+            Services.buildUnionType("card"),
+            Services.buildUnionType("card_reference")
+          )
+        ),
+        Services.buildUnion(
+          name = "authorization",
+          discriminator = Some("discriminator"),
+          types = Seq(
+            Services.buildUnionType("card_authorization")
+          )
+        )
+      ),
+      resources = Seq(resource)
+    )
+  }
+
+  it("validates expandable properties inside union fields") {
+    linter.validate(
+      buildServiceWithUnion()
+    ) should be(Nil)
+  }
+
 }

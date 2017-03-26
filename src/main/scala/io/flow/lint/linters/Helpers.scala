@@ -42,6 +42,21 @@ trait Helpers {
     service.models.find(_.plural == resource.plural)
   }
 
+  def model(service: Service, name: String): Option[Model] = {
+    service.models.find(_.name == name)
+  }
+  
+  /**
+    * Returns the union type for the successful response type for this
+    * operation. Right now only will resolve if the model is defined
+    * directly in the service (i.e. not imported)
+    */
+  def union(service: Service, operation: Operation): Option[Union] = {
+    responseType(service, operation).flatMap { t =>
+      service.unions.find(_.name == t)
+    }
+  }
+  
   /**
     * Returns the model for the successful response type for this
     * operation. Right now only will resolve if the model is defined

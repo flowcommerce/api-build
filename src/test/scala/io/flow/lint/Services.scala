@@ -166,12 +166,17 @@ object Services {
   }
 
   def buildParameter(
-    name: String = "q"
+    name: String = "q",
+    `type`: String = "String",
+    maximum: Option[Long] = None,
+    example: Option[String] = None
   ) = Parameter(
     name = name,
-    `type` = "string",
+    `type` = `type`,
     location = ParameterLocation.Query,
-    required = false
+    required = false,
+    maximum = maximum,
+    example = example
   )
   
   def buildResponse(

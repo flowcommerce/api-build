@@ -66,9 +66,17 @@ case object Get extends Linter with Helpers {
   private[this] case class Sublinter(leadingParam: String, trailingParams: Seq[String]) {
 
     def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
-      val expansions = model(service, operation).map { m =>
+      val modelExpansions = model(service, operation).map { m =>
         Expansions.fromFieldTypes(m.fields.map(_.`type`))
       }.getOrElse(Nil)
+
+      val unionExpansions = union(service, operation).map { u =>
+        u.types.flatMap { t => model(service, t.`type`) }.map { m =>
+          Expansions.fromFieldTypes(m.fields.map(_.`type`))
+        }.flatten
+      }.getOrElse(Nil)
+
+      val expansions = (modelExpansions ++ unionExpansions).distinct
 
       val requiredParams =
         /** If operation has attribute with name 'non-crud', no id parameter is required.
