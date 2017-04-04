@@ -9,6 +9,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
   val linter = linters.StandardResponse
 
   def buildService(
+    path: String,
     method: Method,
     responses: Seq[Response]
   ): Service = {
@@ -20,7 +21,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
           operations = Seq(
             Operation(
               method = method,
-              path = "/organizations",
+              path = path,
               parameters = Nil,
               responses = responses
             )
@@ -33,6 +34,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
   it("standard codes must not have descriptions") {
     linter.validate(
       buildService(
+        "/organizations/:id",
         Method.Get,
         Seq(
           Response(ResponseCodeInt(200), "[organization]", description = Some("Foo")),
@@ -41,15 +43,30 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations GET /organizations Response 200: Must not have a description as this is a globally standard response",
-        "Resource organizations GET /organizations Response 401: Must not have a description as this is a globally standard response"
+        "Resource organizations GET /organizations/:id Response 200: Must not have a description as this is a globally standard response",
+        "Resource organizations GET /organizations/:id Response 401: Must not have a description as this is a globally standard response"
       )
     )
+  }
+
+  it("Delete to subresource allows http 200") {
+    linter.validate(
+      buildService(
+        "/organizations/:id/items",
+        Method.Delete,
+        Seq(
+          Response(ResponseCodeInt(200), "[organization]"),
+          Response(ResponseCodeInt(401), "unit"),
+          Response(ResponseCodeInt(404), "unit")
+        )
+      )
+    ) should be(Nil)
   }
 
   it("204, 401 must have unit type") {
     linter.validate(
       buildService(
+        "/organizations/:id",
         Method.Delete,
         Seq(
           Response(ResponseCodeInt(204), "string"),
@@ -59,8 +76,8 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations DELETE /organizations Response 204: response must be of type unit and not string",
-        "Resource organizations DELETE /organizations Response 401: response must be of type unit and not string"
+        "Resource organizations DELETE /organizations/:id Response 204: response must be of type unit and not string",
+        "Resource organizations DELETE /organizations/:id Response 401: response must be of type unit and not string"
       )
     )
   }
@@ -68,6 +85,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
   it("Get must have 200, 401") {
     linter.validate(
       buildService(
+        "/organizations/:id",
         Method.Get,
         Seq(
           Response(ResponseCodeInt(404), "unit")
@@ -75,7 +93,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations GET /organizations: Missing response codes: 200, 401"
+        "Resource organizations GET /organizations/:id: Missing response codes: 200, 401"
       )
     )
   }
@@ -83,6 +101,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
   it("Patch must have 401, 404, 422") {
     linter.validate(
       buildService(
+        "/organizations/:id",
         Method.Patch,
         Seq(
           Response(ResponseCodeInt(409), "unit")
@@ -90,7 +109,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations PATCH /organizations: Missing response codes: 401, 404, 422"
+        "Resource organizations PATCH /organizations/:id: Missing response codes: 401, 404, 422"
       )
     )
   }
@@ -98,6 +117,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
   it("Post must have 401, 422") {
     linter.validate(
       buildService(
+        "/organizations/:id",
         Method.Post,
         Seq(
           Response(ResponseCodeInt(404), "unit")
@@ -105,7 +125,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations POST /organizations: Missing response codes: 401, 422"
+        "Resource organizations POST /organizations/:id: Missing response codes: 401, 422"
       )
     )
   }
@@ -113,6 +133,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
   it("Put must have 401, 422") {
     linter.validate(
       buildService(
+        "/organizations/:id",
         Method.Put,
         Seq(
           Response(ResponseCodeInt(404), "unit")
@@ -120,14 +141,15 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations PUT /organizations: Missing response codes: 401, 422"
+        "Resource organizations PUT /organizations/:id: Missing response codes: 401, 422"
       )
     )
   }
 
-  it("Delete must have 204, 401, 404") {
+  it("Delete must have 401, 404") {
     linter.validate(
       buildService(
+        "/organizations/:id",
         Method.Delete,
         Seq(
           Response(ResponseCodeInt(409), "unit")
@@ -135,7 +157,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Resource organizations DELETE /organizations: Missing response codes: 204, 401, 404"
+        "Resource organizations DELETE /organizations/:id: Missing response codes: 401, 404"
       )
     )
   }
@@ -158,6 +180,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
     Seq("ordererrors", "error", "[generic_error]").foreach { typ =>
       linter.validate(
         buildService(
+        "/organizations/:id",
           Method.Post,
           Seq(
             Response(ResponseCodeInt(200), "[organization]"),
@@ -167,7 +190,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
         )
       ) should be(
         Seq(
-          s"Resource organizations POST /organizations Response 422: response must be of type *_error and not $typ"
+          s"Resource organizations POST /organizations/:id Response 422: response must be of type *_error and not $typ"
         )
       )
     }
@@ -184,6 +207,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
     ).foreach { typ =>
       linter.validate(
         buildService(
+          "/organizations/:id",
           Method.Post,
           Seq(
             Response(ResponseCodeInt(200), "[organization]"),
@@ -205,7 +229,7 @@ class StandardResponseSpec extends FunSpec with Matchers {
             operations = Seq(
               Operation(
                 method = Method.Post,
-                path = "/organizations",
+                path = "/organizations/:id",
                 parameters = Nil,
                 responses = Seq(
                   Response(ResponseCodeInt(200), "[organization]"),
