@@ -23,7 +23,7 @@ case object StandardResponse extends Linter with Helpers {
     Method.Patch -> Seq(401, 404, 422),
     Method.Post -> Seq(401, 422),
     Method.Put -> Seq(401, 422),
-    Method.Delete -> Seq(204, 401, 404),
+    Method.Delete -> Seq(401, 404),
     Method.Head -> Nil,
     Method.Connect -> Nil,
     Method.Options -> Nil,
@@ -92,13 +92,27 @@ case object StandardResponse extends Linter with Helpers {
       }
       case ResponseCodeInt(n) => {
         n match {
-          case 204 => compare(resource, operation, response, "unit")
+          case 204 if pathIdentifiesResource(operation.path) => compare(resource, operation, response, "unit")
           case 401 => compare(resource, operation, response, "unit")
           case 422 => compare(resource, operation, response, "*_error")
           case _ => Nil
         }
       }
     }
+  }
+
+  /**
+    * True if last path component is a variable. Used to differentiate between:
+    * 
+    * DELETE /shopify/carts/:id
+    * 
+    * DELETE /shopify/carts/:id/promo
+    * 
+    * where in the second example we want to allow HTTP 200 response (resource
+    * itself was not deleted)
+    */
+  def pathIdentifiesResource(path: String): Boolean = {
+    path.split("/").lastOption.getOrElse("").startsWith(":")
   }
 
   def compare(
