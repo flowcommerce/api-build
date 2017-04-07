@@ -52,7 +52,9 @@ case object CommonParameterTypes extends Linter with Helpers {
           case Some(typ) => {
             typ == param.`type` match {
               case true => Nil
-              case false => Seq(error(resource, op, param, s"Type expected[$typ] but found[${param.`type`}]"))
+              case false => {
+                Seq(error(resource, op, param, s"Type expected[$typ] but found[${param.`type`}]"))
+              }
             }
           }
         }
@@ -75,7 +77,14 @@ case object CommonParameterTypes extends Linter with Helpers {
       case (Some(a), Some(e)) => {
         a == e match {
           case true => Nil
-          case false => Seq(error(resource, op, param, s"$label expected[$e] but found[$a]"))
+          case false => {
+            if (param.name == "id" && op.path.endsWith("/versions") && param.`type` == "[long]") {
+              // Special case as versions use journal id which is a long
+              Nil
+            } else {
+              Seq(error(resource, op, param, s"$label expected[$e] but found[$a]"))
+            }
+          }
         }
       }
     }

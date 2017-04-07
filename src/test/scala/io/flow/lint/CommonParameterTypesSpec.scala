@@ -12,7 +12,8 @@ class CommonParameterTypesSpec extends FunSpec with Matchers {
     paramType: String = "string",
     default: Option[String] = None,
     minimum: Option[Long] = None,
-    maximum: Option[Long] = None
+    maximum: Option[Long] = None,
+    path: String = "/users"
   ): Service = {
     Services.Base.copy(
       models = Seq(
@@ -23,7 +24,7 @@ class CommonParameterTypesSpec extends FunSpec with Matchers {
           `type` = "user",
           plural = "users",
           method = Method.Get,
-          path = "/users",
+          path = path,
           responseCode = 200,
           responseType = "[user]",
           parameters = Seq(
@@ -53,6 +54,10 @@ class CommonParameterTypesSpec extends FunSpec with Matchers {
         "Resource users GET /users Parameter id: Maximum was not specified - should be 100"
       )
     )
+  }
+
+  it("id on versions endpoint") {
+    linter.validate(buildService("id", "[long]", None, None, Some(100), path = "/users/versions")) should be(Nil)
   }
 
   it("limit") {
