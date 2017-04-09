@@ -429,7 +429,13 @@ case class OneApi(
     } else {
       name match {
         case ApiServiceRx(apidocType, typeName) => {
-          s"io.flow.api.v0.$apidocType.$typeName"
+          // TODO: figure out how to import. we have a circular
+          // dependency as api project is built after
+          // api-event. Probably need to move the generate event
+          // union/enum into api-event
+          //
+          // s"io.flow.api.v0.$apidocType.$typeName"
+          name
         }
         case _ => {
           sys.error(s"Failed to map import to API project for type[$name]")
