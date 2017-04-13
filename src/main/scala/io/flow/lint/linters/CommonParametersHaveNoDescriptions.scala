@@ -21,7 +21,9 @@ case object CommonParametersHaveNoDescriptions extends Linter with Helpers {
   }
 
   def validateResource(service: Service, resource: Resource): Seq[String] = {
-    resource.operations.flatMap(validateOperation(service, resource, _))
+    resource.operations.
+      filter(op => !ignored(op.attributes, "common_parameters_have_no_description")).
+      flatMap(validateOperation(service, resource, _))
   }
 
   def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
