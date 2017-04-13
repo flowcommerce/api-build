@@ -23,16 +23,19 @@ import com.bryzek.apidoc.spec.v0.models.{Service, Union}
   */
 case object ExpandableUnionsAreConsistent extends Linter with Helpers {
 
-  val Pattern = """^expandable_(.+)$""".r
+  private[this] val Pattern = """^expandable_(.+)$""".r
 
   override def validate(service: Service): Seq[String] = {
-    service.unions.flatMap(validateUnion(_))
+    service.unions.flatMap { u => validateUnion(service, u) }
   }
 
-  def validateUnion(union: Union): Seq[String] = {
+  def validateUnion(service: Service, union: Union): Seq[String] = {
     union.name match {
       case Pattern(name) => {
-        validateUnionTypes(union, Seq(name, s"${name}_reference"))
+        service.unions.find(_.name == name) match {
+          case None => validateUnionTypes(union, Seq(name, s"${name}_reference"))
+          case Some(u) => validateUnionTypes(union, u.types.map(_.`type`) ++ Seq(s"${name}_reference"))
+        }
       }
       case _ => {
         Nil
@@ -42,16 +45,15 @@ case object ExpandableUnionsAreConsistent extends Linter with Helpers {
 
   def validateUnionTypes(union: Union, types: Seq[String]): Seq[String] = {
     val names = union.types.map(_.`type`)
-    names == types match {
-      case true => Nil
-      case false => {
-        names.toList match {
-          case Nil => {
-            Seq(error(union, s"Types for this expandable union must be ${types.mkString(", ")}"))
-          }
-          case _ => {
-            Seq(error(union, s"Types for this expandable union must be ${types.mkString(", ")} and not ${names.mkString(", ")}"))
-          }
+    if (names == types) {
+      Nil
+    } else {
+      names.toList match {
+        case Nil => {
+          Seq(error(union, s"Types for this expandable union must be ${types.mkString(", ")}"))
+        }
+        case _ => {
+          Seq(error(union, s"Types for this expandable union must be ${types.mkString(", ")} and not ${names.mkString(", ")}"))
         }
       }
     }

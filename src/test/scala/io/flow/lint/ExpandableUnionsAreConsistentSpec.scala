@@ -53,5 +53,54 @@ class ExpandableUnionsAreConsistentSpec extends FunSpec with Matchers {
     )
   }
 
+  it("with valid types when the type itself is a union") {
+    val s = Services.Base.copy(
+      unions = Seq(
+        Services.buildUnion(
+          name = "expandable_payment",
+          discriminator = Some("discriminator"),
+          types = Seq(
+            Services.buildUnionType("payment_paypal"),
+            Services.buildUnionType("payment_reference")
+          )
+        ),
+        Services.buildUnion(
+          name = "payment",
+          discriminator = Some("discriminator"),
+          types = Seq(
+            Services.buildUnionType("payment_paypal")
+          )
+        )
+      )
+    )
+
+    linter.validate(s) should be(Nil)
+  }
+
+  it("with invalid types when the type itself is a union") {
+    val s = Services.Base.copy(
+      unions = Seq(
+        Services.buildUnion(
+          name = "expandable_payment",
+          discriminator = Some("discriminator"),
+          types = Seq(
+            Services.buildUnionType("other"),
+            Services.buildUnionType("payment_reference")
+          )
+        ),
+        Services.buildUnion(
+          name = "payment",
+          discriminator = Some("discriminator"),
+          types = Seq(
+            Services.buildUnionType("payment_paypal")
+          )
+        )
+      )
+    )
+
+    linter.validate(s) should be(
+      Seq("Union expandable_payment: Types for this expandable union must be payment_paypal, payment_reference and not other, payment_reference")
+    )
+  }
 
 }
