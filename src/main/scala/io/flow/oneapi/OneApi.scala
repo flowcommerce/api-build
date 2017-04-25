@@ -13,7 +13,8 @@ case class OneApi(
 
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
-    "timezone" -> "/"
+    "timezone" -> "/",
+    "io.flow.session.v0.unions.session" -> "/sessions",
   )
 
   private[this] val DefaultFieldDescriptions = Map(
