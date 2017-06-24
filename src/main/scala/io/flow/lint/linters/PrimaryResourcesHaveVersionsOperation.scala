@@ -1,8 +1,8 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Response, Service}
-import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
+import io.apibuilder.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Response, Service}
+import io.apibuilder.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
 /**
   * Makes sure we have /versions methods for all of our resources.

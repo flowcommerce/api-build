@@ -1,6 +1,6 @@
 package io.flow.build
 
-import com.bryzek.apidoc.spec.v0.models.Service
+import io.apibuilder.spec.v0.models.Service
 import io.flow.{oneapi, lint, proxy}
 
 object Main extends App {
@@ -15,7 +15,7 @@ object Main extends App {
     proxy.Controller()
   )
 
-  ApidocConfig.load() match {
+  ApibuilderConfig.load() match {
     case Left(error) => {
       println(s"** Error loading apidoc config: $error")
       System.exit(1)

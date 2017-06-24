@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
-import com.bryzek.apidoc.spec.v0.models.{Attribute, Field, Model, Operation, Parameter, Resource, Response, Service, Union}
-import com.bryzek.apidoc.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
+import io.apibuilder.spec.v0.models.{Attribute, Field, Model, Operation, Parameter, Resource, Response, Service, Union}
+import io.apibuilder.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 import play.api.libs.json.{JsError, JsSuccess}
 
 trait Helpers {

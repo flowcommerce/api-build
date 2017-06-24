@@ -1,6 +1,6 @@
 package io.flow.oneapi
 
-import com.bryzek.apidoc.spec.v0.models.Service
+import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
 
 case class Controller() extends io.flow.build.Controller {
@@ -38,7 +38,7 @@ case class Controller() extends io.flow.build.Controller {
       }
 
       case Right(service) => {
-        import com.bryzek.apidoc.spec.v0.models.json._
+        import io.apibuilder.spec.v0.models.json._
         import play.api.libs.json._
 
         val path = s"/tmp/flow-${buildType}.json"

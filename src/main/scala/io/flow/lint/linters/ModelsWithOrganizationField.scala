@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Model, Service}
+import io.apibuilder.spec.v0.models.{Model, Service}
 
 /**
   * For models w/ field named organization, ensure organization's position is:

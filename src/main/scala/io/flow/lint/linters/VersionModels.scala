@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
+import io.apibuilder.spec.v0.models.{Field, Model, Service}
 
 /**
   * Keep all _version models w/ same structure - 3 leading fields, then a

@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, Resource, Service}
+import io.apibuilder.spec.v0.models.{Method, Operation, Parameter, Resource, Service}
 
 /**
   * We reserve 'method' and 'callback' for jsonp requests (as

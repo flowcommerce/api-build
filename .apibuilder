@@ -1,18 +1,18 @@
 code:
-  bryzek:
-    apidoc-common:
+  apicollective:
+    apibuilder-common:
       version: latest
       generators:
         play_2_x_standalone_json: src/main/scala/io/flow/generated
-    apidoc-generator:
+    apibuilder-generator:
       version: latest
       generators:
         play_2_x_standalone_json: src/main/scala/io/flow/generated
-    apidoc-spec:
+    apibuilder-spec:
       version: latest
       generators:
         play_2_x_standalone_json: src/main/scala/io/flow/generated
-    apidoc-api:
+    apibuilder-api:
       version: latest
       generators:
         ning_1_9_client: src/main/scala/io/flow/generated

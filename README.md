@@ -2,7 +2,7 @@
 
 # api-build
 
-Runs a set of tests against an API defined in apidoc to ensure
+Runs a set of tests against an API defined in apibuilder to ensure
 consistency, and then builds a few artifacts used in the end to end
 pipeline of API at gilt.
 
@@ -32,7 +32,7 @@ Or run the full build:
 
 ## running locally
 
-api-build needs to access apidoc and requires an API Token:
+api-build needs to access apibuilder and requires an API Token:
 
   1. Goto http://apidoc.me/tokens/ and create a token
 
@@ -53,13 +53,13 @@ We are using one-jar to publish (see https://github.com/sbt/sbt-onejar)
     java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar oneapi flow/common flow/user
     java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/common flow/user
 
-To specify a specific APIDOC Profile:
+To specify a specific API Builder Profile:
 
-    APIDOC_PROFILE=xxx java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/common flow/user
+    APIBUILDER_PROFILE=xxx java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/common flow/user
 
-Or to specify a specific APIDOC URL and/or Token:
+Or to specify a specific APIBUILDER URL and/or Token:
 
-    APIDOC_API_TOKEN=yyy APIDOC_API_URI=http://api.apidoc.mc java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/user
+    APIBUILDER_API_TOKEN=yyy APIBUILDER_API_URI=http://api.apidoc.mc java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/user
 
 The default behavior is to use the default apidoc profile.
 

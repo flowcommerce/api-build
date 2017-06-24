@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
+import io.apibuilder.spec.v0.models.{Field, Model, Service}
 
 /**
   * For error models (those with an error_id field in position 1), validate:
