@@ -2,37 +2,37 @@ package io.flow.build
 
 import scala.util.{Failure, Success, Try}
 
-case class ApidocProfile(name: String, baseUrl: String, token: Option[String] = None)
+case class ApibuilderProfile(name: String, baseUrl: String, token: Option[String] = None)
 
 /**
-  * Parses the apidoc configuration file
+  * Parses the API Builder configuration file
   */
-object ApidocConfig {
+object ApibuilderConfig {
 
-  private[this] val DefaultPath = "~/.apidoc/config"
+  private[this] val DefaultPath = "~/.apibuilder/config"
 
-  private[this] val DefaultApidocProfile = ApidocProfile(
+  private[this] val DefaultApibuilderProfile = ApibuilderProfile(
     name = "default",
-    baseUrl = "http://api.apidoc.me",
+    baseUrl = "https://api.apibuilder.io",
     token = None
   )
 
   /**
-    * Loads apidoc configuration from the apidoc configuration file,
+    * Loads API Builder configuration from the API Builder configuration file,
     * returning either an error or the configuration. You can set the
-    * APIDOC_PROFILE environment variable if you want to parse a
+    * APIBUILDER_PROFILE environment variable if you want to parse a
     * specific profile.
     * 
     * @param path The path to the configuration file we are reading
     */
   def load(
     path: String = DefaultPath
-  ): Either[String, ApidocProfile] = {
-    val profileName = Environment.optionalString("APIDOC_PROFILE").getOrElse(DefaultApidocProfile.name)
-    val envToken = Environment.optionalString("APIDOC_TOKEN")
-    val envBaseUrl = Environment.optionalString("APIDOC_API_BASE_URL")
+  ): Either[String, ApibuilderProfile] = {
+    val profileName = Environment.optionalString("APIBUILDER_PROFILE").getOrElse(DefaultApibuilderProfile.name)
+    val envToken = Environment.optionalString("APIBUILDER_TOKEN")
+    val envBaseUrl = Environment.optionalString("APIBUILDER_API_BASE_URL")
 
-    val profileOrErrors: Either[String, ApidocProfile] = loadAllProfiles(path) match {
+    val profileOrErrors: Either[String, ApibuilderProfile] = loadAllProfiles(path) match {
       case Left(errors) => {
         Left(errors)
       }
@@ -40,9 +40,9 @@ object ApidocConfig {
       case Right(profiles) => {
         profiles.find(_.name == profileName) match {
           case None => {
-            profileName == DefaultApidocProfile.name match {
-              case true => Right(DefaultApidocProfile)
-              case false => Left(s"apidoc profile named[$profileName] not found")
+            profileName == DefaultApibuilderProfile.name match {
+              case true => Right(DefaultApibuilderProfile)
+              case false => Left(s"API Builder profile named[$profileName] not found")
             }
           }
           case Some(p) => {
@@ -58,7 +58,7 @@ object ApidocConfig {
         val p2 = envToken match {
           case None => profile
           case Some(token) => {
-            println("Using apidoc token from environment variable")
+            println("Using API Builder token from environment variable")
             profile.copy(token = Some(token))
           }
         }
@@ -66,7 +66,7 @@ object ApidocConfig {
         val p3 = envBaseUrl match {
           case None => p2
           case Some(url) => {
-            println("Using apidoc baseUrl[$url] from environment variable")
+            println("Using API Builder baseUrl[$url] from environment variable")
             profile.copy(baseUrl = url)
           }
         }
@@ -79,23 +79,23 @@ object ApidocConfig {
   private[this] val Profile = """\[profile (.+)\]""".r
   private[this] val Default = """\[default\]""".r
 
-  private[this] def loadAllProfiles(path: String): Either[String, Seq[ApidocProfile]] = {
+  private[this] def loadAllProfiles(path: String): Either[String, Seq[ApibuilderProfile]] = {
     val fullPath = path.replaceFirst("^~", System.getProperty("user.home"))
-    var allProfiles = scala.collection.mutable.ListBuffer[ApidocProfile]()
+    var allProfiles = scala.collection.mutable.ListBuffer[ApibuilderProfile]()
 
     Try(
       if (new java.io.File(fullPath).exists) {
-        var currentProfile: Option[ApidocProfile] = None
+        var currentProfile: Option[ApibuilderProfile] = None
 
         scala.io.Source.fromFile(fullPath).getLines.map(_.trim).foreach { l =>
           l match {
             case Profile(name) => {
               currentProfile.map { p => allProfiles += p }
-              currentProfile = Some(ApidocProfile(name = name, baseUrl = DefaultApidocProfile.baseUrl))
+              currentProfile = Some(ApibuilderProfile(name = name, baseUrl = DefaultApibuilderProfile.baseUrl))
             }
             case Default() => {
               currentProfile.map { p => allProfiles += p }
-              currentProfile = Some(DefaultApidocProfile)
+              currentProfile = Some(DefaultApibuilderProfile)
             }
             case _ => {
               l.split("=").map(_.trim).toList match {

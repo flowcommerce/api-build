@@ -8,7 +8,7 @@ import scala.concurrent.duration.Duration
 /**
   * Utility to download service.json files from apidoc
   */
-case class Downloader(config: ApidocProfile) {
+case class Downloader(config: ApibuilderProfile) {
 
   private[this] val client = {
     new io.apibuilder.api.v0.Client(
@@ -61,7 +61,7 @@ case class Downloader(config: ApidocProfile) {
 object Downloader {
 
   def withClient[T](
-    profile: ApidocProfile
+    profile: ApibuilderProfile
   ) (
     f: Downloader => T
   ) = {

@@ -15,7 +15,7 @@ object Main extends App {
     proxy.Controller()
   )
 
-  ApidocConfig.load() match {
+  ApibuilderConfig.load() match {
     case Left(error) => {
       println(s"** Error loading apidoc config: $error")
       System.exit(1)
