@@ -1,6 +1,6 @@
 package io.flow.lint.linters
 
-import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Service}
+import io.apibuilder.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Service}
 import io.flow.lint.Linter
 import io.flow.lint.util.Expansions
 

@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Field, Model, Service}
+import io.apibuilder.spec.v0.models.{Field, Model, Service}
 
 /**
   * For well known field names, enforce specific types to ensure

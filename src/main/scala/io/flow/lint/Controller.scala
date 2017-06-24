@@ -1,6 +1,6 @@
 package io.flow.lint
 
-import com.bryzek.apidoc.spec.v0.models.Service
+import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{BuildType, Downloader}
 
 case class Controller() extends io.flow.build.Controller {

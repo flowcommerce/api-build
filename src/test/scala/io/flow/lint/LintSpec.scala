@@ -1,6 +1,6 @@
 package io.flow.lint
 
-import com.bryzek.apidoc.spec.v0.models._
+import io.apibuilder.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
 import scala.collection.JavaConversions._
 import scala.concurrent.Await

@@ -1,6 +1,6 @@
 package io.flow.oneapi
 
-import com.bryzek.apidoc.spec.v0.models._
+import io.apibuilder.spec.v0.models._
 import io.flow.build.{BuildType, Downloader}
 import play.api.libs.json.{Json, JsString}
 

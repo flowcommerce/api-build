@@ -2,7 +2,7 @@ package io.flow.lint.linters
 
 import io.flow.lint.Linter
 import io.flow.lint.util.Expansions
-import com.bryzek.apidoc.spec.v0.models.{Method, Operation, Resource, Service}
+import io.apibuilder.spec.v0.models.{Method, Operation, Resource, Service}
 
 /**
   * Enforce that for models with expansion where the return type is

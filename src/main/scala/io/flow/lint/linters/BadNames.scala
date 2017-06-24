@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Field, Model, Operation, Parameter, Resource, Service}
+import io.apibuilder.spec.v0.models.{Field, Model, Operation, Parameter, Resource, Service}
 import scala.util.{Failure, Success, Try}
 
 /**

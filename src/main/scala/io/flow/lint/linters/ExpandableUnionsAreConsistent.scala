@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import com.bryzek.apidoc.spec.v0.models.{Service, Union}
+import io.apibuilder.spec.v0.models.{Service, Union}
 
 /**
   * Validates that we are consistent with our expansion union types, e.g.:
