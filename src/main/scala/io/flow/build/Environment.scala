@@ -13,7 +13,7 @@ object ApibuilderConfig {
 
   private[this] val DefaultApibuilderProfile = ApibuilderProfile(
     name = "default",
-    baseUrl = "https://api.apibuilder.io",
+    baseUrl = "https://app.apibuilder.io",
     token = None
   )
 
