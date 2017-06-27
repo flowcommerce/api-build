@@ -6,7 +6,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 /**
-  * Utility to download service.json files from apidoc
+  * Utility to download service.json files from apibuilder
   */
 case class Downloader(config: ApibuilderProfile) {
 

@@ -48,7 +48,7 @@ case class Controller() extends io.flow.build.Controller {
 
     val version = downloader.service(Application("flow", buildType.toString, "latest")) match {
       case Left(error) => {
-        sys.error(s"Failed to download '$buildType' service from apidoc: $error")
+        sys.error(s"Failed to download '$buildType' service from apibuilder: $error")
       }
       case Right(svc) => {
         svc.version

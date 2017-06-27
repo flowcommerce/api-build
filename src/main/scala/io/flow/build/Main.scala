@@ -17,7 +17,7 @@ object Main extends App {
 
   ApibuilderConfig.load() match {
     case Left(error) => {
-      println(s"** Error loading apidoc config: $error")
+      println(s"** Error loading apibuilder config: $error")
       System.exit(1)
     }
 
