@@ -9,7 +9,7 @@ pipeline of API at gilt.
 Main features:
 
   - lint: Automated build to enforce standard conventions at Flow
-  - oneapi: Merge multiple API specs into a single API, managed at apiapibuilder.io/flow/api
+  - oneapi: Merge multiple API specs into a single API, managed at https://app.apibuilder.io/flow/api
   - proxy: Generates configuration files for the API proxy, routing paths to services
 
 ## Installation
@@ -34,7 +34,7 @@ Or run the full build:
 
 api-build needs to access apibuilder and requires an API Token:
 
-  1. Goto http://apiapibuilder.io/tokens/ and create a token
+  1. Goto https://app.apibuilder.io/tokens/ and create a token
 
   2. Create the ~/.apibuilder/config file - see https://github.com/apicollective/apibuilder-cli
 
@@ -59,7 +59,7 @@ To specify a specific API Builder Profile:
 
 Or to specify a specific APIBUILDER URL and/or Token:
 
-    APIBUILDER_API_TOKEN=yyy APIBUILDER_API_URI=http://api.apibuilder.io java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/user
+    APIBUILDER_API_TOKEN=yyy APIBUILDER_API_URI=http://app.apibuilder.io java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/user
 
 The default behavior is to use the default apibuilder profile.
 
