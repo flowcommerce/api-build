@@ -1,11 +1,11 @@
 package io.flow.proxy
 
-import io.flow.build.BuildType
-import io.flow.registry.v0.{Client => RegistryClient}
 import io.flow.registry.v0.models.Application
+import io.flow.registry.v0.{Client => RegistryClient}
+
 import scala.annotation.tailrec
-import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * Cache to lookup information from the registry.  This cache is
@@ -63,7 +63,7 @@ private[proxy] case class RegistryApplicationCache(
       }
     }
 
-    results.size >= limit match {
+    results.map(_.size).getOrElse(0) >= limit match {
       case true => load(cache, offset + limit)
       case false => cache.toMap
     }
