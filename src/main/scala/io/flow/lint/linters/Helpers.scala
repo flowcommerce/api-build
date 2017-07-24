@@ -1,7 +1,6 @@
 package io.flow.lint.linters
 
-import io.apibuilder.spec.v0.models.{Attribute, Field, Model, Operation, Parameter, Resource, Response, Service, Union}
-import io.apibuilder.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
+import io.apibuilder.spec.v0.models._
 import play.api.libs.json.{JsError, JsSuccess}
 
 trait Helpers {
@@ -65,6 +64,26 @@ trait Helpers {
   def model(service: Service, operation: Operation): Option[Model] = {
     responseType(service, operation).flatMap { t =>
       service.models.find(_.name == t)
+    }
+  }
+
+  /**
+    * Returns the enum given a name. Checks imports as well
+    *
+    * @param search the enum name or fully-qualified name (capture_decline_code or io.flow.error.v0.enums.generic_error)
+    */
+  def hasEnum(service: Service, search: String): Boolean = {
+    val (namespace, name) = search.split('.').toList match {
+      case x :: Nil => (service.namespace, x)
+      case ns :+ name => (ns.mkString("."), name)
+    }
+    service.enums.exists(_.name == name) || {
+      (for {
+        imp <- service.imports
+        if imp.namespace + ".enums" == namespace
+        enum <- imp.enums
+        if enum == name
+      } yield enum).nonEmpty
     }
   }
 
