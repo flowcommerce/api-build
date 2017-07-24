@@ -2,6 +2,7 @@ package io.flow.lint
 
 import io.apibuilder.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
+import play.api.libs.json.Json
 
 class ErrorModelsSpec extends FunSpec with Matchers {
 
@@ -69,7 +70,20 @@ class ErrorModelsSpec extends FunSpec with Matchers {
 
     val errorCode = Services.buildEnum("error_code", "error_codes")
     linter.validate(baseService.copy(enums = Seq(errorCode))) should be(Nil)
+  }
 
+  it("ignores where specified") {
+    val service = buildService(Nil).copy(
+      models = Seq(
+        Services.buildModel("my_error").copy(
+          attributes = Seq(Attribute("linter", Json.obj("ignore" -> Json.arr("error_models"))))
+        )
+      )
+    )
+    linter.validate(service) should be(Nil)
+
+    val service2 = buildService(Nil)
+    linter.validate(service2) shouldNot be(Nil)
   }
   
 }
