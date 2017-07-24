@@ -13,7 +13,10 @@ import io.apibuilder.spec.v0.models.{Field, Model, Service}
 case object ErrorModels extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.models.filter(isError(_)).flatMap(validateModel(service, _))
+    service.models
+      .filter(isError(_))
+      .filter(e => !ignored(e.attributes, "error_models"))
+      .flatMap(validateModel(service, _))
   }
 
   def isError(model: Model): Boolean = {
