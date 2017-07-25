@@ -69,7 +69,20 @@ class ErrorModelsSpec extends FunSpec with Matchers {
 
     val errorCode = Services.buildEnum("error_code", "error_codes")
     linter.validate(baseService.copy(enums = Seq(errorCode))) should be(Nil)
+  }
 
+  it("code can be imported enum") {
+    val baseService = buildService(Seq(code.copy(`type` = "io.flow.error.v0.enums.generic_error"), messages)).copy(
+      imports = Seq(Import(
+        namespace = "io.flow.error.v0",
+        uri = "https://app.apibuilder.io/flow/error/latest/service.json",
+        organization = Organization("flow"),
+        application = Application("error"),
+        version = "0.0.1",
+        enums = Seq("generic_error")
+      ))
+    )
+    linter.validate(baseService) should be(Nil)
   }
   
 }
