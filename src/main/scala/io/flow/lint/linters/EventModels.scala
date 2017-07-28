@@ -21,10 +21,22 @@ case object EventModels extends Linter with Helpers {
   )
   
   private[this] def isEvent(model: Model): Boolean = {
-    Suffixes.exists { s => model.name.endsWith(s) }
+    Suffixes.exists { s => model.name.endsWith(s"_$s") }
   }
 
-  def validateModel(model: Model): Seq[String] = {
+  private[this] def validateModel(model: Model): Seq[String] = {
+    validateFieldNames(model) ++ validateFieldTypes(
+      model,
+      Map(
+        "event_id" -> "string",
+        "timestamp" -> "date-time-iso8601",
+        "organization" -> "string",
+        "number" -> "string"
+      )
+    )
+  }
+
+  private[this] def validateFieldNames(model: Model): Seq[String] = {
     val fieldNames = model.fields.map(_.name)
     fieldNames match {
       case "event_id" :: "timestamp" :: "organization" :: "number" :: _ => Nil

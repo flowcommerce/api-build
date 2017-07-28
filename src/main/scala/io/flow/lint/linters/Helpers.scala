@@ -201,5 +201,21 @@ trait Helpers {
       }
     }
   }
-  
+
+  def validateFieldTypes(model: Model, expectedTypes: Map[String, String]): Seq[String] = {
+    expectedTypes.flatMap { case (fieldName, expectedTypeName) =>
+      validateType(model, fieldName, expectedTypeName)
+    }.toList
+  }
+
+  def validateType(model: Model, fieldName: String, typeName: String): Seq[String] = {
+    model.fields.find(_.name == fieldName) match {
+      case None => Nil
+      case Some(f) if f.`type` == typeName => Nil
+      case Some(f) => Seq(
+        error(model, f, s"type must be '$typeName' and not ${f.`type`}")
+      )
+    }
+  }
+
 }
