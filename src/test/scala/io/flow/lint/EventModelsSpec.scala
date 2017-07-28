@@ -7,10 +7,21 @@ class EventModelsSpec extends FunSpec with Matchers {
 
   private[this] val linter = linters.EventModels
 
-  def buildService(fields: Seq[String]): Service = {
+  private[this] def buildService(
+    fields: Seq[String]
+  ): Service = {
     Services.Base.copy(
       models = Seq(
-        Services.buildSimpleModel("org_upserted", fields)
+        Services.buildModel(
+          name = "org_upserted",
+          fields = fields.map { case (name) =>
+            val typ = name match {
+              case "timestamp" => "date-time-iso8601"
+              case _ => "string"
+            }
+            Services.buildField(name = name, `type` = typ)
+          }
+        )
       )
     )
   }

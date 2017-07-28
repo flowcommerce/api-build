@@ -9,7 +9,7 @@ case class Lint(
 ) {
   
   def validate(service: Service): Seq[String] = {
-    linters.map(_.validate(service)).flatten
+    linters.flatMap(_.validate(service))
   }
 
 }
@@ -31,6 +31,7 @@ object Lint {
     linters.ModelsWithOrganizationField,
     linters.PrimaryResourcesHaveVersionsOperation,
     linters.ProxyQueryParameters,
+    linters.PublishedEventModels,
     linters.SortAttribute,
     linters.SortParameterDefault,
     linters.StandardResponse,
