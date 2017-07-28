@@ -6,7 +6,7 @@ import play.api.libs.json.{JsObject, Json}
 
 class StandardResponseSpec extends FunSpec with Matchers {
 
-  val linter = linters.StandardResponse
+  private[this] val linter = linters.StandardResponse
 
   def buildService(
     path: String,

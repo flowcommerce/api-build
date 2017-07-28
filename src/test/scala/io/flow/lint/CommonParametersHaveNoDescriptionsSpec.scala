@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class CommonParametersHaveNoDescriptionsSpec extends FunSpec with Matchers {
 
-  val linter = linters.CommonParametersHaveNoDescriptions
+  private[this] val linter = linters.CommonParametersHaveNoDescriptions
 
   def buildService(
     paramName: String,

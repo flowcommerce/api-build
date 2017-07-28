@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class LowerCasePathsSpec extends FunSpec with Matchers {
 
-  val linter = linters.LowerCasePaths
+  private[this] val linter = linters.LowerCasePaths
 
   def buildService(
     path: String

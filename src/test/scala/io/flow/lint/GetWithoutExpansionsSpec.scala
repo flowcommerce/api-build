@@ -6,7 +6,7 @@ import play.api.libs.json.Json
 
 class GetWithoutExpansionsSpec extends FunSpec with Matchers {
 
-  val linter = linters.Get
+  private[this] val linter = linters.Get
 
   val model = Services.buildSimpleModel(
     "organization",

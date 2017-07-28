@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class ErrorModelsSpec extends FunSpec with Matchers {
 
-  val linter = linters.ErrorModels
+  private[this] val linter = linters.ErrorModels
 
   val code = Services.buildField("code")
   val messages = Services.buildField("messages", "[string]", minimum = Some(1))

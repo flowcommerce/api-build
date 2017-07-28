@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class EventModelsSpec extends FunSpec with Matchers {
 
-  val linter = linters.EventModels
+  private[this] val linter = linters.EventModels
 
   def buildService(fields: Seq[String]): Service = {
     Services.Base.copy(

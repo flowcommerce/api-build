@@ -6,7 +6,7 @@ import play.api.libs.json.Json
 
 class PrimaryResourcesHaveVersionsOperationSpec extends FunSpec with Matchers {
 
-  val linter = linters.PrimaryResourcesHaveVersionsOperation
+  private[this] val linter = linters.PrimaryResourcesHaveVersionsOperation
 
   def buildReferenceService(operations: Seq[Operation]): Service = {
     Services.Base.copy(

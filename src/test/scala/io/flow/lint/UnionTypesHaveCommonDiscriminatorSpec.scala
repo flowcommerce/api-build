@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class UnionTypesHaveCommonDiscriminatorSpec extends FunSpec with Matchers {
 
-  val linter = linters.UnionTypesHaveCommonDiscriminator
+  private[this] val linter = linters.UnionTypesHaveCommonDiscriminator
 
   def buildService(
     typeName: String,

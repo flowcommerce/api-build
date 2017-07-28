@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class SortParameterDefaultSpec extends FunSpec with Matchers {
 
-  val linter = linters.SortParameterDefault
+  private[this] val linter = linters.SortParameterDefault
 
   def buildService(model: Model, param: Parameter, path: String = "/organizations"): Service = {
     Services.Base.copy(

@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class MinimumMaximumSpec extends FunSpec with Matchers {
 
-  val linter = linters.MinimumMaximum
+  private[this] val linter = linters.MinimumMaximum
 
   def buildServiceWithModel(
     modelName: String = "user",

@@ -6,7 +6,7 @@ import play.api.libs.json.Json
 
 class SortAttributeSpec extends FunSpec with Matchers {
 
-  val linter = linters.SortAttribute
+  private[this] val linter = linters.SortAttribute
 
   val sortParameter = Parameter(
     name = "sort",

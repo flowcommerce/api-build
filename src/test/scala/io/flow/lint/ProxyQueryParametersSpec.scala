@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class ProxyQueryParametersSpec extends FunSpec with Matchers {
 
-  val linter = linters.ProxyQueryParameters
+  private[this] val linter = linters.ProxyQueryParameters
 
   def buildService(
     paramName: String

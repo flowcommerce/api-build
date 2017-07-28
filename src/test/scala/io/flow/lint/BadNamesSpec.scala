@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class BadNamesSpec extends FunSpec with Matchers {
 
-  val linter = linters.BadNames
+  private[this] val linter = linters.BadNames
 
   def buildModel(
     fieldName: String

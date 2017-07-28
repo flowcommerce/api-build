@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class ExpandableUnionsAreConsistentSpec extends FunSpec with Matchers {
 
-  val linter = linters.ExpandableUnionsAreConsistent
+  private[this] val linter = linters.ExpandableUnionsAreConsistent
 
   def buildService(types: Seq[String]): Service = {
     Services.Base.copy(

@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class GetByIdIsExpandableSpec extends FunSpec with Matchers {
 
-  val linter = linters.GetByIdIsExpandable
+  private[this] val linter = linters.GetByIdIsExpandable
 
   def buildService(
     responseType: String = "[expandable_organization]",

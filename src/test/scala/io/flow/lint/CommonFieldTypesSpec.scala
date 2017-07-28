@@ -5,7 +5,7 @@ import org.scalatest.{FunSpec, Matchers}
 
 class CommonFieldTypesSpec extends FunSpec with Matchers {
 
-  val linter = linters.CommonFieldTypes
+  private[this] val linter = linters.CommonFieldTypes
 
   def buildService(
     fieldName: String,
