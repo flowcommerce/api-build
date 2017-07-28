@@ -2,7 +2,6 @@ package io.flow.lint.linters
 
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Field, Model, Operation, Parameter, Resource, Service}
-import scala.util.{Failure, Success, Try}
 
 /**
   *  We have decided to call the same things consistently. This linter
