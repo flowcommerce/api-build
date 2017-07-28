@@ -15,8 +15,13 @@ class EventModelsSpec extends FunSpec with Matchers {
     )
   }
 
-  it("no-op w/out event_id field") {
-    linter.validate(buildService(Seq("id", "email"))) should be(Nil)
+  it("no-op w/out event_id") {
+    linter.validate(buildService(Seq("id", "email"))) should be(
+      Seq(
+        "Model org_upserted: event_id must be the first field in event models",
+        "Model org_upserted: timestamp field is required in event models"
+      )
+    )
   }
 
   it("fields") {

@@ -56,19 +56,13 @@ case object EventModels extends Linter with Helpers {
       }
 
       case _ => {
-        val eventIdErrors = if (fieldNames.headOption.contains("event_id")) {
-          Nil
-        } else {
-          Seq(error(model, "event_id must be the first field in event models"))
-        }
-
         val timestampErrors = if (fieldNames.contains("timestamp")) {
           error(model, "timestamp field must come after event_id in event models")
         } else {
           error(model, "timestamp field is required in event models")
         }
 
-        eventIdErrors ++ Seq(timestampErrors) ++ validateOrgAndNumber(model, fieldNames, "timestamp")
+        Seq(timestampErrors) ++ validateOrgAndNumber(model, fieldNames, "timestamp")
       }
     }
   }
