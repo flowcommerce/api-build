@@ -418,6 +418,8 @@ case class OneApi(
   }
 
   private[this] val ApiServiceRx = """^io\.flow\..+\.v0\.(\w+).(\w+)$""".r
+  private[this] val ApiServiceArrayRx = """^\[io\.flow\..+\.v0\.(\w+).(\w+)\]$""".r
+  private[this] val ApiServiceMapRx = """^map\[io\.flow\..+\.v0\.(\w+).(\w+)\]$""".r
 
   /**
     * Rewrite imports in api-event to allow imports from api
@@ -428,7 +430,7 @@ case class OneApi(
       name
     } else {
       name match {
-        case ApiServiceRx(apidocType, typeName) => {
+        case ApiServiceRx(_, _) | ApiServiceArrayRx(_, _) | ApiServiceMapRx(_, _) => {
           // TODO: figure out how to import. we have a circular
           // dependency as api project is built after
           // api-event. Probably need to move the generate event
