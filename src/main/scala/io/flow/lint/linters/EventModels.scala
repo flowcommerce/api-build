@@ -2,7 +2,6 @@ package io.flow.lint.linters
 
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Model, Service}
-import io.flow.lint.linters.CommonParameterTypes.ignored
 
 /**
   * For event models (models ending with 'upserted', 'deleted'), validate:

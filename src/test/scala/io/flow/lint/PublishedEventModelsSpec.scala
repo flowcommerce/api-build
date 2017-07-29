@@ -1,6 +1,6 @@
 package io.flow.lint
 
-import io.apibuilder.spec.v0.models.Service
+import io.apibuilder.spec.v0.models.{Attribute, Service}
 import org.scalatest.{FunSpec, Matchers}
 
 class PublishedEventModelsSpec extends FunSpec with Matchers {
@@ -8,16 +8,33 @@ class PublishedEventModelsSpec extends FunSpec with Matchers {
   private[this] val linter = linters.PublishedEventModels
 
   private[this] def buildService(
-    fields: Map[String, String]
+    fields: Map[String, String],
+    attributes: Seq[Attribute] = Nil
   ): Service = {
     Services.Base.copy(
       models = Seq(
         Services.buildModel(
           name = "organization_rates_published",
           fields = fields.map { case (name, typ) => Services.buildField(name = name, `type` = typ) }.toList
+        ).copy(
+          attributes = attributes
         )
       )
     )
+  }
+
+  it("respects linter ignore hint") {
+    linter.validate(
+      buildService(
+        Map(
+          "id" -> "string",
+          "email" -> "string"
+        ),
+        attributes = Seq(
+          Services.buildLinterIgnoreAttribute(Seq("published_event_model"))
+        )
+      )
+    ) should be(Nil)
   }
 
   it("no-op w/ invalid fields") {
