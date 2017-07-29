@@ -19,7 +19,7 @@ case object PublishedEventModels extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
     service.models.
-      filter(m => !ignored(m.attributes, "event_model")).
+      filter(m => !ignored(m.attributes, "published_event_model")).
       filter(isPublishedEvent).
       flatMap(validateModel)
   }
