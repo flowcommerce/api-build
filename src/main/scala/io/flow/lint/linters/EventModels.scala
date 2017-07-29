@@ -2,6 +2,7 @@ package io.flow.lint.linters
 
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Model, Service}
+import io.flow.lint.linters.CommonParameterTypes.ignored
 
 /**
   * For event models (models ending with 'upserted', 'deleted'), validate:
@@ -13,7 +14,10 @@ import io.apibuilder.spec.v0.models.{Model, Service}
 case object EventModels extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.models.filter(isEvent).flatMap(validateModel)
+    service.models.
+      filter(m => !ignored(m.attributes, "event_model")).
+      filter(isEvent).
+      flatMap(validateModel)
   }
 
   private[this] val Suffixes = List(

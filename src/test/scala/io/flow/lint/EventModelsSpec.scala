@@ -8,7 +8,8 @@ class EventModelsSpec extends FunSpec with Matchers {
   private[this] val linter = linters.EventModels
 
   private[this] def buildService(
-    fields: Seq[String]
+    fields: Seq[String],
+    attributes: Seq[Attribute] = Nil
   ): Service = {
     Services.Base.copy(
       models = Seq(
@@ -21,9 +22,22 @@ class EventModelsSpec extends FunSpec with Matchers {
             }
             Services.buildField(name = name, `type` = typ)
           }
+        ).copy(
+          attributes = attributes
         )
       )
     )
+  }
+
+  it("respects linter ignore hint") {
+    linter.validate(
+      buildService(
+        fields = Seq("id"),
+        attributes = Seq(
+          Services.buildLinterIgnoreAttribute(Seq("event_model"))
+        )
+      )
+    ) should be(Nil)
   }
 
   it("no-op w/out event_id") {

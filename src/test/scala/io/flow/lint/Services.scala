@@ -1,6 +1,7 @@
 package io.flow.lint
 
 import io.apibuilder.spec.v0.models._
+import play.api.libs.json.{JsArray, JsObject, Json}
 
 object Services {
 
@@ -56,6 +57,30 @@ object Services {
   ): UnionType = {
     UnionType(
       `type` = `type`
+    )
+  }
+
+  /**
+    * Builds an attribute with the name 'linter' containing an ignore hint
+    */
+  def buildLinterIgnoreAttribute(
+    values: Seq[String]
+  ): Attribute = {
+    buildAttribute(
+      name = "linter",
+      value = Json.obj(
+        "ignore" -> values
+      )
+    )
+  }
+
+  def buildAttribute(
+    name: String,
+    value: JsObject
+  ): Attribute = {
+    Attribute(
+      name = name,
+      value = value
     )
   }
 
