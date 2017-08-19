@@ -99,7 +99,11 @@ case class OneApi(
       ),
       namespace = s"${ns}.v" + majorVersion(canonical.version),
       version = canonical.version,
-      baseUrl = canonical.baseUrl,
+      baseUrl = Some(
+        canonical.baseUrl.getOrElse(
+          sys.error(s"Missing base url for buildType[$buildType]")
+        }
+      ),
       description = canonical.description,
       info = canonical.info,
       headers = Nil,
