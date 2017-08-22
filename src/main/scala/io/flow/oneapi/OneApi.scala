@@ -101,7 +101,7 @@ case class OneApi(
       version = canonical.version,
       baseUrl = Some(
         canonical.baseUrl.getOrElse {
-          sys.error(s"Missing base url for buildType[$buildType]")
+          "https://api.flow.io"
         }
       ),
       description = canonical.description,
