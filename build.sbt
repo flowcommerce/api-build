@@ -18,7 +18,7 @@ lazy val root = project
     libraryDependencies ++= Seq(
       "com.typesafe.play" %% "play-json" % "2.6.3",
       "com.ning" % "async-http-client" % "1.9.40",
-      "org.scalatest" %% "scalatest" % "3.0.3" % Test
+      "org.scalatest" %% "scalatest" % "3.0.4" % Test
     )
   )
 
