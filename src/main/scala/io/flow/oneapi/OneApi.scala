@@ -555,7 +555,7 @@ case class OneApi(
         EnumValue( 
           name = t.`type`
         )
-      },
+      }.distinct,
       deprecation = None,
       attributes = Seq(docsAttribute(Module.Webhook))
     )
