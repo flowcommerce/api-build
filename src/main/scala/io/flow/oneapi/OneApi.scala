@@ -535,7 +535,7 @@ case class OneApi(
           name = "event",
           plural = "events",
           discriminator = discriminator,
-          types = unions.flatMap { _.types },
+          types = unions.flatMap { _.types }.distinct,
           deprecation = None,
           attributes = Seq(docsAttribute(Module.Webhook))
         )
