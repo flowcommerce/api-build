@@ -1,7 +1,7 @@
 package io.flow.oneapi
 
 import io.apibuilder.spec.v0.models._
-import io.flow.build.{BuildType, Downloader}
+import io.flow.build.BuildType
 import play.api.libs.json.{Json, JsString}
 
 private[oneapi] case class ContextualValue(context: String, value: String)
@@ -531,11 +531,17 @@ case class OneApi(
   def createEventUnion(unions: Seq[Union]): Union = {
     unions.map(_.discriminator).distinct.toList match {
       case discriminator :: Nil => {
+        val types = unions.flatMap { _.types }
+        val duplicates = types.map(_.`type`).groupBy(identity).collect { case (typ, instances) if instances.length > 1 => typ }
+        if (duplicates.nonEmpty) {
+          sys.error(s"Geneated event union has duplicate types: ${duplicates.mkString(", ")}")
+        }
+
         Union(
           name = "event",
           plural = "events",
           discriminator = discriminator,
-          types = unions.flatMap { _.types }.distinct,
+          types = types,
           deprecation = None,
           attributes = Seq(docsAttribute(Module.Webhook))
         )
