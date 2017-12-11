@@ -9,20 +9,27 @@ import io.apibuilder.spec.v0.models.{Service, Union}
   */
 case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
 
-  private[this] val StandardName = "discriminator"
-
   override def validate(service: Service): Seq[String] = {
     service.unions.
       filter(op => !ignored(op.attributes, "discriminator")).
-      flatMap(validateUnion(_))
+      flatMap(validateUnion)
   }
 
   def validateUnion(union: Union): Seq[String] = {
+    val expected = expectedDiscriminator(union.name)
+
     union.discriminator match {
-      case None => Seq(error(union, s"Must have a discriminator with value '$StandardName'"))
-      case Some(StandardName) => Nil
-      case Some(actual) => Seq(error(union, s"Discriminator must have value '$StandardName' and not '$actual'"))
+      case None => Seq(error(union, s"Must have a discriminator with value '$expected'"))
+      case Some(actual) if actual == expected => Nil
+      case Some(actual) => Seq(error(union, s"Discriminator must have value '$expected' and not '$actual'"))
     }
   }
 
+  private[this] def expectedDiscriminator(typeName: String): String = {
+    if (isError(typeName)) {
+      "code"
+    } else {
+      "discriminator"
+    }
+  }
 }

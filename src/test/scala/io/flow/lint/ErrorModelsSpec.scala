@@ -7,8 +7,8 @@ class ErrorModelsSpec extends FunSpec with Matchers {
 
   private[this] val linter = linters.ErrorModels
 
-  val code = Services.buildField("code")
-  val messages = Services.buildField("messages", "[string]", minimum = Some(1))
+  private[this] val code = Services.buildField("code")
+  private[this] val messages = Services.buildField("messages", "[string]", minimum = Some(1))
 
   def buildService(
     fields: Seq[Field]

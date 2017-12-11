@@ -32,6 +32,10 @@ trait Helpers {
     }
   }
 
+  def isError(typeName: String): Boolean = {
+    typeName.endsWith("_error")
+  }
+
   /**
     * Returns the model for this resource. Right now only will resolve
     * if the model is defined directly in the service (i.e. not
@@ -44,7 +48,7 @@ trait Helpers {
   def model(service: Service, name: String): Option[Model] = {
     service.models.find(_.name == name)
   }
-  
+
   /**
     * Returns the union type for the successful response type for this
     * operation. Right now only will resolve if the model is defined
@@ -55,7 +59,16 @@ trait Helpers {
       service.unions.find(_.name == t)
     }
   }
-  
+
+  /**
+    * Returns the union types for the provided model, if any.
+    */
+  def unions(service: Service, model: Model): Seq[Union] = {
+    service.unions.filter { u =>
+      u.types.map(_.`type`).contains(model.name)
+    }
+  }
+
   /**
     * Returns the model for the successful response type for this
     * operation. Right now only will resolve if the model is defined
@@ -115,6 +128,10 @@ trait Helpers {
 
   def error(union: Union, error: String): String = {
     s"Union ${union.name}: $error"
+  }
+
+  def error(union: Union, typ: UnionType, error: String): String = {
+    s"Union ${union.name} type ${typ.`type`}: $error"
   }
 
   def error(model: Model, error: String): String = {
