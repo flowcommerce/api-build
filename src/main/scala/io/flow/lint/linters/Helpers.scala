@@ -36,6 +36,10 @@ trait Helpers {
     typeName.endsWith("_error")
   }
 
+  def isMapping(typeName: String): Boolean = {
+    typeName.endsWith("_mapping")
+  }
+
   /**
     * Returns the model for this resource. Right now only will resolve
     * if the model is defined directly in the service (i.e. not

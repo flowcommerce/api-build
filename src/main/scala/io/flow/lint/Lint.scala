@@ -27,6 +27,7 @@ object Lint {
     linters.Get,
     linters.GetByIdIsExpandable,
     linters.LowerCasePaths,
+    linters.MappingModels,
     linters.MinimumMaximum,
     linters.ModelsWithOrganizationField,
     linters.PrimaryResourcesHaveVersionsOperation,
