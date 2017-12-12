@@ -87,6 +87,7 @@ class MappingModelsSpec extends FunSpec with Matchers {
 
   it("validates names") {
     val other = Services.buildField("foo", "order_reference")
+    val fullyQualified = Services.buildField("price_book", "io.flow.price.v0.models.price_book_reference")
 
     linter.validate(
       buildService(
@@ -95,6 +96,15 @@ class MappingModelsSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq("Field 'foo' must be named 'order'")
+    )
+
+    linter.validate(
+      buildService(
+        name = "experience_price_book_mapping",
+        fields = Seq(id, experienceReference, fullyQualified)
+      )
+    ) should be(
+      Nil
     )
   }
 

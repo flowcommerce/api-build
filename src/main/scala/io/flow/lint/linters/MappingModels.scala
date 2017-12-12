@@ -72,8 +72,8 @@ case object MappingModels extends Linter with Helpers {
 
   private[this] def validateNames(f1: Field, f2: Field, f3: Field): Seq[String] = {
     validateName(1, "id", f1.name) ++
-      validateName(2, stripReference(f2.`type`), f2.name) ++
-      validateName(3, stripReference(f3.`type`), f3.name)
+      validateName(2, stripReference(stripPackage(f2.`type`)), f2.name) ++
+      validateName(3, stripReference(stripPackage(f3.`type`)), f3.name)
   }
 
   private[this] def validateName(index: Int, expected: String, actual: String): Seq[String] = {
@@ -86,6 +86,10 @@ case object MappingModels extends Linter with Helpers {
 
   private[this] def stripReference(typ: String): String = {
     typ.stripSuffix("_reference")
+  }
+
+  private[this] def stripPackage(typ: String): String = {
+    typ.split("\\.").last
   }
 
   private[this] def validateModelName(expected: String, actual: String): Seq[String] = {
