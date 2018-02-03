@@ -58,7 +58,7 @@ case class OneApi(
     }
   }
 
-  def buildOneApi() = {
+  def buildOneApi(): Service = {
     val (name, key, ns, imports) = buildType match {
       case BuildType.Api => {
         ("API", "api", "io.flow", Nil)
@@ -128,7 +128,7 @@ case class OneApi(
             map(normalizeName(parser, localTypes, s, _)).
             map(localize(parser, s, _))
         }
-      ).sortBy { resourceSortKey(_) }
+      ).sortBy { resourceSortKey }
     )
 
     buildType match {
@@ -161,9 +161,10 @@ case class OneApi(
   private[this] def normalizeName(parser: TextDatatypeParser, localTypes: Seq[String], service: Service, resource: Resource): Resource = {
     val qualifiedName = withNamespace(service, resource.`type`)
 
-    val finalType = localTypes.contains(qualifiedName) match {
-      case true => parser.toString(parser.parse(qualifiedName))
-      case false => qualifiedName
+    val finalType = if (localTypes.contains(qualifiedName)) {
+      parser.toString(parser.parse(qualifiedName))
+    } else {
+      qualifiedName
     }
 
     resource.copy(
@@ -201,21 +202,19 @@ case class OneApi(
       case Nil => None
       case one :: Nil => Some(one)
       case multiple => {
-        MergeResourcePathsHack.lift(a.`type`) match {
+        MergeResourcePathsHack.get(a.`type`) match {
           case Some(defaultPath) => {
-            allPaths.contains(defaultPath) match {
-              case true => Some(defaultPath)
-              case false => {
-                defaultPath == "/" match {
-                  case true => Some(defaultPath)
-                  case false => sys.error(s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]")
-                }
-              }
+            if (allPaths.contains(defaultPath)) {
+              Some(defaultPath)
+            } else if (defaultPath == "/") {
+              Some(defaultPath)
+            } else {
+              sys.error(s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]")
             }
           }
           case None => {
             val (internal, public) = multiple.partition(p => p.startsWith("/internal"))
-            public.toList match {
+            public match {
               case Nil => internal.headOption
               case one :: Nil => Some(one)
               case multiplePublic => {
@@ -287,7 +286,7 @@ case class OneApi(
     )
   }
 
-  def resourceSortKey(resource: Resource) = {
+  def resourceSortKey(resource: Resource): String = {
     val docs = resource.attributes.find(_.name == "docs").getOrElse {
       sys.error("Resource is missing the 'docs' attribute")
     }
@@ -313,13 +312,13 @@ case class OneApi(
 
     resource.copy(
       `type` = localizeType(parser, resource.`type`),
-      operations = resource.operations.map { localize(parser, service, _) }.sortBy { op => (op.path.toLowerCase, methodSortOrder(op.method)) },
-      description = (
-        resource.description match {
-          case Some(d) => Some(d)
-          case None => recordDescription(service, resource.`type`)
-        }
-      ),
+      operations = resource.operations.
+        map { localize(parser, service, _) }.
+        sortBy(OperationSort.key),
+      description = resource.description match {
+        case Some(d) => Some(d)
+        case None => recordDescription(service, resource.`type`)
+      },
       attributes = resource.attributes ++ additionalAttributes
     )
   }
@@ -345,26 +344,6 @@ case class OneApi(
           }
         }
       }
-    }
-  }
-
-  /**
-    * Returns a numeric index by which we can sort methods. This
-    * allows us to present, for example, all operations with a GET
-    * Method first.
-    */
-  def methodSortOrder(method: Method): Int = {
-    method match {
-      case Method.Get => 1
-      case Method.Post => 2
-      case Method.Put => 3
-      case Method.Patch => 4
-      case Method.Delete => 5
-      case Method.Connect => 6
-      case Method.Head => 7
-      case Method.Options => 8
-      case Method.Trace => 9
-      case Method.UNDEFINED(_) => 10
     }
   }
 
@@ -408,7 +387,7 @@ case class OneApi(
 
   def responseCodeToString(code: ResponseCode): String = {
     code match {
-      case ResponseCodeInt(code) => code.toString
+      case ResponseCodeInt(c) => c.toString
       case ResponseCodeOption.Default | ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => "*"
     }
   }
@@ -513,8 +492,11 @@ case class OneApi(
     */
   def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
     values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
-      val dupValues = values.filter { v => dup == v.value.toLowerCase }.toSeq
-      assert(dupValues.size >= 2, s"Could not find duplicates for value[$dup]")
+      val dupValues = values.filter { v => dup == v.value.toLowerCase }
+      assert(
+        dupValues.size >= 2,
+        s"Could not find duplicates for value[$dup]"
+      )
       s"Duplicate $label[$dup] in: " + dupValues.map(_.context).sorted.mkString(", ")
     }
   }
@@ -533,9 +515,10 @@ case class OneApi(
       case discriminator :: Nil => {
         val types = unions.flatMap { _.types }
         val duplicates = types.map(_.`type`).groupBy(identity).collect { case (typ, instances) if instances.length > 1 => typ }
-        if (duplicates.nonEmpty) {
-          sys.error(s"Geneated event union has duplicate types: ${duplicates.mkString(", ")}")
-        }
+        assert(
+          duplicates.isEmpty,
+          s"Generated event union has duplicate types: ${duplicates.mkString(", ")}"
+        )
 
         Union(
           name = "event",
