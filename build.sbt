@@ -6,7 +6,7 @@ name := "api-build"
 
 organization := "io.flow"
 
-scalaVersion in ThisBuild := "2.11.12"
+scalaVersion in ThisBuild := "2.12.11"
 
 version := "0.1.62"
 
@@ -18,7 +18,7 @@ lazy val root = project
     libraryDependencies ++= Seq(
       "com.typesafe.play" %% "play-json" % "2.6.8",
       "com.ning" % "async-http-client" % "1.9.40",
-      "org.scalatest" %% "scalatest" % "3.0.4" % Test
+      "org.scalatest" %% "scalatest" % "3.1.2" % Test
     )
   )
 
