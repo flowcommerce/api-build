@@ -11,8 +11,7 @@ object OperationSort {
     *  - /:organization/experiences/:key
     *  - /:organization/experiences/items
     *
-    * We need the /items path to support before /:key else it is never
-    * resolved
+    * We need the /items path to sort before /:key else it never resolves
     */
   def key(op: Operation): String = {
     (
