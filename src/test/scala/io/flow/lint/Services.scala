@@ -176,7 +176,7 @@ object Services {
     path: String,
     parameters: Seq[Parameter] = Nil,
     responseCode: Int = 200,
-    responseType: String,
+    responseType: String = "string",
     attributes: Seq[Attribute] = Nil
   ): Operation = {
     Operation(
