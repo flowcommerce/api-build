@@ -1,0 +1,24 @@
+---
+apicollective:
+  apibuilder-common:
+    play_2_x_standalone_json:
+    - src/main/scala/io/flow/generated/ApicollectiveApibuilderCommonV0Models.scala
+  apibuilder-generator:
+    play_2_x_standalone_json:
+    - src/main/scala/io/flow/generated/ApicollectiveApibuilderGeneratorV0Models.scala
+  apibuilder-spec:
+    play_2_x_standalone_json:
+    - src/main/scala/io/flow/generated/ApicollectiveApibuilderSpecV0Models.scala
+  apibuilder-api:
+    ning_1_9_client:
+    - src/main/scala/io/flow/generated/ApicollectiveApibuilderApiV0Client.scala
+flow:
+  common:
+    play_2_x_standalone_json:
+    - src/main/scala/io/flow/generated/FlowCommonV0Models.scala
+  error:
+    play_2_x_standalone_json:
+    - src/main/scala/io/flow/generated/FlowErrorV0Models.scala
+  registry:
+    ning_1_9_client:
+    - src/main/scala/io/flow/generated/FlowRegistryV0Client.scala

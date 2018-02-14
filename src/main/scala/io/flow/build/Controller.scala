@@ -4,7 +4,7 @@ import io.apibuilder.spec.v0.models.Service
 
 trait Controller {
 
-  private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
+  private[this] val internalErrors = scala.collection.mutable.Map[String, Seq[String]]()
   private[this] val GlobalError = "Global"
 
   protected[this] def addError(message: String) {
@@ -12,12 +12,12 @@ trait Controller {
   }
   
   protected[this] def addError(key: String, error: String) {
-    errors.get(key) match {
+    internalErrors.get(key) match {
       case None => {
-        errors.put(key, Seq(error))
+        internalErrors.put(key, Seq(error))
       }
       case Some(existing) => {
-        errors.put(key, existing ++ Seq(error))
+        internalErrors.put(key, existing ++ Seq(error))
       }
     }
   }
@@ -37,6 +37,6 @@ trait Controller {
     implicit ec: scala.concurrent.ExecutionContext
   )
 
-  def errors(): Map[String, Seq[String]] = errors.toMap
+  def errors(): Map[String, Seq[String]] = internalErrors.toMap
 
 }
