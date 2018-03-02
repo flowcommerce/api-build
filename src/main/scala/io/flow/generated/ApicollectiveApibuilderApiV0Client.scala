@@ -3285,7 +3285,9 @@ package io.apibuilder.api.v0 {
     }
 
     def _logRequest(request: Request): Unit = {
-      logger.info("_logRequest: " + request)
+      if (logger.isInfoEnabled) {
+        logger.info("_logRequest: " + request)
+      }
     }
 
     def _requestBuilder(method: String, path: String, requestHeaders: Seq[(String, String)]): RequestBuilder = {
