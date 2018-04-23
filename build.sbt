@@ -6,9 +6,9 @@ name := "api-build"
 
 organization := "io.flow"
 
-scalaVersion in ThisBuild := "2.12.4"
+scalaVersion in ThisBuild := "2.12.5"
 
-version := "0.1.66"
+version := "0.1.67"
 
 exportJars := true
 
@@ -16,7 +16,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     libraryDependencies ++= Seq(
-      "com.typesafe.play" %% "play-json" % "2.6.8",
+      "com.typesafe.play" %% "play-json" % "2.6.9",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.0.5" % Test
     )
