@@ -30,6 +30,7 @@ object Lint {
     linters.MappingModels,
     linters.MinimumMaximum,
     linters.ModelsWithOrganizationField,
+    linters.PathsDoNotHaveTrailingSlash,
     linters.PrimaryResourcesHaveVersionsOperation,
     linters.ProxyQueryParameters,
     linters.PublishedEventModels,
