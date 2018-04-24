@@ -32,7 +32,7 @@ case class Controller() extends io.flow.build.Controller {
   ) {
     val services = allServices.
       filter { s => s.resources.nonEmpty }.
-      filterNot { s => ExcludeWhiteList.exists(s.name.startsWith) }
+      filterNot { s => ExcludeWhiteList.exists(ew => s.name.startsWith(ew)) }
 
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
