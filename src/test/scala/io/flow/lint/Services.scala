@@ -212,4 +212,22 @@ object Services {
     `type` = `type`
   )
 
+  def buildServiceByPath(path: String): Service = {
+    Services.Base.copy(
+      resources = Seq(
+        Resource(
+          `type` = "organization",
+          plural = "organizations",
+          operations = Seq(
+            Operation(
+              method = Method.Get,
+              path = path,
+              parameters = Nil,
+              responses = Seq(Services.buildResponse(`type` = "unit"))
+            )
+          )
+        )
+      )
+    )
+  }
 }
