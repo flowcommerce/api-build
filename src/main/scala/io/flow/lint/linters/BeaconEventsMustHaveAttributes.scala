@@ -41,7 +41,7 @@ case object BeaconEventsMustHaveAttributes extends Linter with Helpers {
     val typeErrors = if (field.`type` == AttributesType) {
       Nil
     } else {
-      Seq(s"have type '$AttributesType")
+      Seq(s"have type '$AttributesType' and not '${field.`type`}'")
     }
 
     (requiredErrors ++ typeErrors).toList match {
