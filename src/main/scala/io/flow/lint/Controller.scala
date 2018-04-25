@@ -5,7 +5,6 @@ import io.flow.build.{BuildType, Downloader}
 
 case class Controller() extends io.flow.build.Controller {
 
-  private[this] val linter = Lint()
   private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
 
   override val name = "Linter"
@@ -21,7 +20,7 @@ case class Controller() extends io.flow.build.Controller {
     services.foreach { service =>
       print(s"${service.name}...")
 
-      linter.validate(service) match {
+      Lint(buildType).validate(service) match {
         case Nil => println(" Valid!")
         case errors => {
           errors.size match {

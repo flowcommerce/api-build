@@ -79,6 +79,16 @@ case class OneApi(
         ("API Internal Event", "api-internal-event", "io.flow.internal.event", imports)
       }
 
+      case BuildType.ApiMisc => {
+        val imports = services.flatMap { _.imports }
+        ("API misc", "api-misc", "io.flow.misc", imports)
+      }
+
+      case BuildType.ApiMiscEvent => {
+        val imports = services.flatMap { _.imports }
+        ("API misc Event", "api-misc-event", "io.flow.misc.event", imports)
+      }
+
       case BuildType.ApiPartner => {
         val imports = services.flatMap { _.imports }
         ("API Partner", "api-partner", "io.flow.partner", imports)
@@ -132,8 +142,8 @@ case class OneApi(
     )
 
     buildType match {
-      case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner => service
-      case BuildType.ApiEvent | BuildType.ApiInternalEvent => createEventService(service)
+      case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner | BuildType.ApiMisc => service
+      case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent => createEventService(service)
     }
   }
 
@@ -396,7 +406,7 @@ case class OneApi(
     buildType match {
       case BuildType.Api => parser.toString(parser.parse(name))
       case BuildType.ApiEvent => toApiImport(parser, name)
-      case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner => name
+      case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
     }
   }
 
