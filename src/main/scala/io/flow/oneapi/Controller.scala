@@ -17,9 +17,10 @@ case class Controller() extends io.flow.build.Controller {
   ) {
     val eventService: Seq[Service] = (
       buildType match {
-        case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiPartner => None
+        case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMiscEvent => None
         case BuildType.Api => Some(BuildType.ApiEvent.toString)
         case BuildType.ApiInternal => Some(BuildType.ApiInternalEvent.toString)
+        case BuildType.ApiMisc => Some(BuildType.ApiMiscEvent.toString)
       }
     ) match {
       case None => Nil
@@ -41,8 +42,11 @@ case class Controller() extends io.flow.build.Controller {
         import io.apibuilder.spec.v0.models.json._
         import play.api.libs.json._
 
-        val path = s"/tmp/flow-${buildType}.json"
-        new java.io.PrintWriter(path) { write(Json.prettyPrint(Json.toJson(service))); close }
+        val path = s"/tmp/flow-$buildType.json"
+        new java.io.PrintWriter(path) { _ =>
+          write(Json.prettyPrint(Json.toJson(service)))
+          close
+        }
         println(s"One API file created. See: $path")
       }
     }

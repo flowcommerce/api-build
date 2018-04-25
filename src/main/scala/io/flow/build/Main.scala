@@ -9,11 +9,17 @@ object Main extends App {
 
   private[this] var globalErrors = scala.collection.mutable.ListBuffer[String]()
 
-  private[this] val controllers = Seq(
-    lint.Controller(),
-    oneapi.Controller(),
-    proxy.Controller()
-  )
+  private[this] def controllers(buildType: BuildType): Seq[Controller] = {
+    val all = scala.collection.mutable.ListBuffer[Controller]()
+    all.append(lint.Controller())
+    if (buildType.oneapi) {
+      all.append(oneapi.Controller())
+    }
+    if (buildType.proxy) {
+      all.append(proxy.Controller())
+    }
+    all
+  }
 
   ApibuilderConfig.load() match {
     case Left(error) => {
@@ -24,11 +30,11 @@ object Main extends App {
     case Right(profile) => {
       args.toList match {
         case Nil => {
-          println("** ERROR: Specify type[api|internal] and command[lint|oneapi|all]")
+          println(s"** ERROR: Specify type[${BuildType.all.mkString(", ")}] and command[lint|oneapi|all]")
         }
 
         case one :: Nil => {
-          println("** ERROR: Specify type[api|internal] and command[lint|oneapi|all]")
+          println(s"** ERROR: Specify type[${BuildType.all.mkString(", ")}] and command[lint|oneapi|all]")
         }
 
         case typ :: command :: rest => {
@@ -38,10 +44,10 @@ object Main extends App {
             }
 
             case Some(buildType) => {
-              val selected = if (command == "all") { controllers } else { controllers.filter(_.command == command) }
+              val selected = if (command == "all") { controllers(buildType) } else { controllers(buildType).filter(_.command == command) }
               selected.toList match {
                 case Nil => {
-                  println(s"** ERROR: Invalid command[$command]. Must be one of: all, " + controllers.map(_.command).mkString(", "))
+                  println(s"** ERROR: Invalid command[$command]. Must be one of: all, " + controllers(buildType).map(_.command).mkString(", "))
                 }
 
                 case _ => {
