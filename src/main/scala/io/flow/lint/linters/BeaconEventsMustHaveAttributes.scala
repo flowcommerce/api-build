@@ -8,7 +8,7 @@ import io.flow.lint.Linter
   */
 case object BeaconEventsMustHaveAttributes extends Linter with Helpers {
 
-  private[this] val AttributesType = "BeaconAttributes"
+  private[this] val AttributesType = "beacon_attributes"
 
   override def validate(service: Service): Seq[String] = {
     service.unions.find(_.name == "event") match {

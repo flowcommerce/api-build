@@ -53,7 +53,7 @@ class BeaconEventsMustHaveAttributesSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Model user: Must have a field named 'attributes' of type 'BeaconAttributes'"
+        "Model user: Must have a field named 'attributes' of type 'beacon_attributes'"
       )
     )
 
@@ -70,7 +70,7 @@ class BeaconEventsMustHaveAttributesSpec extends FunSpec with Matchers {
       )
     ) should be(
       Seq(
-        "Model user Field[attributes]: Must not be required and have type 'BeaconAttributes' and not 'string'"
+        "Model user Field[attributes]: Must not be required and have type 'beacon_attributes' and not 'string'"
       )
     )
 
@@ -79,7 +79,7 @@ class BeaconEventsMustHaveAttributesSpec extends FunSpec with Matchers {
         models = Seq(
           model.copy(
             fields = Seq(
-              Services.buildField("attributes", required = false, `type` = "BeaconAttributes")
+              Services.buildField("attributes", required = false, `type` = "beacon_attributes")
             )
           )
         ),
