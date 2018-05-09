@@ -10,7 +10,9 @@ case class Controller() extends io.flow.build.Controller {
   /**
     * Whitelist of applications in the 'api' repo that do not exist in registry
     */
-  private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "usage", "optin")
+  private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "usage")
+
+  private[this] val HostingMap = Map("optin"->"content")
 
   /**
     * This is the hostname of the services when running in docker on
@@ -38,9 +40,15 @@ case class Controller() extends io.flow.build.Controller {
 
     def serviceHost(name: String): String = {
       buildType match {
-        case BuildType.Api => name.toLowerCase
+        case BuildType.Api => {
+          val specName = name.toLowerCase
+          HostingMap.getOrElse(specName, specName)
+        }
         case BuildType.ApiEvent => name.toLowerCase
-        case BuildType.ApiInternal => Text.stripSuffix(name.toLowerCase, "-internal")
+        case BuildType.ApiInternal => {
+          val specName = Text.stripSuffix(name.toLowerCase, "-internal")
+          HostingMap.getOrElse(specName, specName)
+        }
         case BuildType.ApiInternalEvent => Text.stripSuffix(name.toLowerCase, "-internal-event")
         case BuildType.ApiMisc | BuildType.ApiMiscEvent => sys.error("Proxy does not support api-misc")
         case BuildType.ApiPartner => name.toLowerCase
