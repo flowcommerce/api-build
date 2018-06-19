@@ -12,7 +12,10 @@ case class Controller() extends io.flow.build.Controller {
     */
   private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "usage")
 
-  private[this] val HostingMap = Map("optin"->"content")
+  private[this] val HostingMap = Map(
+    "optin"->"content",
+    "consumer-invoice" -> "order-management"
+  )
 
   /**
     * This is the hostname of the services when running in docker on
