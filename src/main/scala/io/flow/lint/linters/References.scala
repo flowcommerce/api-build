@@ -9,15 +9,15 @@ case object References extends Linter with Helpers {
     */
   override def validate(service: Service): Seq[String] = {
     val modelErrors = service.models
-      .filter(m => !ignored(m.attributes, "reference_model_exists"))
+      .filter(m => !ignored(m.attributes, "reference_type_exists"))
       .flatMap(validateModel(service, _))
 
     val unionErrors = service.unions
-      .filter(m => !ignored(m.attributes, "reference_model_exists"))
+      .filter(m => !ignored(m.attributes, "reference_type_exists"))
       .flatMap(validateUnion(service, _))
 
     val enumErrors = service.enums
-      .filter(m => !ignored(m.attributes, "reference_model_exists"))
+      .filter(m => !ignored(m.attributes, "reference_type_exists"))
       .flatMap(validateEnum(service, _))
 
     modelErrors ++ unionErrors ++ enumErrors

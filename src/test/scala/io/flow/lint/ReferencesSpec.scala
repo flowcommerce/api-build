@@ -1,6 +1,8 @@
 package io.flow.lint
 
+import io.apibuilder.spec.v0.models.Attribute
 import org.scalatest.{FunSpec, Matchers}
+import play.api.libs.json.Json
 
 class ReferencesSpec extends FunSpec with Matchers {
 
@@ -26,6 +28,25 @@ class ReferencesSpec extends FunSpec with Matchers {
         models = Seq(
           Services.buildSimpleModel("authorization"),
           Services.buildSimpleModel("authorization_reference")
+        )
+      )
+    ) should be(Nil)
+  }
+
+  it("Ignores invalid reference types if specified in attributes") {
+    linter.validate(
+      Services.Base.copy(
+        models = Seq(
+          Services.buildSimpleModel("authorization_reference").copy(
+            attributes = Seq(
+              Attribute(
+                name = "linter",
+                value = Json.obj(
+                  "ignore" -> Json.arr("reference_type_exists")
+                )
+              )
+            )
+          )
         )
       )
     ) should be(Nil)
