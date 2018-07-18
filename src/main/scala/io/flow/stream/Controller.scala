@@ -1,5 +1,5 @@
 package io.flow.stream
-import io.apibuilder.spec.v0.models.{Field, Service, Union}
+import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
 import io.apibuilder.validation.{ApiBuilderService, ApibuilderType, MultiService}
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.util.{FlowEnvironment, StreamNames}
@@ -36,16 +36,13 @@ case class Controller() extends io.flow.build.Controller {
 
     buildType match {
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent =>
-        println(s"buildType=$buildType downloader=$downloader")
         val allServices = loadImports(services)
         val ms = MultiService(allServices.map(ApiBuilderService.apply))
         val streams = services.flatMap(processService(ms, _)).filterNot(_.capturedEvents.isEmpty)
-        println(s"********\n${streams.mkString("\n")}")
+        saveStreams(buildType, streams)
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiMisc | BuildType.ApiPartner => // do nothing
     }
   }
-
-
 
   private def processService(multiService: MultiService, service: Service): Seq[KinesisStream] = {
     service.unions.filter(u => u.name.endsWith("_event") && u.discriminator.isDefined).flatMap { union =>
@@ -86,8 +83,7 @@ case class Controller() extends io.flow.build.Controller {
           model.name match {
             case UnionMemberRx(payloadName, eventType, version) =>
               if (eventType == "upserted") {
-                val typeField = model.fields.find(matchFieldToPayloadType(_, payloadName, version))
-                val payloadType = typeField.flatMap { tf => multiService.findType(tf.`type`) }
+                val payloadType = extractPayloadModel(model.fields, payloadName, version, multiService)
                 payloadType.fold {
                   println(s"Skipping non v2 upserted union ${union.name} member ${model.name}")
                   None: Option[EventType]
@@ -96,13 +92,12 @@ case class Controller() extends io.flow.build.Controller {
                 }
               } else {
                 val idField = model.fields.find(f => f.name == "id" && f.`type` == "string")
-                val typeField = model.fields.find(matchFieldToPayloadType(_, payloadName, version))
-                val payloadType = typeField.flatMap { tf => multiService.findType(tf.`type`) }
-                idField.orElse(typeField).fold {
-                  println(s"Skipping non v2 deleted union ${union.name} member ${model.name}")
-                  None: Option[EventType]
-                } { _ =>
+                val payloadType = extractPayloadModel(model.fields, payloadName, version, multiService)
+                if (idField.isDefined || payloadType.isDefined) {
                   Some(EventType.Deleted(model.name, payloadName, payloadType, discriminator))
+                } else {
+                  println(s"Skipping non v2 deleted union ${union.name} member ${model.name}")
+                  None
                 }
               }
             case _ =>
@@ -113,6 +108,17 @@ case class Controller() extends io.flow.build.Controller {
           processUnion(multiService, union, streamName)
       }
     }
+  }
+
+  private def extractPayloadModel(fields: Seq[Field], payloadName: String, version: String, multiService: MultiService): Option[Model] = {
+    for {
+      typeField <- fields.find(matchFieldToPayloadType(_, payloadName, version))
+      payloadType: ApibuilderType <- multiService.findType(typeField.`type`)
+      model <- payloadType match {
+        case ApibuilderType.Model(_, model) => Some(model)
+        case _ => None
+      }
+    } yield model
   }
 
   private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
@@ -135,4 +141,19 @@ case class Controller() extends io.flow.build.Controller {
   private def matchFieldToPayloadType(field: Field, payloadName: String, version: String): Boolean = {
     field.name == payloadName && (field.`type`.endsWith(s".$payloadName") || field.`type`.endsWith(s".${payloadName}_$version"))
   }
+
+  def saveStreams(buildType: BuildType, streams: Seq[KinesisStream]): Unit = {
+    import play.api.libs.json._
+    import io.apibuilder.spec.v0.models.json._
+    implicit val w2 = Json.writes[CapturedType]
+    implicit val w3 = Json.writes[KinesisStream]
+    val path = s"/tmp/flow-$buildType-streams.json"
+    new java.io.PrintWriter(path) {
+      write(Json.prettyPrint(Json.toJson(streams.head)))
+      close
+    }
+    println(s"Stream info file created. See: $path")
+
+  }
+
 }

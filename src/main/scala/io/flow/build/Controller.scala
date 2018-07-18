@@ -35,7 +35,7 @@ trait Controller {
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  )
+  ): Unit
 
   def errors(): Map[String, Seq[String]] = internalErrors.toMap
 
