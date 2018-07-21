@@ -17,7 +17,7 @@ package io.flow.registry.v0.models {
     case object Http extends HealthcheckDiscriminator { override def toString = "http" }
     case object Postgresql extends HealthcheckDiscriminator { override def toString = "postgresql" }
 
-    case class UNDEFINED(override val toString: String) extends HealthcheckDiscriminator
+    final case class UNDEFINED(override val toString: String) extends HealthcheckDiscriminator
 
     val all: scala.List[HealthcheckDiscriminator] = scala.List(Http, Postgresql)
 
@@ -34,7 +34,7 @@ package io.flow.registry.v0.models {
    * @param dependencies A list of the direct dependencies of this application. Guaranteed to be
    *        non-cyclical over the set of all applications.
    */
-  case class Application(
+  final case class Application(
     id: String,
     ports: Seq[io.flow.registry.v0.models.Port],
     dependencies: Seq[String]
@@ -47,7 +47,7 @@ package io.flow.registry.v0.models {
    *        service's default port number.
    * @param dependency The application IDs on which this application is dependent
    */
-  case class ApplicationForm(
+  final case class ApplicationForm(
     id: String,
     service: String,
     external: _root_.scala.Option[Long] = None,
@@ -55,14 +55,14 @@ package io.flow.registry.v0.models {
     dependency: _root_.scala.Option[Seq[String]] = None
   )
 
-  case class ApplicationPutForm(
+  final case class ApplicationPutForm(
     service: _root_.scala.Option[String] = None,
     external: _root_.scala.Option[Long] = None,
     internal: _root_.scala.Option[Long] = None,
     dependency: _root_.scala.Option[Seq[String]] = None
   )
 
-  case class ApplicationVersion(
+  final case class ApplicationVersion(
     id: String,
     timestamp: _root_.org.joda.time.DateTime,
     `type`: io.flow.common.v0.models.ChangeType,
@@ -72,7 +72,7 @@ package io.flow.registry.v0.models {
   /**
    * @param port The port on which clients access this service.
    */
-  case class Http(
+  final case class Http(
     host: String,
     port: Long
   ) extends Healthcheck
@@ -83,7 +83,7 @@ package io.flow.registry.v0.models {
    * @param internal The port on which this service is running internally. If running in a container,
    *        this is the port inside the container.
    */
-  case class Port(
+  final case class Port(
     service: io.flow.registry.v0.models.ServiceReference,
     external: Long,
     internal: Long
@@ -93,7 +93,7 @@ package io.flow.registry.v0.models {
    * @param dbname The database name.
    * @param port The port on which clients access this database.
    */
-  case class Postgresql(
+  final case class Postgresql(
     dbname: String,
     host: String,
     port: Long,
@@ -107,25 +107,25 @@ package io.flow.registry.v0.models {
    * from
    * https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.txt
    */
-  case class Service(
+  final case class Service(
     id: String,
     defaultPort: Long
   )
 
-  case class ServiceForm(
+  final case class ServiceForm(
     id: String,
     defaultPort: Long
   )
 
-  case class ServicePutForm(
+  final case class ServicePutForm(
     defaultPort: Long
   )
 
-  case class ServiceReference(
+  final case class ServiceReference(
     id: String
   )
 
-  case class ServiceVersion(
+  final case class ServiceVersion(
     id: String,
     timestamp: _root_.org.joda.time.DateTime,
     `type`: io.flow.common.v0.models.ChangeType,
@@ -140,7 +140,7 @@ package io.flow.registry.v0.models {
    * @param description Information about the type that we received that is undefined in this version of
    *        the client.
    */
-  case class HealthcheckUndefinedType(
+  final case class HealthcheckUndefinedType(
     description: String
   ) extends Healthcheck
 
@@ -190,11 +190,11 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryApplication: play.api.libs.json.Reads[Application] = {
-      (
-        (__ \ "id").read[String] and
-        (__ \ "ports").read[Seq[io.flow.registry.v0.models.Port]] and
-        (__ \ "dependencies").read[Seq[String]]
-      )(Application.apply _)
+      for {
+        id <- (__ \ "id").read[String]
+        ports <- (__ \ "ports").read[Seq[io.flow.registry.v0.models.Port]]
+        dependencies <- (__ \ "dependencies").read[Seq[String]]
+      } yield Application(id, ports, dependencies)
     }
 
     def jsObjectApplication(obj: io.flow.registry.v0.models.Application): play.api.libs.json.JsObject = {
@@ -214,13 +214,13 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryApplicationForm: play.api.libs.json.Reads[ApplicationForm] = {
-      (
-        (__ \ "id").read[String] and
-        (__ \ "service").read[String] and
-        (__ \ "external").readNullable[Long] and
-        (__ \ "internal").readNullable[Long] and
-        (__ \ "dependency").readNullable[Seq[String]]
-      )(ApplicationForm.apply _)
+      for {
+        id <- (__ \ "id").read[String]
+        service <- (__ \ "service").read[String]
+        external <- (__ \ "external").readNullable[Long]
+        internal <- (__ \ "internal").readNullable[Long]
+        dependency <- (__ \ "dependency").readNullable[Seq[String]]
+      } yield ApplicationForm(id, service, external, internal, dependency)
     }
 
     def jsObjectApplicationForm(obj: io.flow.registry.v0.models.ApplicationForm): play.api.libs.json.JsObject = {
@@ -250,12 +250,12 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryApplicationPutForm: play.api.libs.json.Reads[ApplicationPutForm] = {
-      (
-        (__ \ "service").readNullable[String] and
-        (__ \ "external").readNullable[Long] and
-        (__ \ "internal").readNullable[Long] and
-        (__ \ "dependency").readNullable[Seq[String]]
-      )(ApplicationPutForm.apply _)
+      for {
+        service <- (__ \ "service").readNullable[String]
+        external <- (__ \ "external").readNullable[Long]
+        internal <- (__ \ "internal").readNullable[Long]
+        dependency <- (__ \ "dependency").readNullable[Seq[String]]
+      } yield ApplicationPutForm(service, external, internal, dependency)
     }
 
     def jsObjectApplicationPutForm(obj: io.flow.registry.v0.models.ApplicationPutForm): play.api.libs.json.JsObject = {
@@ -286,12 +286,12 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryApplicationVersion: play.api.libs.json.Reads[ApplicationVersion] = {
-      (
-        (__ \ "id").read[String] and
-        (__ \ "timestamp").read[_root_.org.joda.time.DateTime] and
-        (__ \ "type").read[io.flow.common.v0.models.ChangeType] and
-        (__ \ "application").read[io.flow.registry.v0.models.Application]
-      )(ApplicationVersion.apply _)
+      for {
+        id <- (__ \ "id").read[String]
+        timestamp <- (__ \ "timestamp").read[_root_.org.joda.time.DateTime]
+        `type` <- (__ \ "type").read[io.flow.common.v0.models.ChangeType]
+        application <- (__ \ "application").read[io.flow.registry.v0.models.Application]
+      } yield ApplicationVersion(id, timestamp, `type`, application)
     }
 
     def jsObjectApplicationVersion(obj: io.flow.registry.v0.models.ApplicationVersion): play.api.libs.json.JsObject = {
@@ -312,10 +312,10 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryHttp: play.api.libs.json.Reads[Http] = {
-      (
-        (__ \ "host").read[String] and
-        (__ \ "port").read[Long]
-      )(Http.apply _)
+      for {
+        host <- (__ \ "host").read[String]
+        port <- (__ \ "port").read[Long]
+      } yield Http(host, port)
     }
 
     def jsObjectHttp(obj: io.flow.registry.v0.models.Http): play.api.libs.json.JsObject = {
@@ -326,11 +326,11 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryPort: play.api.libs.json.Reads[Port] = {
-      (
-        (__ \ "service").read[io.flow.registry.v0.models.ServiceReference] and
-        (__ \ "external").read[Long] and
-        (__ \ "internal").read[Long]
-      )(Port.apply _)
+      for {
+        service <- (__ \ "service").read[io.flow.registry.v0.models.ServiceReference]
+        external <- (__ \ "external").read[Long]
+        internal <- (__ \ "internal").read[Long]
+      } yield Port(service, external, internal)
     }
 
     def jsObjectPort(obj: io.flow.registry.v0.models.Port): play.api.libs.json.JsObject = {
@@ -350,12 +350,12 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryPostgresql: play.api.libs.json.Reads[Postgresql] = {
-      (
-        (__ \ "dbname").read[String] and
-        (__ \ "host").read[String] and
-        (__ \ "port").read[Long] and
-        (__ \ "user").read[String]
-      )(Postgresql.apply _)
+      for {
+        dbname <- (__ \ "dbname").read[String]
+        host <- (__ \ "host").read[String]
+        port <- (__ \ "port").read[Long]
+        user <- (__ \ "user").read[String]
+      } yield Postgresql(dbname, host, port, user)
     }
 
     def jsObjectPostgresql(obj: io.flow.registry.v0.models.Postgresql): play.api.libs.json.JsObject = {
@@ -368,10 +368,10 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryService: play.api.libs.json.Reads[Service] = {
-      (
-        (__ \ "id").read[String] and
-        (__ \ "default_port").read[Long]
-      )(Service.apply _)
+      for {
+        id <- (__ \ "id").read[String]
+        defaultPort <- (__ \ "default_port").read[Long]
+      } yield Service(id, defaultPort)
     }
 
     def jsObjectService(obj: io.flow.registry.v0.models.Service): play.api.libs.json.JsObject = {
@@ -390,10 +390,10 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryServiceForm: play.api.libs.json.Reads[ServiceForm] = {
-      (
-        (__ \ "id").read[String] and
-        (__ \ "default_port").read[Long]
-      )(ServiceForm.apply _)
+      for {
+        id <- (__ \ "id").read[String]
+        defaultPort <- (__ \ "default_port").read[Long]
+      } yield ServiceForm(id, defaultPort)
     }
 
     def jsObjectServiceForm(obj: io.flow.registry.v0.models.ServiceForm): play.api.libs.json.JsObject = {
@@ -448,12 +448,12 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonReadsRegistryServiceVersion: play.api.libs.json.Reads[ServiceVersion] = {
-      (
-        (__ \ "id").read[String] and
-        (__ \ "timestamp").read[_root_.org.joda.time.DateTime] and
-        (__ \ "type").read[io.flow.common.v0.models.ChangeType] and
-        (__ \ "service").read[io.flow.registry.v0.models.Service]
-      )(ServiceVersion.apply _)
+      for {
+        id <- (__ \ "id").read[String]
+        timestamp <- (__ \ "timestamp").read[_root_.org.joda.time.DateTime]
+        `type` <- (__ \ "type").read[io.flow.common.v0.models.ChangeType]
+        service <- (__ \ "service").read[io.flow.registry.v0.models.Service]
+      } yield ServiceVersion(id, timestamp, `type`, service)
     }
 
     def jsObjectServiceVersion(obj: io.flow.registry.v0.models.ServiceVersion): play.api.libs.json.JsObject = {
@@ -506,7 +506,7 @@ package io.flow.registry.v0.models {
 
 
 package io.flow.registry.v0 {
-  import com.ning.http.client.{AsyncCompletionHandler, AsyncHttpClient, AsyncHttpClientConfig, Realm, Request, RequestBuilder, Response}
+  import com.ning.http.client.{AsyncCompletionHandler, AsyncHttpClient, Realm, Request, RequestBuilder, Response, AsyncHttpClientConfig}
 
   object Constants {
 
@@ -546,8 +546,8 @@ package io.flow.registry.v0 {
         service: _root_.scala.Option[Seq[String]] = None,
         prefix: _root_.scala.Option[String] = None,
         q: _root_.scala.Option[String] = None,
-        limit: Long = 25,
-        offset: Long = 0,
+        limit: Long = 25L,
+        offset: Long = 0L,
         sort: String = "-created_at",
         requestHeaders: Seq[(String, String)] = Nil
       )(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[Seq[io.flow.registry.v0.models.Application]] = {
@@ -571,8 +571,8 @@ package io.flow.registry.v0 {
       override def getVersions(
         id: _root_.scala.Option[Seq[String]] = None,
         application: _root_.scala.Option[Seq[String]] = None,
-        limit: Long = 25,
-        offset: Long = 0,
+        limit: Long = 25L,
+        offset: Long = 0L,
         sort: String = "journal_timestamp",
         requestHeaders: Seq[(String, String)] = Nil
       )(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[Seq[io.flow.registry.v0.models.ApplicationVersion]] = {
@@ -685,8 +685,8 @@ package io.flow.registry.v0 {
     object Services extends Services {
       override def get(
         id: _root_.scala.Option[Seq[String]] = None,
-        limit: Long = 25,
-        offset: Long = 0,
+        limit: Long = 25L,
+        offset: Long = 0L,
         sort: String = "-created_at",
         requestHeaders: Seq[(String, String)] = Nil
       )(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[Seq[io.flow.registry.v0.models.Service]] = {
@@ -706,8 +706,8 @@ package io.flow.registry.v0 {
       override def getVersions(
         id: _root_.scala.Option[Seq[String]] = None,
         service: _root_.scala.Option[Seq[String]] = None,
-        limit: Long = 25,
-        offset: Long = 0,
+        limit: Long = 25L,
+        offset: Long = 0L,
         sort: String = "journal_timestamp",
         requestHeaders: Seq[(String, String)] = Nil
       )(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[Seq[io.flow.registry.v0.models.ServiceVersion]] = {
@@ -785,6 +785,12 @@ package io.flow.registry.v0 {
       }
     }
 
+    def _logResponse(response: Response): Unit = {
+      if (logger.isInfoEnabled) {
+        logger.info("_logResponse: status=" + response.getStatusCode + ", responseBody: " + response.getResponseBody("UTF-8"))
+      }
+    }
+
     def _requestBuilder(method: String, path: String, requestHeaders: Seq[(String, String)]): RequestBuilder = {
       val builder = new RequestBuilder(method)
         .setUrl(baseUrl + path)
@@ -839,7 +845,10 @@ package io.flow.registry.v0 {
       val result = scala.concurrent.Promise[com.ning.http.client.Response]()
       asyncHttpClient.executeRequest(finalRequest,
         new AsyncCompletionHandler[Unit]() {
-          override def onCompleted(r: com.ning.http.client.Response) = result.success(r)
+          override def onCompleted(r: com.ning.http.client.Response) = {
+            _logResponse(r)
+            result.success(r)
+          }
           override def onThrowable(t: Throwable) = result.failure(t)
         }
       )
@@ -886,7 +895,7 @@ package io.flow.registry.v0 {
 
   sealed trait Authorization extends _root_.scala.Product with _root_.scala.Serializable
   object Authorization {
-    case class Basic(username: String, password: Option[String] = None) extends Authorization
+    final case class Basic(username: String, password: Option[String] = None) extends Authorization
   }
 
   package interfaces {
@@ -914,8 +923,8 @@ package io.flow.registry.v0 {
       service: _root_.scala.Option[Seq[String]] = None,
       prefix: _root_.scala.Option[String] = None,
       q: _root_.scala.Option[String] = None,
-      limit: Long = 25,
-      offset: Long = 0,
+      limit: Long = 25L,
+      offset: Long = 0L,
       sort: String = "-created_at",
       requestHeaders: Seq[(String, String)] = Nil
     )(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[Seq[io.flow.registry.v0.models.Application]]
@@ -928,8 +937,8 @@ package io.flow.registry.v0 {
     def getVersions(
       id: _root_.scala.Option[Seq[String]] = None,
       application: _root_.scala.Option[Seq[String]] = None,
-      limit: Long = 25,
-      offset: Long = 0,
+      limit: Long = 25L,
+      offset: Long = 0L,
       sort: String = "journal_timestamp",
       requestHeaders: Seq[(String, String)] = Nil
     )(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[Seq[io.flow.registry.v0.models.ApplicationVersion]]
@@ -999,8 +1008,8 @@ package io.flow.registry.v0 {
      */
     def get(
       id: _root_.scala.Option[Seq[String]] = None,
-      limit: Long = 25,
-      offset: Long = 0,
+      limit: Long = 25L,
+      offset: Long = 0L,
       sort: String = "-created_at",
       requestHeaders: Seq[(String, String)] = Nil
     )(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[Seq[io.flow.registry.v0.models.Service]]
@@ -1013,8 +1022,8 @@ package io.flow.registry.v0 {
     def getVersions(
       id: _root_.scala.Option[Seq[String]] = None,
       service: _root_.scala.Option[Seq[String]] = None,
-      limit: Long = 25,
-      offset: Long = 0,
+      limit: Long = 25L,
+      offset: Long = 0L,
       sort: String = "journal_timestamp",
       requestHeaders: Seq[(String, String)] = Nil
     )(implicit ec: scala.concurrent.ExecutionContext): scala.concurrent.Future[Seq[io.flow.registry.v0.models.ServiceVersion]]
@@ -1059,16 +1068,16 @@ package io.flow.registry.v0 {
     import io.flow.error.v0.models.json._
     import io.flow.registry.v0.models.json._
 
-    case class GenericErrorResponse(
+    final case class GenericErrorResponse(
       response: _root_.com.ning.http.client.Response,
       message: Option[String] = None
     ) extends Exception(message.getOrElse(response.getStatusCode + ": " + response.getResponseBody("UTF-8"))){
       lazy val genericError = _root_.io.flow.registry.v0.Client.parseJson("io.flow.error.v0.models.GenericError", response, _.validate[io.flow.error.v0.models.GenericError])
     }
 
-    case class UnitResponse(status: Int) extends Exception(s"HTTP $status")
+    final case class UnitResponse(status: Int) extends Exception(s"HTTP $status")
 
-    case class FailedRequest(responseCode: Int, message: String, requestUri: Option[_root_.java.net.URI] = None) extends _root_.java.lang.Exception(s"HTTP $responseCode: $message")
+    final case class FailedRequest(responseCode: Int, message: String, requestUri: Option[_root_.java.net.URI] = None) extends _root_.java.lang.Exception(s"HTTP $responseCode: $message")
 
   }
 
