@@ -14,7 +14,8 @@ case class OneApi(
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
     "timezone" -> "/",
-    "query_builder" -> "/:organization/query/builders"
+    "query_builder" -> "/:organization/query/builders",
+    "query_builder" -> "/:organization/center/query/builders"
   )
 
   private[this] val DefaultFieldDescriptions = Map(
@@ -132,7 +133,7 @@ case class OneApi(
       unions = services.flatMap { s =>
         s.unions.map(localize(parser, s, _))
       }.sortBy { _.name.toLowerCase },
-     
+
       resources = mergeResources(
         services.flatMap { s =>
           s.resources.
@@ -552,7 +553,7 @@ case class OneApi(
       name = "event_type",
       plural = "event_types",
       values = event.types.map { t =>
-        EnumValue( 
+        EnumValue(
           name = t.`type`
         )
       }.distinct,
