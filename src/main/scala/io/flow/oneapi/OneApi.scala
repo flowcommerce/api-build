@@ -101,6 +101,11 @@ case class OneApi(
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }
 
+    //Annotations are not namespaced, they're global. For convenience, we'll collect them from all imports and add them
+    //to the root service
+    val allAnnotations = imports.flatMap(_.annotations).distinct
+    val importsWithNoAnnotations = imports.map(_.copy(annotations = Nil))
+
     val service = Service(
       apidoc = canonical.apidoc,
       name = name,
@@ -118,7 +123,7 @@ case class OneApi(
       description = canonical.description,
       info = canonical.info,
       headers = Nil,
-      imports = imports,
+      imports = importsWithNoAnnotations,
       attributes = Nil,
 
       enums = services.flatMap { s =>
@@ -139,7 +144,8 @@ case class OneApi(
             map(normalizeName(parser, localTypes, s, _)).
             map(localize(parser, s, _))
         }
-      ).sortBy { resourceSortKey }
+      ).sortBy { resourceSortKey },
+      annotations = allAnnotations
     )
 
     buildType match {
