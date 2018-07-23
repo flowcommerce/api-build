@@ -103,7 +103,7 @@ case class OneApi(
 
     //Annotations are not namespaced, they're global. For convenience, we'll collect them from all imports and add them
     //to the root service
-    val allAnnotations = imports.flatMap(_.annotations).distinct
+    val allAnnotations = services.flatMap { _.imports.flatMap(_.annotations) }.distinct
     val importsWithNoAnnotations = imports.map(_.copy(annotations = Nil))
 
     val service = Service(
