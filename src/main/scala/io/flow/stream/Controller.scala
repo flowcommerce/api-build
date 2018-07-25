@@ -61,7 +61,8 @@ case class Controller() extends io.flow.build.Controller {
               val upserted = candidates.collect { case u: EventType.Upserted => u }
               val deleted  = candidates.collect { case d: EventType.Deleted => d }
               val pairs = pairUpEvents(upserted, deleted)
-              Some(KinesisStream(streamName, pairs))
+              val shortName = s"${union.name}_v0" // FIXME: Replace "v0" with typ.service.version
+              Some(KinesisStream(streamName, shortName, pairs))
           }
       }
     }
@@ -149,7 +150,7 @@ case class Controller() extends io.flow.build.Controller {
     implicit val w3 = Json.writes[KinesisStream]
     val path = s"/tmp/flow-$buildType-streams.json"
     new java.io.PrintWriter(path) {
-      write(Json.prettyPrint(Json.toJson(streams.head)))
+      write(Json.prettyPrint(Json.toJson(streams)))
       close
     }
     println(s"Stream info file created. See: $path")
