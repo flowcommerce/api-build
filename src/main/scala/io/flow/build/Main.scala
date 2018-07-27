@@ -1,7 +1,7 @@
 package io.flow.build
 
 import io.apibuilder.spec.v0.models.Service
-import io.flow.{oneapi, lint, proxy}
+import io.flow.{oneapi, lint, proxy, stream}
 
 object Main extends App {
 
@@ -12,6 +12,7 @@ object Main extends App {
   private[this] def controllers(buildType: BuildType): Seq[Controller] = {
     val all = scala.collection.mutable.ListBuffer[Controller]()
     all.append(lint.Controller())
+    all.append(stream.Controller())
     if (buildType.oneapi) {
       all.append(oneapi.Controller())
     }
