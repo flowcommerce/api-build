@@ -144,7 +144,7 @@ case class Controller() extends io.flow.build.Controller {
     field.name == payloadName && (field.`type`.endsWith(s".$payloadName") || field.`type`.endsWith(s".${payloadName}_$version"))
   }
 
-  def saveStreams(buildType: BuildType, streams: Seq[KinesisStream]): Unit = {
+  private def saveStreams(buildType: BuildType, streams: Seq[KinesisStream]): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
     implicit val w2 = Json.writes[CapturedType]
