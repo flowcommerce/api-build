@@ -6,9 +6,6 @@ apicollective:
   apibuilder-generator:
     play_2_x_standalone_json:
     - src/main/scala/io/flow/generated/ApicollectiveApibuilderGeneratorV0Models.scala
-  apibuilder-spec:
-    play_2_x_standalone_json:
-    - src/main/scala/io/flow/generated/ApicollectiveApibuilderSpecV0Models.scala
   apibuilder-api:
     ning_1_9_client:
     - src/main/scala/io/flow/generated/ApicollectiveApibuilderApiV0Client.scala
