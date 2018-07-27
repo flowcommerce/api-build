@@ -52,7 +52,7 @@ case class Controller() extends io.flow.build.Controller {
           None
         case Some(typ) =>
           val className = s"${ApiBuilderUtils.toPackageName(typ.service.namespace, false)}.${ApiBuilderUtils.toClassName(union.name, false)}"
-          StreamNames(FlowEnvironment.Current).json(className) match {
+          StreamNames(FlowEnvironment.Production).json(className) match {
             case None =>
               println(s"Unable to generate stream name for union ${union.name} [$className]")
               None
