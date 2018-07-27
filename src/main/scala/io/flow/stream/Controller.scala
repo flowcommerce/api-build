@@ -2,7 +2,7 @@ package io.flow.stream
 import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
 import io.apibuilder.validation.{ApiBuilderService, ApibuilderType, MultiService}
 import io.flow.build.{Application, BuildType, Downloader}
-import io.flow.util.{FlowEnvironment, StreamNames}
+import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
 
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
@@ -51,7 +51,7 @@ case class Controller() extends io.flow.build.Controller {
           println(s"Unable to find union ${union.name}")
           None
         case Some(typ) =>
-          val className = s"${ApiBuilderUtils.toPackageName(typ.nameSpace, false)}.${ApiBuilderUtils.toClassName(union.name, false)}"
+          val className = s"${ApiBuilderUtils.toPackageName(typ.service.namespace, false)}.${ApiBuilderUtils.toClassName(union.name, false)}"
           StreamNames(FlowEnvironment.Current).json(className) match {
             case None =>
               println(s"Unable to generate stream name for union ${union.name} [$className]")
@@ -61,7 +61,8 @@ case class Controller() extends io.flow.build.Controller {
               val upserted = candidates.collect { case u: EventType.Upserted => u }
               val deleted  = candidates.collect { case d: EventType.Deleted => d }
               val pairs = pairUpEvents(upserted, deleted)
-              val shortName = s"${union.name}_v0" // FIXME: Replace "v0" with typ.service.version
+              val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0)
+              val shortName = s"${union.name}_v${serviceMajorVersion}"
               Some(KinesisStream(streamName, shortName, pairs))
           }
       }
