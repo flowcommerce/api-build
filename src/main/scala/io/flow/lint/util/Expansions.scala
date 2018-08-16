@@ -1,6 +1,8 @@
 package io.flow.lint.util
 
-object Expansions {
+import io.flow.lint.linters.Helpers
+
+object Expansions extends Helpers {
 
   /**
     * Accepts a list of field types, returning the list of possible
@@ -16,13 +18,9 @@ object Expansions {
 
   private[this] def toName(field: String): Option[String] = {
     val idx = field.lastIndexOf(".")
-    val name = if (idx < 0) { field } else { field.substring(idx + 1) }
-
-    // If the name starts with '[' and ends with ']' it represents an array
-    // We want to remove both those characters before checking if it starts with expandable
-    val formattedName = if (name.startsWith("[") && name.endsWith("]")) name.stripPrefix("[").stripSuffix("]") else name
-    formattedName.startsWith("expandable_") match {
-      case true => Some(formattedName.replace("expandable_", ""))
+    val name = if (idx < 0) { baseType(field) } else { baseType(field.substring(idx + 1)) }
+    name.startsWith("expandable_") match {
+      case true => Some(name.replace("expandable_", ""))
       case false => None
     }
   }
