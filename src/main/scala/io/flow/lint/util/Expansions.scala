@@ -17,8 +17,12 @@ object Expansions {
   private[this] def toName(field: String): Option[String] = {
     val idx = field.lastIndexOf(".")
     val name = if (idx < 0) { field } else { field.substring(idx + 1) }
-    name.startsWith("expandable_") match {
-      case true => Some(name.replace("expandable_", ""))
+
+    // If the name starts with '[' and ends with ']' it represents an array
+    // We want to remove both those characters before checking if it starts with expandable
+    val formattedName = if (name.startsWith("[") && name.endsWith("]")) name.stripPrefix("[").stripSuffix("]") else name
+    formattedName.startsWith("expandable_") match {
+      case true => Some(formattedName.replace("expandable_", ""))
       case false => None
     }
   }

@@ -118,7 +118,7 @@ class GetWithExpansionsSpec extends FunSpec with Matchers {
     )
   }
 
-  def buildServiceWithUnion(): Service = {
+  def buildServiceWithUnion(expandableTypeIsArray: Boolean = false): Service = {
     val card = Services.buildModel("card", Seq(
       Services.buildField("id"),
       Services.buildField("name")
@@ -128,9 +128,10 @@ class GetWithExpansionsSpec extends FunSpec with Matchers {
       Services.buildField("id")
     ))
 
+    val expandableCardType = if (expandableTypeIsArray) "[expandable_card]" else "expandable_card"
     val cardAuthorization = Services.buildModel("card_authorization", Seq(
       Services.buildField("id"),
-      Services.buildField("card", `type` = "expandable_card")
+      Services.buildField("card", `type` = expandableCardType)
     ))
 
     val resource = Services.buildResource(
@@ -150,7 +151,7 @@ class GetWithExpansionsSpec extends FunSpec with Matchers {
         )
       )
     )
-    
+
     Services.Base.copy(
       models = Seq(card, cardReference, cardAuthorization),
       unions = Seq(
@@ -180,4 +181,9 @@ class GetWithExpansionsSpec extends FunSpec with Matchers {
     ) should be(Nil)
   }
 
+  it("validates expandable properties when expandable type is an array") {
+    linter.validate(
+      buildServiceWithUnion(expandableTypeIsArray = true)
+    ) should be(Nil)
+  }
 }
