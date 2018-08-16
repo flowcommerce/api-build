@@ -25,7 +25,7 @@ case class Controller() extends io.flow.build.Controller {
         val importedServices = filteredImports.flatMap { imp =>
           downloader.service(Application(imp.organization.key, imp.application.key, imp.version)) match {
             case Right(svc) => Some(svc)
-            case Left(err) =>
+            case Left(_) =>
               println(s"Error fetching import $imp")
               None
           }
@@ -39,7 +39,9 @@ case class Controller() extends io.flow.build.Controller {
         val allServices = loadImports(services)
         val ms = MultiService(allServices.map(ApiBuilderService.apply))
         val streams = services.flatMap(processService(ms, _)).filterNot(_.capturedEvents.isEmpty)
-        saveStreams(buildType, streams)
+        val allModels = allServices.flatMap(_.models)
+        val descriptor = StreamDescriptor(streams, allModels)
+        saveDescriptor(buildType, descriptor)
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiMisc | BuildType.ApiPartner => // do nothing
     }
   }
@@ -144,14 +146,15 @@ case class Controller() extends io.flow.build.Controller {
     field.name == payloadName && (field.`type`.endsWith(s".$payloadName") || field.`type`.endsWith(s".${payloadName}_$version"))
   }
 
-  private def saveStreams(buildType: BuildType, streams: Seq[KinesisStream]): Unit = {
+  private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
-    implicit val w2 = Json.writes[CapturedType]
-    implicit val w3 = Json.writes[KinesisStream]
+    implicit val w1 = Json.writes[CapturedType]
+    implicit val w2 = Json.writes[KinesisStream]
+    implicit val w3 = Json.writes[StreamDescriptor]
     val path = s"/tmp/flow-$buildType-streams.json"
     new java.io.PrintWriter(path) {
-      write(Json.prettyPrint(Json.toJson(streams)))
+      write(Json.prettyPrint(Json.toJson(descriptor)))
       close
     }
     println(s"Stream info file created. See: $path")
