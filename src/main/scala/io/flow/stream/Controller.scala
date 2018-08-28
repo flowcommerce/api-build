@@ -15,35 +15,37 @@ case class Controller() extends io.flow.build.Controller {
   override def run(buildType: BuildType, downloader: Downloader, services: Seq[Service])(implicit ec: ExecutionContext): Unit = {
 
     @tailrec
-    def loadImports(services: Seq[Service]): Seq[Service] = {
-      val imports = services.flatMap { service => service.imports }.groupBy(_.uri).values.toList.map(_.sortBy(_.version).last)
+    def loadImports(services: Seq[Service], cached: Map[String, Service]): Seq[Service] = {
+      val imports = services.flatMap(_.imports).groupBy(_.uri).values.toList.map(_.sortBy(_.version).last)
       val filteredImports = imports.filterNot(imp => services.exists(svc => svc.organization.key == imp.organization.key && svc.application.key == imp.application.key))
       if (filteredImports.size == 0) {
         services
       } else {
-        println("Loading imports...")
         val importedServices = filteredImports.flatMap { imp =>
-          downloader.service(Application(imp.organization.key, imp.application.key, imp.version)) match {
-            case Right(svc) => Some(svc)
-            case Left(_) =>
-              println(s"Error fetching import $imp")
-              None
+          cached.get(imp.organization.key + imp.application.key + imp.version).orElse {
+            println("Loading imports...")
+            downloader.service(Application(imp.organization.key, imp.application.key, imp.version)) match {
+              case Right(svc) => Some(svc)
+              case Left(_) =>
+                println(s"Error fetching import $imp")
+                None
+            }
           }
         }
-        loadImports(services ++ importedServices)
+        loadImports(services ++ importedServices, cached)
       }
     }
 
     buildType match {
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent =>
-        val allServices = loadImports(services)
-        val ms = MultiService(allServices.map(ApiBuilderService.apply))
-        val streams = services.flatMap(processService(ms, _)).filterNot(_.capturedEvents.isEmpty)
-        val allModels = allServices.flatMap(_.models)
-        val allUnions = allServices.flatMap(_.unions)
-        val allEnums = allServices.flatMap(_.enums)
-        val descriptor = StreamDescriptor(streams, allModels, allUnions, allEnums)
-        saveDescriptor(buildType, descriptor)
+      case class Aggregator(streams: Seq[KinesisStream] = Nil, cache: Map[String, Service] = Map.empty)
+        val agg = services.foldLeft(Aggregator()) { case (agg, service) =>
+          val allServices = loadImports(Seq(service), agg.cache)
+          val ms = MultiService(allServices.map(ApiBuilderService.apply))
+          val streams = processService(ms, service)
+          Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key + s.version -> s))
+        }
+        saveDescriptor(buildType, StreamDescriptor(agg.streams))
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiMisc | BuildType.ApiPartner => // do nothing
     }
   }
@@ -65,9 +67,16 @@ case class Controller() extends io.flow.build.Controller {
               val upserted = candidates.collect { case u: EventType.Upserted => u }
               val deleted  = candidates.collect { case d: EventType.Deleted => d }
               val pairs = pairUpEvents(upserted, deleted)
-              val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0)
-              val shortName = s"${union.name}_v${serviceMajorVersion}"
-              Some(KinesisStream(streamName, shortName, pairs))
+              if (pairs.isEmpty) {
+                None
+              } else {
+                val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0)
+                val shortName = s"${union.name}_v${serviceMajorVersion}"
+                val allModels = multiService.services.flatMap(_.service.models)
+                val allUnions = multiService.services.flatMap(_.service.unions)
+                val allEnums = multiService.services.flatMap(_.service.enums)
+                Some(KinesisStream(streamName, shortName, pairs, allModels, allUnions, allEnums))
+              }
           }
       }
     }
