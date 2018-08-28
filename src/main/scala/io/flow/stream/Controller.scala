@@ -40,7 +40,9 @@ case class Controller() extends io.flow.build.Controller {
         val ms = MultiService(allServices.map(ApiBuilderService.apply))
         val streams = services.flatMap(processService(ms, _)).filterNot(_.capturedEvents.isEmpty)
         val allModels = allServices.flatMap(_.models)
-        val descriptor = StreamDescriptor(streams, allModels)
+        val allUnions = allServices.flatMap(_.unions)
+        val allEnums = allServices.flatMap(_.enums)
+        val descriptor = StreamDescriptor(streams, allModels, allUnions, allEnums)
         saveDescriptor(buildType, descriptor)
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiMisc | BuildType.ApiPartner => // do nothing
     }
