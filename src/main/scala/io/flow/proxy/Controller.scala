@@ -15,7 +15,8 @@ case class Controller() extends io.flow.build.Controller {
   private[this] val HostingMap = Map(
     "optin"->"content",
     "consumer-invoice" -> "order-messenger",
-    "shopify-session" -> "session",
+    "shopify-session" -> "session"
+    "permission"        -> "organization"
     "checkout" -> "experience"
   )
 
