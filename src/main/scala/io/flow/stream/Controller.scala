@@ -154,7 +154,7 @@ case class Controller() extends io.flow.build.Controller {
   }
 
   private def matchFieldToPayloadType(field: Field, payloadName: String, version: String): Boolean = {
-    field.name == payloadName && (field.`type`.endsWith(s".$payloadName") || field.`type`.endsWith(s".${payloadName}_$version"))
+    payloadName.contains(field.name) && (field.`type`.endsWith(s".$payloadName") || field.`type`.endsWith(s".${payloadName}_$version"))
   }
 
   private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
