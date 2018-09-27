@@ -71,7 +71,8 @@ case class Controller() extends io.flow.build.Controller {
                 None
               } else {
                 val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0)
-                val shortName = s"${union.name}_v${serviceMajorVersion}"
+                val internal = if (service.name.contains("-internal-") && !union.name.contains("_internal_")) "internal_" else ""
+                val shortName = s"${union.name}_${internal}_v${serviceMajorVersion}"
                 val allModels = multiService.services.flatMap(_.service.models)
                 val allUnions = multiService.services.flatMap(_.service.unions)
                 val allEnums = multiService.services.flatMap(_.service.enums)
