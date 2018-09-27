@@ -96,20 +96,28 @@ case class Controller() extends io.flow.build.Controller {
         case Some(ApibuilderType.Model(ns, model)) =>
           val discriminator = member.discriminatorValue.getOrElse(member.`type`)
           model.name match {
-            case UnionMemberRx(payloadName, eventType, version) =>
+            case UnionMemberRx(typeName, eventType, version) =>
               if (eventType == "upserted") {
-                val payloadType = extractPayloadModel(model.fields, payloadName, version, multiService)
+                val payloadField = model.fields.find(matchFieldToPayloadType(_, typeName, version))
+                payloadField.fold {
+                  println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: field not found")
+                }{_ => }
+                val payloadType = payloadField.flatMap(pf => extractPayloadModel(model.fields, pf, version, multiService))
                 payloadType.fold {
-                  println(s"Skipping non v2 upserted union ${union.name} member ${model.name}")
-                  None: Option[EventType]
-                } { payloadType =>
-                  Some(EventType.Upserted(model.name, payloadName, payloadType, discriminator))
-                }
+                  println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: payload type not found")
+                }{_ => }
+                for {
+                  fld <- payloadField
+                  pt <- payloadType
+                } yield (
+                  EventType.Upserted(model.name, typeName, fld.name, pt, discriminator)
+                )
               } else {
                 val idField = model.fields.find(f => f.name == "id" && f.`type` == "string")
-                val payloadType = extractPayloadModel(model.fields, payloadName, version, multiService)
+                val payloadField = model.fields.find(matchFieldToPayloadType(_, typeName, version))
+                val payloadType = payloadField.flatMap(pf => extractPayloadModel(model.fields, pf, version, multiService))
                 if (idField.isDefined || payloadType.isDefined) {
-                  Some(EventType.Deleted(model.name, payloadName, payloadType, discriminator))
+                  Some(EventType.Deleted(model.name, typeName, payloadType, discriminator))
                 } else {
                   println(s"Skipping non v2 deleted union ${union.name} member ${model.name}")
                   None
@@ -125,9 +133,8 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def extractPayloadModel(fields: Seq[Field], payloadName: String, version: String, multiService: MultiService): Option[Model] = {
+  private def extractPayloadModel(fields: Seq[Field], typeField: Field, version: String, multiService: MultiService): Option[Model] = {
     for {
-      typeField <- fields.find(matchFieldToPayloadType(_, payloadName, version))
       payloadType: ApibuilderType <- multiService.findType(typeField.`type`)
       model <- payloadType match {
         case ApibuilderType.Model(_, model) => Some(model)
@@ -143,7 +150,7 @@ case class Controller() extends io.flow.build.Controller {
           println(s"Skipping unpaired v2 upserted member ${head.eventName}")
           pairUpEvents(tail, deleted)
         }{ d =>
-          List(CapturedType(head.typeName, head.payloadType, head.discriminator, d.discriminator, d.payloadType.isDefined)) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
+          List(CapturedType(head.fieldName, head.payloadType, head.discriminator, d.discriminator, d.payloadType.isDefined)) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
         }
       case Nil =>
         deleted.foreach { d =>
@@ -153,8 +160,8 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def matchFieldToPayloadType(field: Field, payloadName: String, version: String): Boolean = {
-    payloadName.contains(field.name) && (field.`type`.endsWith(s".$payloadName") || field.`type`.endsWith(s".${payloadName}_$version"))
+  private def matchFieldToPayloadType(field: Field, typeName: String, version: String): Boolean = {
+    typeName.contains(field.name) && (field.`type`.endsWith(s".$typeName") || field.`type`.endsWith(s".${typeName}_$version"))
   }
 
   private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
