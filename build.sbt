@@ -21,6 +21,7 @@ lazy val root = project
       "io.flow" %% "apibuilder-validation" % "0.2.4",
       "com.typesafe.play" %% "play-json" % "2.6.10",
       "com.ning" % "async-http-client" % "1.9.40",
+      "com.github.scopt" %% "scopt" % "3.7.0",
       "org.scalatest" %% "scalatest" % "3.0.5" % Test
     )
   )
