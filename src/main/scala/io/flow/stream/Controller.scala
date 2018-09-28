@@ -162,7 +162,16 @@ case class Controller() extends io.flow.build.Controller {
   }
 
   private def matchFieldToPayloadType(field: Field, typeName: String, version: String): Boolean = {
-    typeName.contains(field.name) && (field.`type`.endsWith(s".$typeName") || field.`type`.endsWith(s".${typeName}_$version"))
+    matchFileName(typeName, field.name) && matchFieldType(typeName, field.`type`, version)
+  }
+
+  private def matchFileName(typeName: String, fieldName: String) = {
+    typeName.equals(fieldName) || typeName.endsWith(s"_$fieldName")
+  }
+
+  private def matchFieldType(typeName: String, fieldType: String, version: String) = {
+    val simpleType = fieldType.reverse.takeWhile(_ != '.').reverse
+    typeName.equals(simpleType) || typeName.endsWith(s"_$simpleType") || fieldType.endsWith(s".${typeName}_$version")
   }
 
   private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
