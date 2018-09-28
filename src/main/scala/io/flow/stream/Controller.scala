@@ -151,7 +151,7 @@ case class Controller() extends io.flow.build.Controller {
           println(s"Skipping unpaired v2 upserted member ${head.eventName}")
           pairUpEvents(tail, deleted)
         }{ d =>
-          List(CapturedType(head.fieldName, head.payloadType, head.discriminator, d.discriminator, d.payloadType.isDefined)) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
+          List(CapturedType(head.fieldName, head.typeName, head.payloadType, head.discriminator, d.discriminator, d.payloadType.isDefined)) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
         }
       case Nil =>
         deleted.foreach { d =>
