@@ -1,7 +1,7 @@
 package io.flow.stream
 import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
 import io.apibuilder.validation.{ApiBuilderService, ApibuilderType, MultiService}
-import io.flow.build.{Application, BuildType, Downloader}
+import io.flow.build.{Application, BuildType, Config, Downloader}
 import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
 
 import scala.annotation.tailrec
@@ -12,7 +12,7 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "stream"
 
 
-  override def run(buildType: BuildType, downloader: Downloader, services: Seq[Service])(implicit ec: ExecutionContext): Unit = {
+  override def run(config: Config, downloader: Downloader, services: Seq[Service])(implicit ec: ExecutionContext): Unit = {
 
     @tailrec
     def loadImports(services: Seq[Service], cached: Map[String, Service]): Seq[Service] = {
@@ -36,7 +36,7 @@ case class Controller() extends io.flow.build.Controller {
       }
     }
 
-    buildType match {
+    config.buildType match {
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent =>
       case class Aggregator(streams: Seq[KinesisStream] = Nil, cache: Map[String, Service] = Map.empty)
         val agg = services.foldLeft(Aggregator()) { case (agg, service) =>
@@ -45,7 +45,7 @@ case class Controller() extends io.flow.build.Controller {
           val streams = processService(ms, service)
           Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key + s.version -> s))
         }
-        saveDescriptor(buildType, StreamDescriptor(agg.streams))
+        saveDescriptor(config.buildType, StreamDescriptor(agg.streams))
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiMisc | BuildType.ApiPartner => // do nothing
     }
   }

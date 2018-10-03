@@ -30,7 +30,7 @@ trait Controller {
     * Run things and return a list of errors
     */
   def run(
-    buildType: BuildType,
+    config: Config,
     downloader: Downloader,
     services: Seq[Service]
   ) (

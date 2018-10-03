@@ -17,7 +17,7 @@ lazy val root = project
   .in(file("."))
   .settings(
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.1.0",
+      "io.flow" %% "lib-util" % "0.1.1",
       "io.flow" %% "apibuilder-validation" % "0.2.4",
       "com.typesafe.play" %% "play-json" % "2.6.10",
       "com.ning" % "async-http-client" % "1.9.40",

@@ -1,7 +1,7 @@
 package io.flow.oneapi
 
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{Application, BuildType, Downloader}
+import io.flow.build.{Application, BuildType, Downloader, Config}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -9,14 +9,14 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "oneapi"
 
   def run(
-    buildType: BuildType,
+    config: Config,
     downloader: Downloader,
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
   ) {
     val eventService: Seq[Service] = (
-      buildType match {
+      config.buildType match {
         case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMiscEvent => None
         case BuildType.Api => Some(BuildType.ApiEvent.toString)
         case BuildType.ApiInternal => Some(BuildType.ApiInternalEvent.toString)
@@ -32,7 +32,7 @@ case class Controller() extends io.flow.build.Controller {
 
     val all = services ++ eventService
     println("Building single API from: " + all.map(_.name).mkString(", "))
-    OneApi(buildType, all).process match {
+    OneApi(config.buildType, all).process match {
       case Left(errs) => {
         println(s"Errors from building single API:\n - ${errs.mkString("\n")}")
         errs.foreach { addError(_) }
@@ -42,7 +42,7 @@ case class Controller() extends io.flow.build.Controller {
         import io.apibuilder.spec.v0.models.json._
         import play.api.libs.json._
 
-        val path = s"/tmp/flow-$buildType.json"
+        val path = s"/tmp/flow-${config.buildType}.json"
         new java.io.PrintWriter(path) {
           write(Json.prettyPrint(Json.toJson(service)))
           close

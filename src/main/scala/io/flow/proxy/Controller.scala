@@ -1,7 +1,7 @@
 package io.flow.proxy
 
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{Application, BuildType, Downloader}
+import io.flow.build.{Application, BuildType, Downloader, Config}
 import io.flow.registry.v0.{Client => RegistryClient}
 import Text._
 
@@ -32,7 +32,7 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "proxy"
 
   def run(
-    buildType: BuildType,
+    config: Config,
     downloader: Downloader,
     allServices: Seq[Service]
   ) (
@@ -45,7 +45,7 @@ case class Controller() extends io.flow.build.Controller {
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
     def serviceHost(name: String): String = {
-      buildType match {
+      config.buildType match {
         case BuildType.Api => {
           val specName = name.toLowerCase
           HostingMap.getOrElse(specName, specName)
@@ -61,9 +61,9 @@ case class Controller() extends io.flow.build.Controller {
       }
     }
 
-    val version = downloader.service(Application("flow", buildType.toString, "latest")) match {
+    val version = downloader.service(Application("flow", config.buildType.toString, "latest")) match {
       case Left(error) => {
-        sys.error(s"Failed to download '$buildType' service from apibuilder: $error")
+        sys.error(s"Failed to download '${config.buildType}' service from apibuilder: $error")
       }
       case Right(svc) => {
         svc.version
@@ -72,17 +72,17 @@ case class Controller() extends io.flow.build.Controller {
 
     val registryClient = new RegistryClient()
     try {
-      build(buildType, services, version, "production") { service =>
+      build(config.buildType, services, version, "production") { service =>
         s"https://${serviceHost(service.name)}.api.flow.io"
       }
 
       val cache = RegistryApplicationCache(registryClient)
 
-      build(buildType, services, version, "development") { service =>
+      build(config.buildType, services, version, "development") { service =>
         s"http://$DevelopmentHostname:${cache.externalPort(serviceHost(service.name))}"
       }
 
-      build(buildType, services, version, "workstation") { service =>
+      build(config.buildType, services, version, "workstation") { service =>
         s"http://$DockerHostname:${cache.externalPort(serviceHost(service.name))}"
       }
     } finally {

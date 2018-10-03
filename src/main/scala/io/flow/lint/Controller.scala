@@ -1,7 +1,7 @@
 package io.flow.lint
 
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{BuildType, Downloader}
+import io.flow.build.{BuildType, Downloader, Config}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -11,7 +11,7 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "lint"
 
   def run(
-    buildType: BuildType,
+    config: Config,
     downloader: Downloader,
     services: Seq[Service]
   ) (
@@ -20,7 +20,7 @@ case class Controller() extends io.flow.build.Controller {
     services.foreach { service =>
       print(s"${service.name}...")
 
-      Lint(buildType).validate(service) match {
+      Lint(config.buildType).validate(service) match {
         case Nil => println(" Valid!")
         case errors => {
           errors.size match {

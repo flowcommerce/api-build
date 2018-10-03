@@ -34,6 +34,11 @@ object Main extends App {
       val parser = new scopt.OptionParser[Config]("api-build") {
         override def showUsageOnError = true
 
+        opt[Boolean]("dedup")
+          .action((d, c) => c.copy(dedup = d))
+          .valueName("true/false")
+          .text("fully namespace duplicate records")
+
         arg[BuildType]("<build type>")
           .action((bt, c) => c.copy(buildType = bt))
           .text(BuildType.all.map(_.toString).mkString(", "))
@@ -46,6 +51,7 @@ object Main extends App {
 
         arg[String]("<flow/api1>...")
           .text("API specs from APIBuilder")
+          .action((api, c) => c.copy(apis = c.apis :+ api))
           .unbounded()
           .optional()
           .validate(api => Application.parse(api) match {
@@ -95,7 +101,7 @@ object Main extends App {
                 }
               }
             }
-            run(config.buildType, dl, selected, services)
+            run(config, dl, selected, services)
           }
         case None =>
           // error message already printed
@@ -103,7 +109,7 @@ object Main extends App {
     }
   }
 
-  private[this] def run(buildType: BuildType, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]) {
+  private[this] def run(config: Config, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]) {
 
     var errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (globalErrors.nonEmpty) {
@@ -115,7 +121,7 @@ object Main extends App {
       println(s"${controller.name} Starting")
       println("==================================================")
 
-      controller.run(buildType, downloader, services)
+      controller.run(config, downloader, services)
       controller.errors.foreach {
         case (key, errs) => {
           errors.get(key) match {
