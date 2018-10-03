@@ -1,20 +1,21 @@
 package io.flow.oneapi
 
 import io.apibuilder.spec.v0.models._
-import io.flow.build.BuildType
+import io.flow.build.{BuildType, Config}
 import play.api.libs.json.{Json, JsString}
 
 private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(
-  buildType: BuildType,
+  config: Config,
   services: Seq[Service]
 ) {
 
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
     "timezone" -> "/",
-    "query_builder" -> "/:organization/query/builders"
+    "query_builder" -> "/:organization/query/builders",
+    "country" -> "/reference/countries"
   )
 
   private[this] val DefaultFieldDescriptions = Map(
@@ -45,9 +46,34 @@ case class OneApi(
     }
   }
 
+  private[this] val dups = findDups {
+    services.flatMap { s =>
+      s.models.map { m =>
+        ContextualValue(
+          context = s"${s.name}:${m.name}",
+          value = m.name
+        )
+      }
+    } ++ services.flatMap { s =>
+      s.unions.map { u =>
+        ContextualValue(
+          context = s"${s.name}:${u.name}",
+          value = u.name
+        )
+      }
+    } ++ services.flatMap { s =>
+      s.enums.map { e =>
+        ContextualValue(
+          context = s"${s.name}:${e.name}",
+          value = e.name
+        )
+      }
+    }
+  }
+
   def process(): Either[Seq[String], Service] = {
     val pathErrors = validatePaths()
-    val duplicateRecordErrors = validateRecordNames()
+    val duplicateRecordErrors = if (config.dedup) Seq() else validateRecordNames()
 
     (pathErrors ++ duplicateRecordErrors).toList match {
       case Nil => {
@@ -60,7 +86,7 @@ case class OneApi(
   }
 
   def buildOneApi(): Service = {
-    val (name, key, ns, imports) = buildType match {
+    val (name, key, ns, imports) = config.buildType match {
       case BuildType.Api => {
         ("API", "api", "io.flow", Nil)
       }
@@ -98,7 +124,9 @@ case class OneApi(
 
     val parser = TextDatatypeParser()
     val localTypes: Seq[String] = services.flatMap { s =>
-      s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
+      s.enums.map(e => withNamespace(s, e.name)) ++
+        s.models.map(m => withNamespace(s, m.name)) ++
+        s.unions.map(u => withNamespace(s, u.name))
     }
 
     //Annotations are not namespaced, they're global. For convenience, we'll collect them from all imports and add them
@@ -148,7 +176,7 @@ case class OneApi(
       annotations = allAnnotations
     )
 
-    buildType match {
+    config.buildType match {
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner | BuildType.ApiMisc => service
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent => createEventService(service)
     }
@@ -204,7 +232,7 @@ case class OneApi(
 
   /**
     * Merges the two resources:
-    *   - Takes fields from the first resource if both provide (e.g. decription)
+    *   - Takes fields from the first resource if both provide (e.g. description)
     *   - If paths are different, raises an error
     */
   private[this] def merge(a: Resource, b: Resource): Resource = {
@@ -269,12 +297,23 @@ case class OneApi(
     }.toInt
   }
 
+  private def namespaceTypeName(ns: String, t: String) =
+    (ns.split('.') ++ t.split('_')).mkString("_")
+
   def localize(parser: TextDatatypeParser, service: Service, enum: Enum): Enum = {
-    enum
+    if (dups.contains(enum.name))
+      enum.copy(name = namespaceTypeName(service.namespace, enum.name))
+    else
+      enum
   }
 
   def localize(parser: TextDatatypeParser, service: Service, model: Model): Model = {
     model.copy(
+      name =
+        if (dups.contains(model.name))
+          namespaceTypeName(service.namespace, model.name)
+        else
+          model.name,
       fields = model.fields.map(localize(parser, service, _))
     )
   }
@@ -293,6 +332,11 @@ case class OneApi(
 
   def localize(parser: TextDatatypeParser, service: Service, union: Union): Union = {
     union.copy(
+      name =
+        if (dups.contains(union.name))
+          namespaceTypeName(service.namespace, union.name)
+        else
+          union.name,
       types = union.types.map(localize(parser, service, _))
     )
   }
@@ -410,7 +454,7 @@ case class OneApi(
   }
 
   def localizeType(parser: TextDatatypeParser, name: String): String = {
-    buildType match {
+    config.buildType match {
       case BuildType.Api => parser.toString(parser.parse(name))
       case BuildType.ApiEvent => toApiImport(parser, name)
       case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
@@ -458,7 +502,7 @@ case class OneApi(
       }
     }
 
-    dups(allPaths, "path")
+    checkDups(allPaths, "path")
   }
 
   def normalizePath(method: Method, path: String): String = {
@@ -501,14 +545,17 @@ case class OneApi(
       }
     }
 
-    dups(names, "record")
+    checkDups(names, "record")
   }
+
+  def findDups(values: Seq[ContextualValue]): Seq[String] =
+    values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted
 
   /**
     * Returns an error message if there are duplicate values
     */
-  def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
-    values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
+  def checkDups(values: Seq[ContextualValue], label: String): Seq[String] = {
+    findDups(values).map { dup =>
       val dupValues = values.filter { v => dup == v.value.toLowerCase }
       assert(
         dupValues.size >= 2,
