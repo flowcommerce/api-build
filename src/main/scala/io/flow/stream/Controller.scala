@@ -8,6 +8,8 @@ import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 
 case class Controller() extends io.flow.build.Controller {
+  private val BannedStreamNames = Set("production.local.item.event.v0.local_item_event.json", "production.localized.item.internal.event.v0.localized_item_event.json")
+
   override val name = "Stream"
   override val command = "stream"
 
@@ -61,6 +63,9 @@ case class Controller() extends io.flow.build.Controller {
           StreamNames(FlowEnvironment.Production).json(className) match {
             case None =>
               println(s"Unable to generate stream name for union ${union.name} [$className]")
+              None
+            case Some(streamName) if BannedStreamNames.contains(streamName) =>
+              println(s"Skipping banned stream $streamName")
               None
             case Some(streamName) =>
               val candidates = processUnion(multiService, union, streamName).toList
