@@ -16,18 +16,18 @@ case class Controller() extends io.flow.build.Controller {
 
     @tailrec
     def loadImports(services: Seq[Service], cached: Map[String, Service]): Seq[Service] = {
-      val imports = services.flatMap(_.imports).groupBy(_.uri).values.toList.map(_.sortBy(_.version).last)
+      val imports = services.flatMap(_.imports).groupBy(_.uri).values.toList.map(_.last)
       val filteredImports = imports.filterNot(imp => services.exists(svc => svc.organization.key == imp.organization.key && svc.application.key == imp.application.key))
       if (filteredImports.size == 0) {
         services
       } else {
         val importedServices = filteredImports.flatMap { imp =>
-          cached.get(imp.organization.key + imp.application.key + imp.version).orElse {
-            println("Loading imports...")
-            downloader.service(Application(imp.organization.key, imp.application.key, imp.version)) match {
+          cached.get(imp.organization.key + imp.application.key).orElse {
+            println("Loading imports")
+            downloader.service(Application(imp.organization.key, imp.application.key, Application.Latest)) match {
               case Right(svc) => Some(svc)
               case Left(_) =>
-                println(s"Error fetching import $imp")
+                println(s"Error fetching import ${imp.organization.key} ${imp.application.key}")
                 None
             }
           }
@@ -43,7 +43,7 @@ case class Controller() extends io.flow.build.Controller {
           val allServices = loadImports(Seq(service), agg.cache)
           val ms = MultiService(allServices.map(ApiBuilderService.apply))
           val streams = processService(ms, service)
-          Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key + s.version -> s))
+          Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s))
         }
         saveDescriptor(buildType, StreamDescriptor(agg.streams))
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiMisc | BuildType.ApiPartner => // do nothing
