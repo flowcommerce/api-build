@@ -20,7 +20,7 @@ case class Controller() extends io.flow.build.Controller {
     def loadImports(services: Seq[Service], cached: Map[String, Service]): Seq[Service] = {
       val imports = services.flatMap(_.imports).groupBy(_.uri).values.toList.map(_.last)
       val filteredImports = imports.filterNot(imp => services.exists(svc => svc.organization.key == imp.organization.key && svc.application.key == imp.application.key))
-      if (filteredImports.size == 0) {
+      if (filteredImports.isEmpty) {
         services
       } else {
         val importedServices = filteredImports.flatMap { imp =>
@@ -29,7 +29,7 @@ case class Controller() extends io.flow.build.Controller {
             downloader.service(Application(imp.organization.key, imp.application.key, Application.Latest)) match {
               case Right(svc) => Some(svc)
               case Left(_) =>
-                println(s"Error fetching import ${imp.organization.key} ${imp.application.key}")
+                println(s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}")
                 None
             }
           }
@@ -41,49 +41,49 @@ case class Controller() extends io.flow.build.Controller {
     buildType match {
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent =>
       case class Aggregator(streams: Seq[KinesisStream] = Nil, cache: Map[String, Service] = Map.empty)
-        val agg = services.foldLeft(Aggregator()) { case (agg, service) =>
+        val result = services.foldLeft(Aggregator()) { case (agg, service) =>
           val allServices = loadImports(Seq(service), agg.cache)
           val ms = MultiService(allServices.map(ApiBuilderService.apply))
           val streams = processService(ms, service)
           Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s))
         }
-        saveDescriptor(buildType, StreamDescriptor(agg.streams))
+        saveDescriptor(buildType, StreamDescriptor(result.streams))
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiMisc | BuildType.ApiPartner => // do nothing
     }
   }
 
   private def processService(multiService: MultiService, service: Service): Seq[KinesisStream] = {
     service.unions.filter(u => u.name.endsWith("_event") && u.discriminator.isDefined).flatMap { union =>
-      multiService.findType(union.name) match {
-        case None =>
-          println(s"Unable to find union ${union.name}")
-          None
-        case Some(typ) =>
-          val className = s"${ApiBuilderUtils.toPackageName(typ.service.namespace, false)}.${ApiBuilderUtils.toClassName(union.name, false)}"
-          StreamNames(FlowEnvironment.Production).json(className) match {
-            case None =>
-              println(s"Unable to generate stream name for union ${union.name} [$className]")
+      val types = multiService.findType(union.name)
+      if (types.size == 0) {
+        println(s"[ERROR] Unable to find union ${union.name}")
+      }
+      types.flatMap { typ =>
+        val className = s"${ApiBuilderUtils.toPackageName(typ.service.namespace, quoteKeywords = false)}.${ApiBuilderUtils.toClassName(union.name, quoteKeywords =false)}"
+        StreamNames(FlowEnvironment.Production).json(className) match {
+          case None =>
+            println(s"[ERROR] Unable to generate stream name for union ${union.name} [$className]")
+            None
+          case Some(streamName) if BannedStreamNames.contains(streamName) =>
+            println(s"Skipping banned stream $streamName")
+            None
+          case Some(streamName) =>
+            val candidates = processUnion(multiService, union, streamName).toList
+            val upserted = candidates.collect { case u: EventType.Upserted => u }
+            val deleted  = candidates.collect { case d: EventType.Deleted => d }
+            val pairs = pairUpEvents(upserted, deleted)
+            if (pairs.isEmpty) {
               None
-            case Some(streamName) if BannedStreamNames.contains(streamName) =>
-              println(s"Skipping banned stream $streamName")
-              None
-            case Some(streamName) =>
-              val candidates = processUnion(multiService, union, streamName).toList
-              val upserted = candidates.collect { case u: EventType.Upserted => u }
-              val deleted  = candidates.collect { case d: EventType.Deleted => d }
-              val pairs = pairUpEvents(upserted, deleted)
-              if (pairs.isEmpty) {
-                None
-              } else {
-                val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0)
-                val internal = if (service.name.contains("-internal-") && !union.name.contains("_internal_")) "internal_" else ""
-                val shortName = s"${union.name}_${internal}v${serviceMajorVersion}"
-                val allModels = multiService.services.flatMap(_.service.models)
-                val allUnions = multiService.services.flatMap(_.service.unions)
-                val allEnums = multiService.services.flatMap(_.service.enums)
-                Some(KinesisStream(streamName, shortName, pairs, allModels, allUnions, allEnums))
-              }
-          }
+            } else {
+              val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0)
+              val internal = if (service.name.contains("-internal-") && !union.name.contains("_internal_")) "internal_" else ""
+              val shortName = s"${union.name}_${internal}v$serviceMajorVersion"
+              val allModels = multiService.services.flatMap(_.service.models)
+              val allUnions = multiService.services.flatMap(_.service.unions)
+              val allEnums = multiService.services.flatMap(_.service.enums)
+              Some(KinesisStream(streamName, shortName, pairs, allModels, allUnions, allEnums))
+            }
+        }
       }
     }
   }
@@ -92,14 +92,12 @@ case class Controller() extends io.flow.build.Controller {
 
   private def processUnion(multiService: MultiService, union: Union, streamName: String): Seq[EventType] = {
     union.types.flatMap { member =>
-      multiService.findType(member.`type`) match {
-        case None =>
-          println(s"Unable to find model for union ${union.name} member ${member.`type`}")
-          None
-        case Some(ApibuilderType.Enum(ns, enum)) =>
-          println(s"Don't know what to do with an union ${union.name} member $enum of type enum")
-          None
-        case Some(ApibuilderType.Model(ns, model)) =>
+      val types = multiService.findType(member.`type`)
+      if (types.size == 0) {
+        println(s"[ERROR] Unable to find model for union ${union.name} member ${member.`type`}")
+      }
+      types.flatMap {
+        case ApibuilderType.Model(_, model) =>
           val discriminator = member.discriminatorValue.getOrElse(member.`type`)
           model.name match {
             case UnionMemberRx(typeName, eventType, version) =>
@@ -113,7 +111,7 @@ case class Controller() extends io.flow.build.Controller {
                   println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: payload type not found")
                 }{_ => }
                 for {
-                  fld <- payloadField
+                  fld <- payloadField.toSeq
                   pt <- payloadType
                 } yield (
                   EventType.Upserted(model.name, typeName, fld.name, pt, discriminator)
@@ -123,25 +121,31 @@ case class Controller() extends io.flow.build.Controller {
                 val payloadField = model.fields.find(matchFieldToPayloadType(_, typeName, version))
                 val payloadType = payloadField.flatMap(pf => extractPayloadModel(model.fields, pf, version, multiService))
                 if (idField.isDefined || payloadType.isDefined) {
-                  Some(EventType.Deleted(model.name, typeName, payloadType, discriminator))
+                  Seq(EventType.Deleted(model.name, typeName, payloadType, discriminator))
                 } else {
                   println(s"Skipping non v2 deleted union ${union.name} member ${model.name}")
-                  None
+                  Nil
                 }
               }
             case _ =>
               println(s"Skipping misnamed union ${union.name} member ${model.name}")
-              None
+              Nil
           }
-        case Some(ApibuilderType.Union(ns, union)) =>
-          processUnion(multiService, union, streamName)
+        case ApibuilderType.Union(_, nestedUnion) =>
+          processUnion(multiService, nestedUnion, streamName)
+        case ApibuilderType.Enum(_, enum) =>
+          println(s"[ERROR] Don't know what to do with an union ${union.name} member $enum of type enum")
+          Nil
+        case other =>
+          println(s"[ERROR] Don't know what to do with an union ${union.name} member $other")
+          Nil
       }
     }
   }
 
   private def extractPayloadModel(fields: Seq[Field], typeField: Field, version: String, multiService: MultiService): Option[Model] = {
     for {
-      payloadType: ApibuilderType <- multiService.findType(typeField.`type`)
+      payloadType: ApibuilderType <- multiService.findType(typeField.`type`).headOption
       model <- payloadType match {
         case ApibuilderType.Model(_, model) => Some(model)
         case _ => None
@@ -182,13 +186,13 @@ case class Controller() extends io.flow.build.Controller {
   private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
-    implicit val w1 = Json.writes[CapturedType]
-    implicit val w2 = Json.writes[KinesisStream]
-    implicit val w3 = Json.writes[StreamDescriptor]
+    implicit val w1: Writes[CapturedType] = Json.writes[CapturedType]
+    implicit val w2: Writes[KinesisStream] = Json.writes[KinesisStream]
+    implicit val w3: Writes[StreamDescriptor] = Json.writes[StreamDescriptor]
     val path = s"/tmp/flow-$buildType-streams.json"
     new java.io.PrintWriter(path) {
       write(Json.prettyPrint(Json.toJson(descriptor)))
-      close
+      close()
     }
     println(s"Stream info file created. See: $path")
 
