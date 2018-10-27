@@ -33,8 +33,8 @@ case object ExpandableUnionsAreConsistent extends Linter with Helpers {
     union.name match {
       case Pattern(name) => {
         service.unions.find(_.name == name) match {
-          case None => validateUnionTypes(union, Seq(name, s"${name}_reference"))
-          case Some(u) => validateUnionTypes(union, u.types.map(_.`type`) ++ Seq(s"${name}_reference"))
+          case None => validateUnionTypes(union, Seq(name, s"${name}_reference")) ++ validateTypeOrder(union, name)
+          case Some(u) => validateUnionTypes(union, u.types.map(_.`type`) ++ Seq(s"${name}_reference")) ++ validateTypeOrder(union, name)
         }
       }
       case _ => {
@@ -45,17 +45,32 @@ case object ExpandableUnionsAreConsistent extends Linter with Helpers {
 
   def validateUnionTypes(union: Union, types: Seq[String]): Seq[String] = {
     val names = union.types.map(_.`type`)
-    if (names == types) {
-      Nil
-    } else {
-      names.toList match {
-        case Nil => {
-          Seq(error(union, s"Types for this expandable union must be ${types.mkString(", ")}"))
-        }
-        case _ => {
-          Seq(error(union, s"Types for this expandable union must be ${types.mkString(", ")} and not ${names.mkString(", ")}"))
-        }
+    types.filterNot(names.contains).toList match {
+      case Nil => {
+        Nil
       }
+      case missing :: Nil => {
+        Seq(error(union, s"must contain a type named '$missing'"))
+      }
+      case missing => {
+        Seq(error(union, s"must contain the following types: " + missing.mkString(", ")))
+      }
+    }
+  }
+
+  def validateTypeOrder(union: Union, name: String): Seq[String] = {
+    val names = union.types.map(_.`type`)
+    val refName = s"${name}_reference"
+    if (names.contains(name) && names.contains(refName)) {
+      val defined = Seq(name, refName)
+      val expected = defined ++ names.filterNot(defined.contains)
+      if (expected == names) {
+        Nil
+      } else {
+        Seq(error(union, s"types must be in the following order: " + expected.mkString(", ")))
+      }
+    } else {
+      Nil
     }
   }
 }
