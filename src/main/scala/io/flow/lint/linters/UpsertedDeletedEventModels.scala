@@ -2,6 +2,7 @@ package io.flow.lint.linters
 
 import io.apibuilder.spec.v0.models.{Model, Service}
 import io.flow.lint.Linter
+import io.flow.stream.EventUnionTypeMatcher
 
 /**
   * Match naming convention required to get events into s3
@@ -31,12 +32,13 @@ case object UpsertedDeletedEventModels extends Linter with Helpers {
   }
 
   def validateModel(model: Model, expected: String): Seq[String] = {
-    val fieldNames = model.fields.map(_.name)
-    if (fieldNames.contains(expected)) {
+    if (model.fields.exists { f =>
+      EventUnionTypeMatcher.matchFieldToPayloadType(f, expected)
+    }) {
       Nil
     } else {
       Seq(
-        error(model, s"Event must contain a field named '$expected'")
+        error(model, s"Event must contain a field whose name and type contain " + expected.split("_").mkString(" or "))
       )
     }
   }

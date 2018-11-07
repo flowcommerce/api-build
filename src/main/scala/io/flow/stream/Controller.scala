@@ -102,7 +102,7 @@ case class Controller() extends io.flow.build.Controller {
           model.name match {
             case UnionMemberRx(typeName, eventType, version) =>
               if (eventType == "upserted") {
-                val payloadField = model.fields.find(matchFieldToPayloadType(_, typeName, version))
+                val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
                 if (payloadField.isEmpty) {
                   println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: field not found")
                 }
@@ -118,7 +118,7 @@ case class Controller() extends io.flow.build.Controller {
                 )
               } else {
                 val idField = model.fields.find(f => f.name == "id" && f.`type` == "string")
-                val payloadField = model.fields.find(matchFieldToPayloadType(_, typeName, version))
+                val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
                 val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(model.fields, pf, version, multiService))
                 if (payloadTypes.isEmpty && idField.isDefined) {
                   Seq(EventType.Deleted(model.name, typeName, None, discriminator))
@@ -170,35 +170,6 @@ case class Controller() extends io.flow.build.Controller {
         }
         Nil
     }
-  }
-
-  private def matchFieldToPayloadType(field: Field, typeName: String, version: String): Boolean = {
-    matchFileName(typeName, field.name) && matchFieldType(typeName, field.`type`, version)
-  }
-
-  private def matchFileName(typeName: String, fieldName: String) = {
-    val typeNameList = typeName.split("_").filter(_.nonEmpty).toList
-    val fieldNameList = fieldName.split("_").filter(_.nonEmpty).toList
-    matchLists(fieldNameList, typeNameList)
-  }
-
-  private def matchFieldType(typeName: String, fieldType: String, version: String) = {
-    val simpleType = fieldType.reverse.takeWhile(_ != '.').reverse
-    val fieldTypeList = simpleType.split("_").filter(_.nonEmpty).toList
-    val typeNameList = typeName.split("_").filter(_.nonEmpty).toList
-    matchLists(typeNameList, fieldTypeList) || matchLists(fieldTypeList, typeNameList)
-  }
-
-  private def matchLists(required: List[String], withExtras: List[String]): Boolean = (required, withExtras) match {
-    case (Nil, _) => true
-    case (_, Nil) => false
-    case (head :: tail, _) =>
-      val shortened = withExtras.dropWhile(_ != head)
-      if (shortened.isEmpty) {
-        false
-      } else {
-        matchLists(tail, shortened.drop(1))
-      }
   }
 
   private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
