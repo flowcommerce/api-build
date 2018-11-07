@@ -34,6 +34,7 @@ object Lint {
     linters.SortParameterDefault,
     linters.StandardResponse,
     linters.UnionTypesHaveCommonDiscriminator,
+    linters.UpsertedDeletedEventModels,
     linters.VersionModels
   )
 
