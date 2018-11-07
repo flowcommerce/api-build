@@ -1,6 +1,6 @@
 package io.flow.lint
 
-import com.bryzek.apidoc.spec.v0.models._
+import io.apibuilder.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
 
 class UpsertedDeletedEventModelsSpec extends FunSpec with Matchers {
@@ -19,9 +19,9 @@ class UpsertedDeletedEventModelsSpec extends FunSpec with Matchers {
   }
 
   it("with valid names") {
-    linter.validate(buildService("user_upserted", Seq("id", "event_id", "user"))) should be (Nil)
+    linter.validate(buildService("user_upserted", Seq("user"))) should be (Nil)
 
-    linter.validate(buildService("user_upserted", Seq("id", "event_id", "foo"))) should be (
+    linter.validate(buildService("user_upserted", Seq("foo"))) should be (
       Seq("Model user_upserted: Event must contain a field named 'user'")
     )
   }

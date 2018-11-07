@@ -1,6 +1,6 @@
 package io.flow.lint.linters
 
-import com.bryzek.apidoc.spec.v0.models.{Model, Service}
+import io.apibuilder.spec.v0.models.{Model, Service}
 import io.flow.lint.Linter
 
 /**
