@@ -177,12 +177,28 @@ case class Controller() extends io.flow.build.Controller {
   }
 
   private def matchFileName(typeName: String, fieldName: String) = {
-    typeName.equals(fieldName) || typeName.endsWith(s"_$fieldName")
+    val typeNameList = typeName.split("_").filter(_.nonEmpty).toList
+    val fieldNameList = fieldName.split("_").filter(_.nonEmpty).toList
+    matchLists(fieldNameList, typeNameList)
   }
 
   private def matchFieldType(typeName: String, fieldType: String, version: String) = {
     val simpleType = fieldType.reverse.takeWhile(_ != '.').reverse
-    typeName.equals(simpleType) || typeName.endsWith(s"_$simpleType") || fieldType.endsWith(s".${typeName}_$version")
+    val fieldTypeList = simpleType.split("_").filter(_.nonEmpty).toList
+    val typeNameList = typeName.split("_").filter(_.nonEmpty).toList
+    matchLists(typeNameList, fieldTypeList) || matchLists(fieldTypeList, typeNameList)
+  }
+
+  private def matchLists(required: List[String], withExtras: List[String]): Boolean = (required, withExtras) match {
+    case (Nil, _) => true
+    case (_, Nil) => false
+    case (head :: tail, _) =>
+      val shortened = withExtras.dropWhile(_ != head)
+      if (shortened.isEmpty) {
+        false
+      } else {
+        matchLists(tail, shortened.drop(1))
+      }
   }
 
   private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
