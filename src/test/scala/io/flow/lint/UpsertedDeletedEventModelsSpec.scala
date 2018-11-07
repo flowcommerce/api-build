@@ -38,4 +38,8 @@ class UpsertedDeletedEventModelsSpec extends FunSpec with Matchers {
     )
   }
 
+  it("ignores legacy models") {
+    linter.validate(buildService("item_origin_deleted", "foo", "item_origin")) should be(Nil)
+  }
+
 }
