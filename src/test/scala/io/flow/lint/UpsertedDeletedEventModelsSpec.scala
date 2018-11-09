@@ -19,10 +19,10 @@ class UpsertedDeletedEventModelsSpec extends FunSpec with Matchers {
   }
 
   it("with valid names") {
-    linter.validate(buildService("user_upserted", "user", "user")) should be (Nil)
+    linter.validate(buildService("example_upserted", "example", "example")) should be (Nil)
 
-    linter.validate(buildService("user_upserted", "foo", "user")) should be (
-      Seq("Model user_upserted: Event must contain a field whose name and type contain user")
+    linter.validate(buildService("example_upserted", "foo", "example")) should be (
+      Seq("Model example_upserted: Event must contain a field whose name and type contain example")
     )
   }
 
