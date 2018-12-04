@@ -4,6 +4,7 @@ import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
 import Text._
+import play.api.libs.json.{JsArray, JsValue, Json}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -31,6 +32,40 @@ case class Controller() extends io.flow.build.Controller {
   override val name = "Proxy"
   override val command = "proxy"
 
+  def buildUserPermissionsFile(
+    buildType: BuildType,
+    services: Seq[Service],
+    version: String
+  ) = {
+    val at = services.flatMap { s =>
+      s.enums.find(_.name == "authentication_technique")
+    }
+    val routes = services.flatMap(s=>s.resources.flatMap(r=>r.operations.flatMap{o=>
+      o.attributes.find(_.name == "auth") match {
+        case Some(a)=> {
+          val ts = a.value \ "techniques"
+          val rs = a.value \ "roles"
+          ts.as[Seq[String]]
+            .filterNot(_ == "user")
+            .map(t=>(t, Map("method" -> o.method.toString, "path"-> o.path))) ++
+          rs.asOpt[Seq[String]]
+            .map(r=>r.map { t =>
+              (t, Map("method" -> o.method.toString, "path" -> o.path))
+            }).getOrElse(Nil)
+        }
+        case None => {
+          Seq(("anonymous", Map("method" -> o.method.toString, "path"-> o.path)))
+        }
+      }
+    }))
+    val rs= routes.groupBy(_._1).map(r=> (r._1, Map("routes" -> r._2.map(_._2).distinct)))
+    val m = Json.toJson(rs)
+
+    val path = s"/tmp/${buildType}-authorization.json"
+    writeToFile(path, Json.prettyPrint(m))
+    println(s" - $path")
+  }
+
   def run(
     buildType: BuildType,
     downloader: Downloader,
@@ -41,8 +76,6 @@ case class Controller() extends io.flow.build.Controller {
     val services = allServices.
       filter { s => s.resources.nonEmpty }.
       filterNot { s => ExcludeWhiteList.exists(ew => s.name.startsWith(ew)) }
-
-    println("Building proxy from: " + services.map(_.name).mkString(", "))
 
     def serviceHost(name: String): String = {
       buildType match {
@@ -70,19 +103,24 @@ case class Controller() extends io.flow.build.Controller {
       }
     }
 
+    println("Building authorization from: " + services.map(_.name).mkString(", "))
+    buildUserPermissionsFile(buildType, services, version)
+
+    println("Building proxy from: " + services.map(_.name).mkString(", "))
+
     val registryClient = new RegistryClient()
     try {
-      build(buildType, services, version, "production") { service =>
+      buildProxyFile(buildType, services, version, "production") { service =>
         s"https://${serviceHost(service.name)}.api.flow.io"
       }
 
       val cache = RegistryApplicationCache(registryClient)
 
-      build(buildType, services, version, "development") { service =>
+      buildProxyFile(buildType, services, version, "development") { service =>
         s"http://$DevelopmentHostname:${cache.externalPort(serviceHost(service.name))}"
       }
 
-      build(buildType, services, version, "workstation") { service =>
+      buildProxyFile(buildType, services, version, "workstation") { service =>
         s"http://$DockerHostname:${cache.externalPort(serviceHost(service.name))}"
       }
     } finally {
@@ -90,7 +128,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private[this] def build(
+  private[this] def buildProxyFile(
     buildType: BuildType,
     services: Seq[Service],
     version: String,
