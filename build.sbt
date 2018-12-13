@@ -22,7 +22,8 @@ lazy val root = project
       "com.typesafe.play" %% "play-json" % "2.6.10",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.0.5" % Test
-    )
+    ),
+    scalacOptions -= "-Xfatal-warnings"
   )
 
 resolvers += "Artifactory" at "https://flow.jfrog.io/flow/libs-release/"
