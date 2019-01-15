@@ -135,9 +135,9 @@ case class OneApi(
       }.sortBy { _.name.toLowerCase },
 
       unions = services.flatMap { s =>
-        s.unions.map(localize(parser, s, _))
+        s.unions.map(localizeUnion(parser, _))
       }.sortBy { _.name.toLowerCase },
-     
+
       resources = mergeResources(
         services.flatMap { s =>
           s.resources.
@@ -271,29 +271,27 @@ case class OneApi(
 
   def localize(parser: TextDatatypeParser, service: Service, model: Model): Model = {
     model.copy(
-      fields = model.fields.map(localize(parser, service, _))
+      fields = model.fields.map(localizeField(parser, _))
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, field: Field): Field = {
+  def localizeField(parser: TextDatatypeParser, field: Field): Field = {
     field.copy(
       `type` = localizeType(parser, field.`type`),
-      description = (
-        field.description match {
-          case Some(d) => Some(d)
-          case None => DefaultFieldDescriptions.get(field.name)
-        }
-      )
+      description = field.description match {
+        case Some(d) => Some(d)
+        case None => DefaultFieldDescriptions.get(field.name)
+      }
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, union: Union): Union = {
+  def localizeUnion(parser: TextDatatypeParser, union: Union): Union = {
     union.copy(
-      types = union.types.map(localize(parser, service, _))
+      types = union.types.map(localizeUnionType(parser, _))
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, ut: UnionType): UnionType = {
+  def localizeUnionType(parser: TextDatatypeParser, ut: UnionType): UnionType = {
     ut.copy(
       `type` = localizeType(parser, ut.`type`)
     )
