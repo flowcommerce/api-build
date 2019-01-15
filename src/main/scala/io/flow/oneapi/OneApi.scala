@@ -131,7 +131,7 @@ case class OneApi(
       }.sortBy { _.name.toLowerCase },
 
       models = services.flatMap { s =>
-        s.models.map(localize(parser, s, _))
+        s.models.map(localizeModel(parser, _))
       }.sortBy { _.name.toLowerCase },
 
       unions = services.flatMap { s =>
@@ -269,7 +269,7 @@ case class OneApi(
     }.toInt
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, model: Model): Model = {
+  def localizeModel(parser: TextDatatypeParser, model: Model): Model = {
     model.copy(
       fields = model.fields.map(localizeField(parser, _))
     )
@@ -324,7 +324,7 @@ case class OneApi(
     resource.copy(
       `type` = localizeType(parser, resource.`type`),
       operations = resource.operations.
-        map { localize(parser, service, _) }.
+        map { localizeOperation(parser, _) }.
         sortBy(OperationSort.key),
       description = resource.description match {
         case Some(d) => Some(d)
@@ -358,15 +358,15 @@ case class OneApi(
     }
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, op: Operation): Operation = {
+  def localizeOperation(parser: TextDatatypeParser, op: Operation): Operation = {
     op.copy(
-      body = op.body.map(localize(parser, service, _)),
+      body = op.body.map(localizeBody(parser, _)),
       parameters = op.parameters.map(localizeParameter(parser, _)),
       responses = op.responses.map(localizeResponse(parser, _))
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, body: Body): Body = {
+  def localizeBody(parser: TextDatatypeParser, body: Body): Body = {
     body.copy(
       `type` = localizeType(parser, body.`type`)
     )
@@ -497,7 +497,7 @@ case class OneApi(
   /**
     * Returns an error message if there are duplicate values
     */
-  def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
+  private[oneapi]def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
     values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
       val dupValues = values.filter { v => dup == v.value.toLowerCase }
       assert(
