@@ -14,7 +14,7 @@ import io.apibuilder.spec.v0.models.{Operation, Parameter, Resource, Service}
   */
 case object CommonParametersHaveNoDescriptions extends Linter with Helpers {
 
-  private[this] val NamesWithNoDescriptions: Seq[String] = Seq("id", "limit", "offset", "sort", "expand")
+  val NamesWithNoDescriptions: Seq[String] = Seq("id", "limit", "offset", "sort", "expand")
 
   override def validate(service: Service): Seq[String] = {
     service.resources.flatMap(validateResource)
