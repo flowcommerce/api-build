@@ -1,7 +1,7 @@
 package io.flow.lint
 
 import io.apibuilder.spec.v0.models._
-import play.api.libs.json.{JsArray, JsObject, Json}
+import play.api.libs.json.{JsObject, Json}
 
 object Services {
 

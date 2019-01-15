@@ -16,45 +16,43 @@ case object CommonParameterTypes extends Linter with Helpers {
     maximum: Option[Long] = None
   )
 
-  val Expected = Map(
+  private[this] val Expected: Map[String, Spec] = Map(
     "id" -> Spec("[string]", default = None, minimum = None, maximum = Some(100)),
     "limit" -> Spec("long", default = Some("25"), minimum = Some(1), maximum = Some(100)),
     "offset" -> Spec("long", default = Some("0"), minimum = Some(0), maximum = None)
   )
 
-  val Types = Map(
+  private[this] val Types: Map[String, String] = Map(
     "sort" -> "string",
     "expand" -> "[string]"
   )
 
   override def validate(service: Service): Seq[String] = {
-    nonHealthcheckResources(service).
-      map(validateResource(service, _)).flatten
+    nonHealthcheckResources(service).flatMap(validateResource)
   }
 
-  def validateResource(service: Service, resource: Resource): Seq[String] = {
+  def validateResource(resource: Resource): Seq[String] = {
     resource.operations.
       filter(_.method == Method.Get).
-      filter(returnsArray(_)).
+      filter(returnsArray).
       filter(op => !ignored(op.attributes, "common_parameter_types")).
       flatMap { op =>
         op.parameters.flatMap { param =>
-          validateParameter(service, resource, op, param)
+          validateParameter(resource, op, param)
         }
       }
   }
 
-  def validateParameter(service: Service, resource: Resource, op: Operation, param: Parameter): Seq[String] = {
+  def validateParameter(resource: Resource, op: Operation, param: Parameter): Seq[String] = {
     Expected.get(param.name) match {
       case None => {
         Types.get(param.name) match {
           case None => Nil
           case Some(typ) => {
-            typ == param.`type` match {
-              case true => Nil
-              case false => {
-                Seq(error(resource, op, param, s"Type expected[$typ] but found[${param.`type`}]"))
-              }
+            if (typ == param.`type`) {
+              Nil
+            } else {
+              Seq(error(resource, op, param, s"Type expected[$typ] but found[${param.`type`}]"))
             }
           }
         }
@@ -75,15 +73,14 @@ case object CommonParameterTypes extends Linter with Helpers {
       case (None, Some(e)) => Seq(error(resource, op, param, s"$label was not specified - should be $e"))
       case (Some(_), None) => Seq(error(resource, op, param, s"$label should not be specified"))
       case (Some(a), Some(e)) => {
-        a == e match {
-          case true => Nil
-          case false => {
-            if (param.name == "id" && op.path.endsWith("/versions") && param.`type` == "[long]") {
-              // Special case as versions use journal id which is a long
-              Nil
-            } else {
-              Seq(error(resource, op, param, s"$label expected[$e] but found[$a]"))
-            }
+        if (a == e) {
+          Nil
+        } else {
+          if (param.name == "id" && op.path.endsWith("/versions") && param.`type` == "[long]") {
+            // Special case as versions use journal id which is a long
+            Nil
+          } else {
+            Seq(error(resource, op, param, s"$label expected[$e] but found[$a]"))
           }
         }
       }

@@ -1,6 +1,5 @@
 package io.flow.proxy
 
-import io.apibuilder.spec.v0.models._
 import org.scalatest.{FunSpec, Matchers}
 
 class TextSpec extends FunSpec with Matchers {

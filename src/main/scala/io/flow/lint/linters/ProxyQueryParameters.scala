@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import io.apibuilder.spec.v0.models.{Method, Operation, Parameter, Resource, Service}
+import io.apibuilder.spec.v0.models.{Operation, Parameter, Resource, Service}
 
 /**
   * We reserve 'method' and 'callback' for jsonp requests (as
@@ -11,24 +11,25 @@ import io.apibuilder.spec.v0.models.{Method, Operation, Parameter, Resource, Ser
   */
 case object ProxyQueryParameters extends Linter with Helpers {
 
-  val ReservedNames = Seq("callback", "envelope", "method")
+  private[this] val ReservedNames: Seq[String] = Seq("callback", "envelope", "method")
 
   override def validate(service: Service): Seq[String] = {
-    nonHealthcheckResources(service).map(validateResource(service, _)).flatten
+    nonHealthcheckResources(service).flatMap(validateResource)
   }
 
-  def validateResource(service: Service, resource: Resource): Seq[String] = {
+  def validateResource(resource: Resource): Seq[String] = {
     resource.operations.flatMap { op =>
       op.parameters.flatMap { param =>
-        validateParameter(service, resource, op, param)
+        validateParameter(resource, op, param)
       }
     }
   }
 
-  def validateParameter(service: Service, resource: Resource, op: Operation, param: Parameter): Seq[String] = {
-    ReservedNames.contains(param.name) match {
-      case false => Nil
-      case true => Seq(error(resource, op, param, s"name is reserved for use only in https://github.com/flowvault/proxy"))
+  def validateParameter(resource: Resource, op: Operation, param: Parameter): Seq[String] = {
+    if (ReservedNames.contains(param.name)) {
+      Seq(error(resource, op, param, s"name is reserved for use only in https://github.com/flowvault/proxy"))
+    } else {
+      Nil
     }
   }
 

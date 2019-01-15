@@ -13,32 +13,28 @@ import io.apibuilder.spec.v0.models.{Model, Service}
 case object ModelsWithOrganizationField extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.models.flatMap(validateModel(_))
+    service.models.flatMap(validateModel)
   }
 
   def validateModel(model: Model): Seq[String] = {
     val fieldNames = model.fields.map(_.name)
     val index = fieldNames.indexOf("organization")
 
-    index < 0 match {
-      case true => {
-        Nil
+    if (index < 0) {
+      Nil
+    } else {
+      val position = fieldNames.take(3) match {
+        case "event_id" :: "timestamp" :: "organization" :: _ => 2
+        case "event_id" :: "timestamp" :: "id" :: _ => 3
+        case "id" :: "timestamp" :: "type" :: _ => 3
+        case "id" :: _ => 1
+        case _ => 0
       }
-      case false => {
-        val position = fieldNames.take(3) match {
-          case "event_id" :: "timestamp" :: "organization" :: rest => 2
-          case "event_id" :: "timestamp" :: "id" :: rest => 3
-          case "id" :: "timestamp" :: "type" :: rest => 3
-          case "id" :: rest => 1
-          case _ => 0
-        }
 
-        position == index match {
-          case true => Nil
-          case false => {
-            Seq(error(model, s"Field[organization] must be in position[$position] and not[$index]"))
-          }
-        }
+      if (position == index) {
+        Nil
+      } else {
+        Seq(error(model, s"Field[organization] must be in position[$position] and not[$index]"))
       }
     }
   }

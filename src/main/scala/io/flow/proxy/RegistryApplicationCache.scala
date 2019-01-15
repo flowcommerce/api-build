@@ -48,7 +48,7 @@ private[proxy] case class RegistryApplicationCache(
 
   @tailrec
   private[this] def load(cache: scala.collection.mutable.Map[String, Application], offset: Long): Map[String, Application] = {
-    val limit = 100
+    val limit = 100L
     val results = Await.result(
       getFromRegistry(
         limit = limit,
@@ -63,9 +63,10 @@ private[proxy] case class RegistryApplicationCache(
       }
     }
 
-    results.map(_.size).getOrElse(0) >= limit match {
-      case true => load(cache, offset + limit)
-      case false => cache.toMap
+    if (results.map(_.size).getOrElse(0) >= limit) {
+      load(cache, offset + limit)
+    } else {
+      cache.toMap
     }
   }
 

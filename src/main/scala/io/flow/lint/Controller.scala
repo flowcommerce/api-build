@@ -5,8 +5,6 @@ import io.flow.build.{BuildType, Downloader}
 
 case class Controller() extends io.flow.build.Controller {
 
-  private[this] var errors = scala.collection.mutable.Map[String, Seq[String]]()
-
   override val name = "Linter"
   override val command = "lint"
 
@@ -16,7 +14,7 @@ case class Controller() extends io.flow.build.Controller {
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  ) {
+  ): Unit = {
     services.foreach { service =>
       print(s"${service.name}...")
 

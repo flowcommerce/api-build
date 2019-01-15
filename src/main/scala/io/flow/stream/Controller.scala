@@ -1,4 +1,5 @@
 package io.flow.stream
+import com.github.ghik.silencer.silent
 import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
 import io.apibuilder.validation.{ApiBuilderService, ApibuilderType, MultiService}
 import io.flow.build.{Application, BuildType, Downloader}
@@ -55,7 +56,7 @@ case class Controller() extends io.flow.build.Controller {
   private def processService(multiService: MultiService, service: Service): Seq[KinesisStream] = {
     service.unions.filter(u => u.name.endsWith("_event") && u.discriminator.isDefined).flatMap { union =>
       val types = multiService.findType(union.name)
-      if (types.size == 0) {
+      if (types.isEmpty) {
         println(s"[ERROR] Unable to find union ${union.name}")
       }
       types.flatMap { typ =>
@@ -75,7 +76,7 @@ case class Controller() extends io.flow.build.Controller {
             if (pairs.isEmpty) {
               None
             } else {
-              val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0)
+              val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0L)
               val internal = if (service.name.contains("-internal-") && !union.name.contains("_internal_")) "internal_" else ""
               val shortName = s"${union.name}_${internal}v$serviceMajorVersion"
               val allModels = multiService.services.flatMap(_.service.models)
@@ -93,33 +94,33 @@ case class Controller() extends io.flow.build.Controller {
   private def processUnion(multiService: MultiService, union: Union, streamName: String): Seq[EventType] = {
     union.types.flatMap { member =>
       val types = multiService.findType(member.`type`)
-      if (types.size == 0) {
+      if (types.isEmpty) {
         println(s"[ERROR] Unable to find model for union ${union.name} member ${member.`type`}")
       }
       types.flatMap {
         case ApibuilderType.Model(_, model) =>
           val discriminator = member.discriminatorValue.getOrElse(member.`type`)
           model.name match {
-            case UnionMemberRx(typeName, eventType, version) =>
+            case UnionMemberRx(typeName, eventType, _) =>
               if (eventType == "upserted") {
                 val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
                 if (payloadField.isEmpty) {
                   println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: field not found")
                 }
-                val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(model.fields, pf, version, multiService))
+                val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(pf, multiService))
                 if (payloadTypes.isEmpty) {
                   println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: payload type not found")
                 }
                 for {
                   pt <- payloadTypes
                   fld <- payloadField.toSeq
-                } yield (
+                } yield {
                   EventType.Upserted(model.name, typeName, fld.name, pt, discriminator)
-                )
+                }
               } else {
                 val idField = model.fields.find(f => f.name == "id" && f.`type` == "string")
                 val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
-                val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(model.fields, pf, version, multiService))
+                val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(pf, multiService))
                 if (payloadTypes.isEmpty && idField.isDefined) {
                   Seq(EventType.Deleted(model.name, typeName, None, discriminator))
                 } else if (payloadTypes.nonEmpty) {
@@ -145,7 +146,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def extractPayloadModels(fields: Seq[Field], typeField: Field, version: String, multiService: MultiService): Seq[Model] = {
+  private def extractPayloadModels(typeField: Field, multiService: MultiService): Seq[Model] = {
     for {
       payloadType: ApibuilderType <- multiService.findType(typeField.`type`)
       model <- payloadType match {
@@ -172,7 +173,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
+  @silent def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
     implicit val w1: Writes[CapturedType] = Json.writes[CapturedType]
@@ -184,7 +185,6 @@ case class Controller() extends io.flow.build.Controller {
       close()
     }
     println(s"Stream info file created. See: $path")
-
   }
 
 }
