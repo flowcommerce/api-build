@@ -34,12 +34,8 @@ case class Controller() extends io.flow.build.Controller {
 
   def buildUserPermissionsFile(
     buildType: BuildType,
-    services: Seq[Service],
-    version: String
+    services: Seq[Service]
   ): Unit = {
-    val at = services.flatMap { s =>
-      s.enums.find(_.name == "authentication_technique")
-    }
     val routes = services.flatMap(s=>s.resources.flatMap(r=>r.operations.flatMap{o=>
       o.attributes.find(_.name == "auth") match {
         case Some(a)=> {
@@ -104,7 +100,7 @@ case class Controller() extends io.flow.build.Controller {
     }
 
     println("Building authorization from: " + services.map(_.name).mkString(", "))
-    buildUserPermissionsFile(buildType, services, version)
+    buildUserPermissionsFile(buildType, services)
 
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
@@ -135,8 +131,6 @@ case class Controller() extends io.flow.build.Controller {
     env: String
   ) (
     hostProvider: Service => String
-  ) (
-    implicit ec: scala.concurrent.ExecutionContext
   ): Unit = {
     services.toList match {
       case Nil => {

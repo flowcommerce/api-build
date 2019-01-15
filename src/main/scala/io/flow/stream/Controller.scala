@@ -1,4 +1,5 @@
 package io.flow.stream
+import com.github.ghik.silencer.silent
 import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
 import io.apibuilder.validation.{ApiBuilderService, ApibuilderType, MultiService}
 import io.flow.build.{Application, BuildType, Downloader}
@@ -172,7 +173,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
+  @silent def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
     implicit val w1: Writes[CapturedType] = Json.writes[CapturedType]
