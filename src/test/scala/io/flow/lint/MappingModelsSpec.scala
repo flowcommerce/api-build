@@ -95,7 +95,7 @@ class MappingModelsSpec extends FunSpec with Matchers {
         fields = Seq(id, other, experienceReference, priceBookReference)
       )
     ) should be(
-      Seq("Field 'foo' must be named 'order'")
+      Seq("Field 2 'foo' must be named 'order'")
     )
 
     linter.validate(
