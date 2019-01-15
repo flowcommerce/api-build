@@ -182,9 +182,9 @@ case object Get extends Linter with Helpers {
             case Nil => trailingParams
             case _ => trailingParams ++ Seq("expand")
           }
-          validateParameterPositions(service, resource, operation, trailingParamsWithExpand)
+          validateParameterPositions(resource, operation, trailingParamsWithExpand)
         }
-        case errors => Nil
+        case _ => Nil
       }
 
       expandErrors ++ missingRequiredParams ++ requiredErrors ++ positionErrors
@@ -195,25 +195,21 @@ case object Get extends Linter with Helpers {
       *  list ends with the specified expectedTail (e.g. limit, offset, sort)
       */
     def validateParameterPositions(
-      service: Service,
       resource: Resource,
       operation: Operation,
       expectedTail: Seq[String]
     ): Seq[String] = {
       val names = queryParameters(operation).map(_.name)
-      val tail = names.reverse.take(expectedTail.size).reverse
+      val tail = names.takeRight(expectedTail.size)
 
       Seq(
-        names.head == leadingParam match {
-          case true => Nil
-          case false =>
-            /** If operation has attribute with name 'non-crud', no id parameter is required.
-              * The resource is most likely manipulating/aggregating data rather than CRUD
-              **/
-            if(operation.attributes.exists(_.name == "non-crud"))
-              Nil
-            else
-              Seq(error(resource, operation, s"Parameter[$leadingParam] must be the first parameter"))
+        if (names.head == leadingParam) {
+          Nil
+        } else {
+          if (operation.attributes.exists(_.name == "non-crud"))
+            Nil
+          else
+            Seq(error(resource, operation, s"Parameter[$leadingParam] must be the first parameter"))
         },
         tail == expectedTail match {
           case true => {

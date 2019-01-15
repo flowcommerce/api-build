@@ -40,9 +40,10 @@ object ApibuilderConfig {
       case Right(profiles) => {
         profiles.find(_.name == profileName) match {
           case None => {
-            profileName == DefaultApibuilderProfile.name match {
-              case true => Right(DefaultApibuilderProfile)
-              case false => Left(s"API Builder profile named[$profileName] not found")
+            if (profileName == DefaultApibuilderProfile.name) {
+              Right(DefaultApibuilderProfile)
+            } else {
+              Left(s"API Builder profile named[$profileName] not found")
             }
           }
           case Some(p) => {
@@ -66,7 +67,7 @@ object ApibuilderConfig {
         val p3 = envBaseUrl match {
           case None => p2
           case Some(url) => {
-            println("Using API Builder baseUrl[$url] from environment variable")
+            println(s"Using API Builder baseUrl[$url] from environment variable")
             profile.copy(baseUrl = url)
           }
         }
@@ -81,33 +82,31 @@ object ApibuilderConfig {
 
   private[this] def loadAllProfiles(path: String): Either[String, Seq[ApibuilderProfile]] = {
     val fullPath = path.replaceFirst("^~", System.getProperty("user.home"))
-    var allProfiles = scala.collection.mutable.ListBuffer[ApibuilderProfile]()
+    val allProfiles = scala.collection.mutable.ListBuffer[ApibuilderProfile]()
 
     Try(
       if (new java.io.File(fullPath).exists) {
         var currentProfile: Option[ApibuilderProfile] = None
 
-        scala.io.Source.fromFile(fullPath).getLines.map(_.trim).foreach { l =>
-          l match {
-            case Profile(name) => {
-              currentProfile.map { p => allProfiles += p }
-              currentProfile = Some(ApibuilderProfile(name = name, baseUrl = DefaultApibuilderProfile.baseUrl))
-            }
-            case Default() => {
-              currentProfile.map { p => allProfiles += p }
-              currentProfile = Some(DefaultApibuilderProfile)
-            }
-            case _ => {
-              l.split("=").map(_.trim).toList match {
-                case "token" :: value :: Nil => {
-                  currentProfile = currentProfile.map(_.copy(token = Some(value)))
-                }
-                case "api_uri" :: value :: Nil => {
-                  currentProfile = currentProfile.map(_.copy(baseUrl = value))
-                }
-                case _ => {
-                  // ignore
-                }
+        scala.io.Source.fromFile(fullPath).getLines.map(_.trim).foreach {
+          case Profile(name) => {
+            currentProfile.map { p => allProfiles += p }
+            currentProfile = Some(ApibuilderProfile(name = name, baseUrl = DefaultApibuilderProfile.baseUrl))
+          }
+          case Default() => {
+            currentProfile.map { p => allProfiles += p }
+            currentProfile = Some(DefaultApibuilderProfile)
+          }
+          case l => {
+            l.split("=").map(_.trim).toList match {
+              case "token" :: value :: Nil => {
+                currentProfile = currentProfile.map(_.copy(token = Some(value)))
+              }
+              case "api_uri" :: value :: Nil => {
+                currentProfile = currentProfile.map(_.copy(baseUrl = value))
+              }
+              case _ => {
+                // ignore
               }
             }
           }

@@ -1,7 +1,6 @@
 package io.flow.stream
 
 import io.apibuilder.spec.v0.models.Model
-import io.apibuilder.validation.ApibuilderType
 
 sealed trait EventType {
   def eventName: String

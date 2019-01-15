@@ -4,7 +4,7 @@ import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
 import Text._
-import play.api.libs.json.{JsArray, JsValue, Json}
+import play.api.libs.json.Json
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -36,7 +36,7 @@ case class Controller() extends io.flow.build.Controller {
     buildType: BuildType,
     services: Seq[Service],
     version: String
-  ) = {
+  ): Unit = {
     val at = services.flatMap { s =>
       s.enums.find(_.name == "authentication_technique")
     }
@@ -72,7 +72,7 @@ case class Controller() extends io.flow.build.Controller {
     allServices: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  ) {
+  ): Unit = {
     val services = allServices.
       filter { s => s.resources.nonEmpty }.
       filterNot { s => ExcludeWhiteList.exists(ew => s.name.startsWith(ew)) }
@@ -137,7 +137,7 @@ case class Controller() extends io.flow.build.Controller {
     hostProvider: Service => String
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  ) {
+  ): Unit = {
     services.toList match {
       case Nil => {
         println(s" - $env: No services - skipping proxy file")
@@ -177,7 +177,7 @@ ${operationsYaml.indent(2)}
     }
   }
 
-  private[this] def writeToFile(path: String, contents: String) {
+  private[this] def writeToFile(path: String, contents: String): Unit = {
     import java.io.{BufferedWriter, File, FileWriter}
 
     val bw = new BufferedWriter(new FileWriter(new File(path)))

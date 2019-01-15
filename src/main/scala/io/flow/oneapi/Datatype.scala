@@ -38,7 +38,7 @@ case class TextDatatypeParser() {
         one match {
           case List => "[" + toString(rest) + "]"
           case Map => "map[" + toString(rest) + "]"
-          case Singleton(name) => sys.error("Did not expect singleton here")
+          case Singleton(_) => sys.error("Did not expect singleton here")
         }
         
       }

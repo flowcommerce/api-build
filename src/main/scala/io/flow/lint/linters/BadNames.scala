@@ -9,17 +9,17 @@ import io.apibuilder.spec.v0.models.{Field, Model, Operation, Parameter, Resourc
   */
 case object BadNames extends Linter with Helpers {
 
-  val Data = Map(
+  private[this] val Data: Map[String, String] = Map(
     "country_of_origin" -> "origin",
     "ip_address" -> "ip",
     "postal_code" -> "postal"
   )
 
   override def validate(service: Service): Seq[String] = {
-    service.models.flatMap(validateModel(service, _)) ++ service.resources.flatMap(validateResource(service, _))
+    service.models.flatMap(validateModel) ++ service.resources.flatMap(validateResource)
   }
 
-  def validateModel(service: Service, model: Model): Seq[String] = {
+  def validateModel(model: Model): Seq[String] = {
     model.fields.flatMap { validateField(model, _) }
   }
 
@@ -30,15 +30,15 @@ case object BadNames extends Linter with Helpers {
     }
   }
 
-  def validateResource(service: Service, resource: Resource): Seq[String] = {
-    resource.operations.flatMap(validateOperation(service, resource, _))
+  def validateResource(resource: Resource): Seq[String] = {
+    resource.operations.flatMap(validateOperation(resource, _))
   }
 
-  def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
-    operation.parameters.flatMap(validateParameter(service, resource, operation, _))
+  def validateOperation(resource: Resource, operation: Operation): Seq[String] = {
+    operation.parameters.flatMap(validateParameter(resource, operation, _))
   }
 
-  def validateParameter(service: Service, resource: Resource, operation: Operation, param: Parameter): Seq[String] = {
+  def validateParameter(resource: Resource, operation: Operation, param: Parameter): Seq[String] = {
     Data.get(param.name) match {
       case None => Nil
       case Some(replacement) => Seq(error(resource, operation, param, s"Name must be '$replacement'"))

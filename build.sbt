@@ -16,14 +16,16 @@ exportJars := true
 lazy val root = project
   .in(file("."))
   .settings(
+    scalacOptions += "-P:silencer:pathFilters=src/main/scala/io/flow/generated/.*",
     libraryDependencies ++= Seq(
       "io.flow" %% "lib-util" % "0.1.2",
       "io.flow" %% "apibuilder-validation" % "0.3.6",
       "com.typesafe.play" %% "play-json" % "2.6.10",
       "com.ning" % "async-http-client" % "1.9.40",
-      "org.scalatest" %% "scalatest" % "3.0.5" % Test
-    ),
-    scalacOptions -= "-Xfatal-warnings"
+      "org.scalatest" %% "scalatest" % "3.0.5" % Test,
+      compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.3.0"),
+      "com.github.ghik" %% "silencer-lib" % "1.3.0" % Provided
+    )
   )
 
 resolvers += "Artifactory" at "https://flow.jfrog.io/flow/libs-release/"

@@ -1,8 +1,7 @@
 package io.flow.lint.linters
 
+import io.apibuilder.spec.v0.models.Service
 import io.flow.lint.Linter
-import io.apibuilder.spec.v0.models.{Method, Operation, Parameter, ParameterLocation, Resource, Response, Service}
-import io.apibuilder.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
 /**
   * We keep all paths in lower case to avoid any issues with case

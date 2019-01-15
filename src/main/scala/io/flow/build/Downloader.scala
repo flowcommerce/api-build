@@ -19,7 +19,7 @@ case class Downloader(config: ApibuilderProfile) {
     )
   }
 
-  def close() {
+  def close(): Unit = {
     client.closeAsyncHttpClient()
   }
 

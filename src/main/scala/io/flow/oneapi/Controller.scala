@@ -14,7 +14,7 @@ case class Controller() extends io.flow.build.Controller {
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  ) {
+  ): Unit = {
     val eventService: Seq[Service] = (
       buildType match {
         case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMiscEvent => None
