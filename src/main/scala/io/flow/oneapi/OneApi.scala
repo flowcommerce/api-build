@@ -304,7 +304,7 @@ case class OneApi(
     val moduleName = (docs.value \ "module").as[JsString].value
 
     Seq(
-      (10000 + Module.moduleSortIndex(moduleName)),
+      10000 + Module.moduleSortIndex(moduleName),
       resource.`type`.toLowerCase
     ).mkString(":")
   }
@@ -361,8 +361,8 @@ case class OneApi(
   def localize(parser: TextDatatypeParser, service: Service, op: Operation): Operation = {
     op.copy(
       body = op.body.map(localize(parser, service, _)),
-      parameters = op.parameters.map(localize(parser, service, _)),
-      responses = op.responses.map(localize(parser, service, _))
+      parameters = op.parameters.map(localizeParameter(parser, _)),
+      responses = op.responses.map(localizeResponse(parser, _))
     )
   }
 
@@ -372,27 +372,23 @@ case class OneApi(
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, param: Parameter): Parameter = {
+  def localizeParameter(parser: TextDatatypeParser, param: Parameter): Parameter = {
     param.copy(
       `type` = localizeType(parser, param.`type`),
-      description = (
-        param.description match {
-          case Some(d) => Some(d)
-          case None => DefaultParameterDescriptions.get(param.name)
-        }
-      )
+      description = param.description match {
+        case Some(d) => Some(d)
+        case None => DefaultParameterDescriptions.get(param.name)
+      }
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, response: Response): Response = {
+  def localizeResponse(parser: TextDatatypeParser, response: Response): Response = {
     response.copy(
       `type` = localizeType(parser, response.`type`),
-      description = (
-        response.description match {
-          case Some(d) => Some(d)
-          case None => DefaultResponseDescriptions.get(responseCodeToString(response.code))
-        }
-      )
+      description = response.description match {
+        case Some(d) => Some(d)
+        case None => DefaultResponseDescriptions.get(responseCodeToString(response.code))
+      }
     )
   }
 
