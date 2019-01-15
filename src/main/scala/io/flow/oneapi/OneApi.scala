@@ -127,7 +127,7 @@ case class OneApi(
       attributes = Nil,
 
       enums = services.flatMap { s =>
-        s.enums.map(localize(parser, s, _))
+        s.enums
       }.sortBy { _.name.toLowerCase },
 
       models = services.flatMap { s =>
@@ -267,10 +267,6 @@ case class OneApi(
     version.split("\\.").headOption.getOrElse {
       sys.error(s"Version[$version] must be in semver")
     }.toInt
-  }
-
-  def localize(parser: TextDatatypeParser, service: Service, enum: Enum): Enum = {
-    enum
   }
 
   def localize(parser: TextDatatypeParser, service: Service, model: Model): Model = {
