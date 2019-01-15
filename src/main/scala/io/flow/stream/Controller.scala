@@ -55,7 +55,7 @@ case class Controller() extends io.flow.build.Controller {
   private def processService(multiService: MultiService, service: Service): Seq[KinesisStream] = {
     service.unions.filter(u => u.name.endsWith("_event") && u.discriminator.isDefined).flatMap { union =>
       val types = multiService.findType(union.name)
-      if (types.size == 0) {
+      if (types.isEmpty) {
         println(s"[ERROR] Unable to find union ${union.name}")
       }
       types.flatMap { typ =>
@@ -100,7 +100,7 @@ case class Controller() extends io.flow.build.Controller {
         case ApibuilderType.Model(_, model) =>
           val discriminator = member.discriminatorValue.getOrElse(member.`type`)
           model.name match {
-            case UnionMemberRx(typeName, eventType, version) =>
+            case UnionMemberRx(typeName, eventType, _) =>
               if (eventType == "upserted") {
                 val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
                 if (payloadField.isEmpty) {
