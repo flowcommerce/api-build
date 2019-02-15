@@ -79,9 +79,9 @@ case object Get extends Linter with Helpers {
       val expansions = (modelExpansions ++ unionExpansions).distinct.sorted
 
       val requiredParams =
-        /** If operation has attribute with name 'non-crud', no id parameter is required.
-          * The resource is most likely manipulating/aggregating data rather than CRUD
-          **/
+        /* If operation has attribute with name 'non-crud', no id parameter is required.
+         * The resource is most likely manipulating/aggregating data rather than CRUD
+         */
         if(operation.attributes.exists(_.name == "non-crud"))
           trailingParams
         else
