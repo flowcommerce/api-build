@@ -53,9 +53,9 @@ case object PrimaryResourcesHaveVersionsOperation extends Linter with Helpers {
           case Some(_) => Nil
         }
       } else {
-        /** If operation has attribute with name 'non-crud', no /versions route is required.
-          * The resource is most likely manipulating/aggregating data rather than CRUD
-          * */
+        /* If operation has attribute with name 'non-crud', no /versions route is required.
+         * The resource is most likely manipulating/aggregating data rather than CRUD
+         */
         if (item.operation.attributes.exists(_.name == "non-crud"))
           Nil
         else
