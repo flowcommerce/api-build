@@ -18,9 +18,9 @@ lazy val root = project
   .settings(
     scalacOptions += "-P:silencer:pathFilters=src/main/scala/io/flow/generated/.*",
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.1.9",
+      "io.flow" %% "lib-util" % "0.1.14",
       "io.flow" %% "apibuilder-validation" % "0.3.9",
-      "com.typesafe.play" %% "play-json" % "2.6.13",
+      "com.typesafe.play" %% "play-json" % "2.7.1",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.0.5" % Test,
       compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.3.0"),
