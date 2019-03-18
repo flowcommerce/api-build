@@ -18,7 +18,8 @@ case class Controller() extends io.flow.build.Controller {
     "consumer-invoice" -> "order-messenger",
     "shopify-session" -> "session",
     "permission"        -> "organization",
-    "checkout" -> "experience"
+    "checkout" -> "experience",
+    "checkout-configuration" -> "organization"
   )
 
   /**
