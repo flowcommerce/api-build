@@ -1,6 +1,6 @@
 package io.flow.stream
 import com.github.ghik.silencer.silent
-import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
+import io.apibuilder.spec.v0.models.{Field, Model, Service, Union, UnionType}
 import io.apibuilder.validation.{ApiBuilderService, ApibuilderType, MultiService}
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
@@ -99,41 +99,7 @@ case class Controller() extends io.flow.build.Controller {
       }
       types.flatMap {
         case ApibuilderType.Model(_, model) =>
-          val discriminator = member.discriminatorValue.getOrElse(member.`type`)
-          model.name match {
-            case UnionMemberRx(typeName, eventType, _) =>
-              if (eventType == "upserted") {
-                val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
-                if (payloadField.isEmpty) {
-                  println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: field not found")
-                }
-                val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(pf, multiService))
-                if (payloadTypes.isEmpty) {
-                  println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: payload type not found")
-                }
-                for {
-                  pt <- payloadTypes
-                  fld <- payloadField.toSeq
-                } yield {
-                  EventType.Upserted(model.name, typeName, fld.name, pt, discriminator)
-                }
-              } else {
-                val idField = model.fields.find(f => f.name == "id" && f.`type` == "string")
-                val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
-                val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(pf, multiService))
-                if (payloadTypes.isEmpty && idField.isDefined) {
-                  Seq(EventType.Deleted(model.name, typeName, None, discriminator))
-                } else if (payloadTypes.nonEmpty) {
-                  payloadTypes.map { pt => EventType.Deleted(model.name, typeName, Some(pt), discriminator) }
-                } else {
-                  println(s"Skipping non v2 deleted union ${union.name} member ${model.name}")
-                  Nil
-                }
-              }
-            case _ =>
-              println(s"Skipping misnamed union ${union.name} member ${model.name}")
-              Nil
-          }
+          processModel(multiService, union, member, model)
         case ApibuilderType.Union(_, nestedUnion) =>
           processUnion(multiService, nestedUnion, streamName)
         case ApibuilderType.Enum(_, enum) =>
@@ -143,6 +109,44 @@ case class Controller() extends io.flow.build.Controller {
           println(s"[ERROR] Don't know what to do with an union ${union.name} member $other")
           Nil
       }
+    }
+  }
+
+  private def processModel(multiService: MultiService, union: Union, unionMember: UnionType, model: Model): Seq[EventType] = {
+    val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
+    model.name match {
+      case UnionMemberRx(typeName, eventType, _) =>
+        if (eventType == "upserted") {
+          val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
+          if (payloadField.isEmpty) {
+            println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: field not found")
+          }
+          val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(pf, multiService))
+          if (payloadTypes.isEmpty) {
+            println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: payload type not found")
+          }
+          for {
+            pt <- payloadTypes
+            fld <- payloadField.toSeq
+          } yield {
+            EventType.Upserted(model.name, typeName, fld.name, pt, discriminator)
+          }
+        } else {
+          val idField = model.fields.find(f => f.name == "id" && f.`type` == "string")
+          val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
+          val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(pf, multiService))
+          if (payloadTypes.isEmpty && idField.isDefined) {
+            Seq(EventType.Deleted(model.name, typeName, None, discriminator))
+          } else if (payloadTypes.nonEmpty) {
+            payloadTypes.map { pt => EventType.Deleted(model.name, typeName, Some(pt), discriminator) }
+          } else {
+            println(s"Skipping non v2 deleted union ${union.name} member ${model.name}")
+            Nil
+          }
+        }
+      case _ =>
+        println(s"Skipping misnamed union ${union.name} member ${model.name}")
+        Nil
     }
   }
 

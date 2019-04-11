@@ -5,10 +5,10 @@ import io.apibuilder.spec.v0.models.Field
 object EventUnionTypeMatcher {
 
   def matchFieldToPayloadType(field: Field, typeName: String): Boolean = {
-    matchFileName(typeName, field.name) && matchFieldType(typeName, field.`type`)
+    matchFieldName(typeName, field.name) && matchFieldType(typeName, field.`type`)
   }
 
-  private def matchFileName(typeName: String, fieldName: String): Boolean = {
+  private def matchFieldName(typeName: String, fieldName: String): Boolean = {
     val typeNameList = typeName.split("_").filter(_.nonEmpty).toList
     val fieldNameList = fieldName.split("_").filter(_.nonEmpty).toList
     matchLists(fieldNameList, typeNameList)
