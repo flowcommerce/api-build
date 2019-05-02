@@ -59,7 +59,7 @@ To specify a specific API Builder Profile:
 
 Or to specify a specific APIBUILDER URL and/or Token:
 
-    APIBUILDER_API_TOKEN=yyy APIBUILDER_API_URI=http://app.apibuilder.io java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/user
+    APIBUILDER_TOKEN=yyy APIBUILDER_API_BASE_URL=http://app.apibuilder.io java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/user
 
 The default behavior is to use the default apibuilder profile.
 
