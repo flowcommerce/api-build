@@ -7,21 +7,24 @@ name := "api-build"
 
 organization := "io.flow"
 
-scalaVersion in ThisBuild := "2.12.6"
+scalaVersion in ThisBuild := "2.12.8"
 
-version := "0.1.87"
+version := "0.2.17"
 
 exportJars := true
 
 lazy val root = project
   .in(file("."))
   .settings(
+    scalacOptions += "-P:silencer:pathFilters=src/main/scala/io/flow/generated/.*",
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.0.10",
-      "io.flow" %% "apibuilder-validation" % "0.2.1",
-      "com.typesafe.play" %% "play-json" % "2.6.9",
+      "io.flow" %% "lib-util" % "0.1.21",
+      "io.flow" %% "apibuilder-validation" % "0.3.9",
+      "com.typesafe.play" %% "play-json" % "2.7.1",
       "com.ning" % "async-http-client" % "1.9.40",
-      "org.scalatest" %% "scalatest" % "3.0.5" % Test
+      "org.scalatest" %% "scalatest" % "3.0.5" % Test,
+      compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.3.1"),
+      "com.github.ghik" %% "silencer-lib" % "1.3.0" % Provided
     )
   )
 

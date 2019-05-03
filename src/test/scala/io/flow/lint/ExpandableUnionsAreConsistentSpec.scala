@@ -23,17 +23,17 @@ class ExpandableUnionsAreConsistentSpec extends FunSpec with Matchers {
 
   it("with no types") {
     linter.validate(buildService(Nil)) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user, user_reference")
+      Seq("Union expandable_user: must contain the following types: user, user_reference")
     )
   }
 
   it("with single types") {
     linter.validate(buildService(Seq("user_reference"))) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user, user_reference and not user_reference")
+      Seq("Union expandable_user: must contain a type named 'user'")
     )
 
     linter.validate(buildService(Seq("user"))) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user, user_reference and not user")
+      Seq("Union expandable_user: must contain a type named 'user_reference'")
     )
   }
 
@@ -43,13 +43,13 @@ class ExpandableUnionsAreConsistentSpec extends FunSpec with Matchers {
 
   it("with valid types in invalid order") {
     linter.validate(buildService(Seq("user_reference", "user"))) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user, user_reference and not user_reference, user")
+      Seq("Union expandable_user: types must be in the following order: user, user_reference")
     )
   }
 
   it("with invalid types") {
     linter.validate(buildService(Seq("foo", "bar"))) should be(
-      Seq("Union expandable_user: Types for this expandable union must be user, user_reference and not foo, bar")
+      Seq("Union expandable_user: must contain the following types: user, user_reference")
     )
   }
 
@@ -99,8 +99,25 @@ class ExpandableUnionsAreConsistentSpec extends FunSpec with Matchers {
     )
 
     linter.validate(s) should be(
-      Seq("Union expandable_payment: Types for this expandable union must be payment_paypal, payment_reference and not other, payment_reference")
+      Seq("Union expandable_payment: must contain a type named 'payment_paypal'")
     )
   }
 
+  it("allows additional types") {
+    val s = Services.Base.copy(
+      unions = Seq(
+        Services.buildUnion(
+          name = "expandable_card",
+          discriminator = Some("discriminator"),
+          types = Seq(
+            Services.buildUnionType("card"),
+            Services.buildUnionType("card_reference"),
+            Services.buildUnionType("card_summary")
+          )
+        )
+      )
+    )
+
+    linter.validate(s) should be(Nil)
+  }
 }

@@ -59,7 +59,7 @@ trait Helpers {
     * directly in the service (i.e. not imported)
     */
   def union(service: Service, operation: Operation): Option[Union] = {
-    responseType(service, operation).flatMap { t =>
+    responseType(operation).flatMap { t =>
       service.unions.find(_.name == t)
     }
   }
@@ -79,7 +79,7 @@ trait Helpers {
     * directly in the service (i.e. not imported)
     */
   def model(service: Service, operation: Operation): Option[Model] = {
-    responseType(service, operation).flatMap { t =>
+    responseType(operation).flatMap { t =>
       service.models.find(_.name == t)
     }
   }
@@ -92,7 +92,7 @@ trait Helpers {
   def hasEnum(service: Service, search: String): Boolean = {
     val (namespace, name) = search.split('.').toList match {
       case x :: Nil => (service.namespace, x)
-      case ns :+ name => (ns.mkString("."), name)
+      case ns :+ n => (ns.mkString("."), n)
     }
     service.enums.exists(_.name == name) || {
       (for {
@@ -108,8 +108,8 @@ trait Helpers {
     * Returns the name of the datatype for the successful response for this
     * operation.
     */
-  def responseType(service: Service, operation: Operation): Option[String] = {
-    operation.responses.find(isSuccess(_)).map { response =>
+  def responseType(operation: Operation): Option[String] = {
+    operation.responses.find(isSuccess).map { response =>
       baseType(response.`type`)
     }
   }
@@ -216,7 +216,7 @@ trait Helpers {
 
       case Some(attr) => {
         (attr.value \ "ignore").validate[Seq[String]] match {
-          case e: JsError => Nil
+          case _: JsError => Nil
           case s: JsSuccess[Seq[String]] => s.get
         }
       }

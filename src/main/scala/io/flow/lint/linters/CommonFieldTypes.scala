@@ -10,7 +10,7 @@ import io.apibuilder.spec.v0.models.{Field, Model, Service}
   */
 case object CommonFieldTypes extends Linter with Helpers {
 
-  val Expected = Map(
+  private[this] val Expected: Map[String, String] = Map(
     "id" -> "string",      // we use string identifiers for all of our resources
     "number" -> "string",  // 'number' is the external unique identifier
     "guid" -> "uuid",
@@ -20,26 +20,23 @@ case object CommonFieldTypes extends Linter with Helpers {
   override def validate(service: Service): Seq[String] = {
     service.models.
       filter(m => !ignored(m.attributes, "common_field_types")).
-      flatMap(validateModel(service, _))
+      flatMap(validateModel)
   }
 
-  def validateModel(service: Service, model: Model): Seq[String] = {
-    model.fields.flatMap(validateFieldType(service, model, _))
+  def validateModel(model: Model): Seq[String] = {
+    model.fields.flatMap(validateFieldType(model, _))
   }
 
-  def validateFieldType(service: Service, model: Model, field: Field): Seq[String] = {
+  def validateFieldType(model: Model, field: Field): Seq[String] = {
     Expected.get(field.name) match {
       case None => {
         Nil
       }
       case Some(exp) => {
-        exp == field.`type` match {
-          case true => {
-            Nil
-          }
-          case false => {
-            Seq(error(model, field, s"Type must be '$exp' and not ${field.`type`}"))
-          }
+        if (exp == field.`type`) {
+          Nil
+        } else {
+          Seq(error(model, field, s"Type must be '$exp' and not ${field.`type`}"))
         }
       }
     }

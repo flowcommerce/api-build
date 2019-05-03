@@ -66,13 +66,14 @@ case object ErrorModels extends Linter with Helpers {
   private[this] def validateModel(service: Service, model: Model): Seq[String] = {
     val fieldNames = model.fields.map(_.name)
     fieldNames match {
-      case "code" :: "messages" :: rest => {
-        val codeErrors = model.fields(0).`type` == "string" match {
+      case "code" :: "messages" :: _ => {
+        val codeErrors = model.fields.head.`type` == "string" match {
           case true => Nil
           case false => {
-            hasEnum(service, model.fields.head.`type`) match {
-              case false => Seq(error(model, model.fields.head, "type must be 'string' or a valid enum"))
-              case true => Nil
+            if (hasEnum(service, model.fields.head.`type`)) {
+              Nil
+            } else {
+              Seq(error(model, model.fields.head, "type must be 'string' or a valid enum"))
             }
           }
         }
@@ -83,29 +84,28 @@ case object ErrorModels extends Linter with Helpers {
       }
 
       case _ => {
-        val codeErrors = fieldNames.contains("code") match {
-          case false => Seq(error(model, "requires a field named 'code'"))
-          case true => {
-            fieldNames match {
-              case "code" :: rest => Nil
-              case _ => Seq(error(model, "first field must be 'code'"))
-            }
+        val codeErrors = if (fieldNames.contains("code")) {
+          fieldNames match {
+            case "code" :: _ => Nil
+            case _ => Seq(error(model, "first field must be 'code'"))
           }
+        } else {
+          Seq(error(model, "requires a field named 'code'"))
         }
 
-        val messagesErrors = fieldNames.contains("messages") match {
-          case false => Seq(error(model, "requires a field named 'messages'"))
-          case true => {
-            fieldNames match {
-              case f :: "messages" :: rest => Nil
-              case _ => {
-                fieldNames.contains("code") match {
-                  case false => Nil
-                  case true => Seq(error(model, "second field must be 'messages'"))
-                }
+        val messagesErrors = if (fieldNames.contains("messages")) {
+          fieldNames match {
+            case _ :: "messages" :: _ => Nil
+            case _ => {
+              if (fieldNames.contains("code")) {
+                Seq(error(model, "second field must be 'messages'"))
+              } else {
+                Nil
               }
             }
           }
+        } else {
+          Seq(error(model, "requires a field named 'messages'"))
         }
 
         codeErrors ++ messagesErrors
@@ -114,16 +114,18 @@ case object ErrorModels extends Linter with Helpers {
   }
 
   def validateMessageField(model: Model, field: Field): Seq[String] = {
-    val typeErrors = field.`type` == "[string]" match {
-      case true => Nil
-      case false => Seq(error(model, field, "type must be '[string]'"))
+    val typeErrors = if (field.`type` == "[string]") {
+      Nil
+    } else {
+      Seq(error(model, field, "type must be '[string]'"))
     }
 
     val minimumErrors = field.minimum match {
       case Some(n) => {
-        n >= 1 match {
-          case true => Nil
-          case false => Seq(error(model, field, "minimum must be >= 1"))
+        if (n >= 1) {
+          Nil
+        } else {
+          Seq(error(model, field, "minimum must be >= 1"))
         }
       }
       case None => {

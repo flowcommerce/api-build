@@ -127,17 +127,17 @@ case class OneApi(
       attributes = Nil,
 
       enums = services.flatMap { s =>
-        s.enums.map(localize(parser, s, _))
+        s.enums
       }.sortBy { _.name.toLowerCase },
 
       models = services.flatMap { s =>
-        s.models.map(localize(parser, s, _))
+        s.models.map(localizeModel(parser, _))
       }.sortBy { _.name.toLowerCase },
 
       unions = services.flatMap { s =>
-        s.unions.map(localize(parser, s, _))
+        s.unions.map(localizeUnion(parser, _))
       }.sortBy { _.name.toLowerCase },
-     
+
       resources = mergeResources(
         services.flatMap { s =>
           s.resources.
@@ -269,35 +269,29 @@ case class OneApi(
     }.toInt
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, enum: Enum): Enum = {
-    enum
-  }
-
-  def localize(parser: TextDatatypeParser, service: Service, model: Model): Model = {
+  def localizeModel(parser: TextDatatypeParser, model: Model): Model = {
     model.copy(
-      fields = model.fields.map(localize(parser, service, _))
+      fields = model.fields.map(localizeField(parser, _))
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, field: Field): Field = {
+  def localizeField(parser: TextDatatypeParser, field: Field): Field = {
     field.copy(
       `type` = localizeType(parser, field.`type`),
-      description = (
-        field.description match {
-          case Some(d) => Some(d)
-          case None => DefaultFieldDescriptions.get(field.name)
-        }
-      )
+      description = field.description match {
+        case Some(d) => Some(d)
+        case None => DefaultFieldDescriptions.get(field.name)
+      }
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, union: Union): Union = {
+  def localizeUnion(parser: TextDatatypeParser, union: Union): Union = {
     union.copy(
-      types = union.types.map(localize(parser, service, _))
+      types = union.types.map(localizeUnionType(parser, _))
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, ut: UnionType): UnionType = {
+  def localizeUnionType(parser: TextDatatypeParser, ut: UnionType): UnionType = {
     ut.copy(
       `type` = localizeType(parser, ut.`type`)
     )
@@ -310,7 +304,7 @@ case class OneApi(
     val moduleName = (docs.value \ "module").as[JsString].value
 
     Seq(
-      (10000 + Module.moduleSortIndex(moduleName)),
+      10000 + Module.moduleSortIndex(moduleName),
       resource.`type`.toLowerCase
     ).mkString(":")
   }
@@ -330,7 +324,7 @@ case class OneApi(
     resource.copy(
       `type` = localizeType(parser, resource.`type`),
       operations = resource.operations.
-        map { localize(parser, service, _) }.
+        map { localizeOperation(parser, _) }.
         sortBy(OperationSort.key),
       description = resource.description match {
         case Some(d) => Some(d)
@@ -364,41 +358,37 @@ case class OneApi(
     }
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, op: Operation): Operation = {
+  def localizeOperation(parser: TextDatatypeParser, op: Operation): Operation = {
     op.copy(
-      body = op.body.map(localize(parser, service, _)),
-      parameters = op.parameters.map(localize(parser, service, _)),
-      responses = op.responses.map(localize(parser, service, _))
+      body = op.body.map(localizeBody(parser, _)),
+      parameters = op.parameters.map(localizeParameter(parser, _)),
+      responses = op.responses.map(localizeResponse(parser, _))
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, body: Body): Body = {
+  def localizeBody(parser: TextDatatypeParser, body: Body): Body = {
     body.copy(
       `type` = localizeType(parser, body.`type`)
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, param: Parameter): Parameter = {
+  def localizeParameter(parser: TextDatatypeParser, param: Parameter): Parameter = {
     param.copy(
       `type` = localizeType(parser, param.`type`),
-      description = (
-        param.description match {
-          case Some(d) => Some(d)
-          case None => DefaultParameterDescriptions.get(param.name)
-        }
-      )
+      description = param.description match {
+        case Some(d) => Some(d)
+        case None => DefaultParameterDescriptions.get(param.name)
+      }
     )
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, response: Response): Response = {
+  def localizeResponse(parser: TextDatatypeParser, response: Response): Response = {
     response.copy(
       `type` = localizeType(parser, response.`type`),
-      description = (
-        response.description match {
-          case Some(d) => Some(d)
-          case None => DefaultResponseDescriptions.get(responseCodeToString(response.code))
-        }
-      )
+      description = response.description match {
+        case Some(d) => Some(d)
+        case None => DefaultResponseDescriptions.get(responseCodeToString(response.code))
+      }
     )
   }
 
@@ -507,7 +497,7 @@ case class OneApi(
   /**
     * Returns an error message if there are duplicate values
     */
-  def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
+  private[oneapi]def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
     values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
       val dupValues = values.filter { v => dup == v.value.toLowerCase }
       assert(
