@@ -21,10 +21,10 @@ case object MinimumMaximum extends Linter with Helpers {
   val LanguageMax = 2
 
   override def validate(service: Service): Seq[String] = {
-    service.models.flatMap(validateModel(service, _)) ++ service.resources.flatMap(validateResource(service, _))
+    service.models.flatMap(validateModel) ++ service.resources.flatMap(validateResource(service, _))
   }
 
-  def validateModel(service: Service, model: Model): Seq[String] = {
+  def validateModel(model: Model): Seq[String] = {
     model.fields.flatMap { validateField(model, _) }
   }
 
@@ -41,10 +41,11 @@ case object MinimumMaximum extends Linter with Helpers {
               Try(
                 default.toLong
               ) match {
-                case Success(default) => {
-                  default < min match {
-                    case false => Nil
-                    case true => Seq(error(model, field, s"Default must be >= minimum[$min] and not $default"))
+                case Success(d) => {
+                  if (d < min) {
+                    Seq(error(model, field, s"Default must be >= minimum[$min] and not $default"))
+                  } else {
+                    Nil
                   }
                 }
                 case Failure(_) => {
@@ -62,27 +63,31 @@ case object MinimumMaximum extends Linter with Helpers {
       case None => Nil
       case Some(max) =>  field.name match {
         case c if isCountry(c) =>
-          max == CountryMax match {
-            case true => Nil
-            case false => Seq(error(model, field, s"Maximum must be $CountryMax and not $max"))
+          if (max == CountryMax) {
+            Nil
+          } else {
+            Seq(error(model, field, s"Maximum must be $CountryMax and not $max"))
           }
 
         case c if isCurrency(c) =>
-          max == CurrencyMax match {
-            case true => Nil
-            case false => Seq(error(model, field, s"Maximum must be $CurrencyMax and not $max"))
+          if (max == CurrencyMax) {
+            Nil
+          } else {
+            Seq(error(model, field, s"Maximum must be $CurrencyMax and not $max"))
           }
 
         case c if isLanguage(c) =>
-          max == LanguageMax match {
-            case true => Nil
-            case false => Seq(error(model, field, s"Maximum must be $LanguageMax and not $max"))
+          if (max == LanguageMax) {
+            Nil
+          } else {
+            Seq(error(model, field, s"Maximum must be $LanguageMax and not $max"))
           }
 
         case _ =>
-          (max > 0) match {
-            case true => Nil
-            case false => Seq(error(model, field, s"Maximum, if specified, must be > 0 and not $max"))
+          if (max > 0) {
+            Nil
+          } else {
+            Seq(error(model, field, s"Maximum, if specified, must be > 0 and not $max"))
           }
       }
     }
@@ -102,56 +107,50 @@ case object MinimumMaximum extends Linter with Helpers {
     val minErrors = param.minimum match {
       case None => Nil
       case Some(min) => {
-        min < 0 match {
-          case true => Seq(error(resource, operation, param, s"Minimum must be >= 0 and not $min"))
-          case false => Nil
+        if (min < 0) {
+          Seq(error(resource, operation, param, s"Minimum must be >= 0 and not $min"))
+        } else {
+          Nil
         }
       }
     }
 
     val maxErrors = param.maximum match {
       case None => {
-        isArray(param.`type`) match {
-          case false => {
-            Nil
-          }
-          case true => {
-            Seq(error(resource, operation, param, s"Missing maximum"))
-          }
+        if (isArray(param.`type`)) {
+          Seq(error(resource, operation, param, s"Missing maximum"))
+        } else {
+          Nil
         }
       }
 
       case Some(max) => {
-        isArray(param.`type`) match {
-          case false => {
-            Nil
-          }
-
-          case true => {
-            val desiredMax = service.enums.find(_.name == baseType(param.`type`)) match {
-              case Some(enum) => Some(enum.values.size)
-              case None => {
-                isPrimitiveType(param.`type`) match {
-                  case false => None // Might be an imported enum. can't validate
-                  case true => Some(GlobalMax)
-                }
-              }
-            }
-
-            desiredMax match {
-              case None => Nil
-              case Some(expected) => {
-                max == expected match {
-                  case true => Nil
-                  case false =>
-                    param.name == ExpandName match {
-                      case false => Seq(error(resource, operation, param, s"Maximum must be $expected and not $max"))
-                      case true => Nil
-                    }
-                }
+        if (isArray(param.`type`)) {
+          val desiredMax = service.enums.find(_.name == baseType(param.`type`)) match {
+            case Some(enum) => Some(enum.values.size)
+            case None => {
+              if (isPrimitiveType(param.`type`)) {
+                Some(GlobalMax)
+              } else {
+                None
               }
             }
           }
+
+          desiredMax match {
+            case None => Nil
+            case Some(expected) => {
+              if (max == expected) {
+                Nil
+              } else if (param.name == ExpandName) {
+                Nil
+              } else {
+                Seq(error(resource, operation, param, s"Maximum must be $expected and not $max"))
+              }
+            }
+          }
+        } else {
+          Nil
         }
       }
     }

@@ -1,6 +1,6 @@
 package io.flow.lint.linters
 
-import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
+import io.apibuilder.spec.v0.models.{Field, Model, Service}
 import io.flow.lint.Linter
 
 /**
@@ -16,10 +16,10 @@ case object MappingModels extends Linter with Helpers {
   override def validate(service: Service): Seq[String] = {
     service.models.
       filter { m => isMapping(m.name) }.
-      flatMap(validateModel(service, _))
+      flatMap(validateModel)
   }
 
-  private[this] def validateModel(service: Service, model: Model): Seq[String] = {
+  private[this] def validateModel(model: Model): Seq[String] = {
     model.fields.toList match {
       case f1 :: f2 :: f3 :: _ => {
         val typeErrors = validateTypes(f1, f2, f3)
@@ -80,7 +80,7 @@ case object MappingModels extends Linter with Helpers {
     if (expected == actual) {
       Nil
     } else {
-      Seq(s"Field '$actual' must be named '$expected'")
+      Seq(s"Field $index '$actual' must be named '$expected'")
     }
   }
 

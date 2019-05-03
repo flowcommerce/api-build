@@ -8,10 +8,6 @@ code:
       version: latest
       generators:
         play_2_x_standalone_json: src/main/scala/io/flow/generated
-    apibuilder-spec:
-      version: latest
-      generators:
-        play_2_x_standalone_json: src/main/scala/io/flow/generated
     apibuilder-api:
       version: latest
       generators:

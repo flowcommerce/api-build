@@ -14,7 +14,7 @@ case object GetByIdIsExpandable extends Linter with Helpers {
     nonHealthcheckResources(service).flatMap { resource =>
       resource.operations.
         filter(_.method == Method.Get).
-        filter(returnsExpandableType(service, _)).
+        filter(returnsExpandableType).
         flatMap {
           validateOperationHasExpandParameter(resource, _)
         }
@@ -32,8 +32,8 @@ case object GetByIdIsExpandable extends Linter with Helpers {
     }
   }
 
-  def returnsExpandableType(service: Service, op: Operation): Boolean = {
-    responseType(service, op) match {
+  def returnsExpandableType(op: Operation): Boolean = {
+    responseType(op) match {
       case None => false
       case Some(t) => {
         Expansions.fromFieldTypes(Seq(t)) match {

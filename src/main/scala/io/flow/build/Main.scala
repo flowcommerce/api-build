@@ -1,7 +1,7 @@
 package io.flow.build
 
 import io.apibuilder.spec.v0.models.Service
-import io.flow.{oneapi, lint, proxy}
+import io.flow.{oneapi, lint, proxy, stream}
 
 object Main extends App {
 
@@ -12,6 +12,7 @@ object Main extends App {
   private[this] def controllers(buildType: BuildType): Seq[Controller] = {
     val all = scala.collection.mutable.ListBuffer[Controller]()
     all.append(lint.Controller())
+    all.append(stream.Controller())
     if (buildType.oneapi) {
       all.append(oneapi.Controller())
     }
@@ -33,7 +34,7 @@ object Main extends App {
           println(s"** ERROR: Specify type[${BuildType.all.mkString(", ")}] and command[lint|oneapi|all]")
         }
 
-        case one :: Nil => {
+        case _ :: Nil => {
           println(s"** ERROR: Specify type[${BuildType.all.mkString(", ")}] and command[lint|oneapi|all]")
         }
 
@@ -83,10 +84,10 @@ object Main extends App {
     }
   }
 
-  private[this] def run(buildType: BuildType, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]) {
+  private[this] def run(buildType: BuildType, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]): Unit = {
 
-    var errors = scala.collection.mutable.Map[String, Seq[String]]()
-    if (!globalErrors.isEmpty) {
+    val errors = scala.collection.mutable.Map[String, Seq[String]]()
+    if (globalErrors.nonEmpty) {
       errors += ("config" -> globalErrors)
     }
 

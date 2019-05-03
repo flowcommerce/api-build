@@ -4,6 +4,7 @@ import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
 import Text._
+import play.api.libs.json.Json
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -15,7 +16,10 @@ case class Controller() extends io.flow.build.Controller {
   private[this] val HostingMap = Map(
     "optin"->"content",
     "consumer-invoice" -> "order-messenger",
-    "shopify-session" -> "session"
+    "shopify-session" -> "session",
+    "permission"        -> "organization",
+    "checkout" -> "experience",
+    "checkout-configuration" -> "organization"
   )
 
   /**
@@ -29,18 +33,46 @@ case class Controller() extends io.flow.build.Controller {
   override val name = "Proxy"
   override val command = "proxy"
 
+  def buildUserPermissionsFile(
+    buildType: BuildType,
+    services: Seq[Service]
+  ): Unit = {
+    val routes = services.flatMap(s=>s.resources.flatMap(r=>r.operations.flatMap{o=>
+      o.attributes.find(_.name == "auth") match {
+        case Some(a)=> {
+          val ts = a.value \ "techniques"
+          val rs = a.value \ "roles"
+          ts.as[Seq[String]]
+            .filterNot(_ == "user")
+            .map(t=>(t, Map("method" -> o.method.toString, "path"-> o.path))) ++
+          rs.asOpt[Seq[String]]
+            .map(r=>r.map { t =>
+              (t, Map("method" -> o.method.toString, "path" -> o.path))
+            }).getOrElse(Nil)
+        }
+        case None => {
+          Seq(("anonymous", Map("method" -> o.method.toString, "path"-> o.path)))
+        }
+      }
+    }))
+    val rs= routes.groupBy(_._1).map(r=> (r._1, Map("routes" -> r._2.map(_._2).distinct)))
+    val m = Json.toJson(rs)
+
+    val path = s"/tmp/${buildType}-authorization.json"
+    writeToFile(path, Json.prettyPrint(m))
+    println(s" - $path")
+  }
+
   def run(
     buildType: BuildType,
     downloader: Downloader,
     allServices: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  ) {
+  ): Unit = {
     val services = allServices.
       filter { s => s.resources.nonEmpty }.
       filterNot { s => ExcludeWhiteList.exists(ew => s.name.startsWith(ew)) }
-
-    println("Building proxy from: " + services.map(_.name).mkString(", "))
 
     def serviceHost(name: String): String = {
       buildType match {
@@ -68,19 +100,24 @@ case class Controller() extends io.flow.build.Controller {
       }
     }
 
+    println("Building authorization from: " + services.map(_.name).mkString(", "))
+    buildUserPermissionsFile(buildType, services)
+
+    println("Building proxy from: " + services.map(_.name).mkString(", "))
+
     val registryClient = new RegistryClient()
     try {
-      build(buildType, services, version, "production") { service =>
+      buildProxyFile(buildType, services, version, "production") { service =>
         s"https://${serviceHost(service.name)}.api.flow.io"
       }
 
       val cache = RegistryApplicationCache(registryClient)
 
-      build(buildType, services, version, "development") { service =>
+      buildProxyFile(buildType, services, version, "development") { service =>
         s"http://$DevelopmentHostname:${cache.externalPort(serviceHost(service.name))}"
       }
 
-      build(buildType, services, version, "workstation") { service =>
+      buildProxyFile(buildType, services, version, "workstation") { service =>
         s"http://$DockerHostname:${cache.externalPort(serviceHost(service.name))}"
       }
     } finally {
@@ -88,16 +125,14 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private[this] def build(
+  private[this] def buildProxyFile(
     buildType: BuildType,
     services: Seq[Service],
     version: String,
     env: String
   ) (
     hostProvider: Service => String
-  ) (
-    implicit ec: scala.concurrent.ExecutionContext
-  ) {
+  ): Unit = {
     services.toList match {
       case Nil => {
         println(s" - $env: No services - skipping proxy file")
@@ -137,7 +172,7 @@ ${operationsYaml.indent(2)}
     }
   }
 
-  private[this] def writeToFile(path: String, contents: String) {
+  private[this] def writeToFile(path: String, contents: String): Unit = {
     import java.io.{BufferedWriter, File, FileWriter}
 
     val bw = new BufferedWriter(new FileWriter(new File(path)))

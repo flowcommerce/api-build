@@ -14,7 +14,7 @@ case class Controller() extends io.flow.build.Controller {
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
-  ) {
+  ): Unit = {
     val eventService: Seq[Service] = (
       buildType match {
         case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMiscEvent => None
@@ -43,7 +43,7 @@ case class Controller() extends io.flow.build.Controller {
         import play.api.libs.json._
 
         val path = s"/tmp/flow-$buildType.json"
-        new java.io.PrintWriter(path) { _ =>
+        new java.io.PrintWriter(path) {
           write(Json.prettyPrint(Json.toJson(service)))
           close
         }

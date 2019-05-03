@@ -44,7 +44,7 @@ case object VersionModels extends Linter with Helpers {
               s"expandable_$baseModelName"
             ))
           }
-          case other => {
+          case _ => {
             Seq(error(model, s"Must have exactly 4 fields: id, timestamp, type, $baseModelName"))
           }
         }
