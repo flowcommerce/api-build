@@ -62,7 +62,10 @@ case class OneApi(
   def buildOneApi(): Service = {
     val (name, key, ns, imports) = buildType match {
       case BuildType.Api => {
-        ("API", "api", "io.flow", Nil)
+        val imports = services.flatMap { _.imports }.filter { i =>
+          !TextDatatype.isNamespaceInFlowApiProject(i.namespace)
+        }
+        ("API", "api", "io.flow", imports)
       }
 
       case BuildType.ApiEvent => {
