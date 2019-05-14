@@ -9,7 +9,7 @@ organization := "io.flow"
 
 scalaVersion in ThisBuild := "2.12.8"
 
-version := "0.2.17"
+version := "0.2.18"
 
 exportJars := true
 
