@@ -1,5 +1,7 @@
 package io.flow.oneapi
 
+import scala.util.matching.Regex
+
 sealed trait TextDatatype
 
 object TextDatatype {
@@ -8,9 +10,9 @@ object TextDatatype {
   case object Map extends TextDatatype
   case class Singleton(name: String) extends TextDatatype
 
-  val ListRx = "^\\[(.*)\\]$".r
-  val MapRx = "^map\\[(.*)\\]$".r
-  val MapDefaultRx = "^map$".r
+  val ListRx: Regex = "^\\[(.*)\\]$".r
+  val MapRx: Regex = "^map\\[(.*)\\]$".r
+  val MapDefaultRx: Regex = "^map$".r
 }
 
 /**
@@ -25,7 +27,9 @@ case class TextDatatypeParser() {
       case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
       case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
       case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
-      case _ => Seq(TextDatatype.Singleton(value.split("\\.").last))
+      case _ => Seq(TextDatatype.Singleton(
+        maybeStripNamespace(value)
+      ))
     }
   }
 
@@ -42,6 +46,15 @@ case class TextDatatypeParser() {
         }
         
       }
+    }
+  }
+
+  def maybeStripNamespace(value: String): String = {
+    val parts = value.split("\\.")
+    if (parts.contains("external") || parts.contains("misc")) {
+      value
+    } else {
+      parts.last
     }
   }
 
