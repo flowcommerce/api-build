@@ -99,7 +99,7 @@ case class OneApi(
       }
     }
 
-    val parser = TextDatatypeParser(buildType)
+    val parser = TextDatatypeParser()
     val localTypes: Seq[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }
@@ -405,9 +405,37 @@ case class OneApi(
   def localizeType(parser: TextDatatypeParser, name: String): String = {
     buildType match {
       case BuildType.Api => parser.toString(parser.parse(name))
-      case BuildType.ApiEvent => name
-      case BuildType.ApiInternal => parser.toString(parser.parse(name))
-      case BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
+      case BuildType.ApiEvent => toApiImport(parser, name)
+      case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
+    }
+  }
+
+  private[this] val ApiServiceRx = """^io\.flow\..+\.v0\.(\w+).(\w+)$""".r
+  private[this] val ApiServiceArrayRx = """^\[io\.flow\..+\.v0\.(\w+).(\w+)\]$""".r
+  private[this] val ApiServiceMapRx = """^map\[io\.flow\..+\.v0\.(\w+).(\w+)\]$""".r
+
+  /**
+    * Rewrite imports in api-event to allow imports from api
+    */
+  def toApiImport(parser: TextDatatypeParser, name: String): String = {
+    val simpleName = parser.toString(parser.parse(name))
+    if (simpleName == name) {
+      name
+    } else {
+      name match {
+        case ApiServiceRx(_, _) | ApiServiceArrayRx(_, _) | ApiServiceMapRx(_, _) => {
+          // TODO: figure out how to import. we have a circular
+          // dependency as api project is built after
+          // api-event. Probably need to move the generate event
+          // union/enum into api-event
+          //
+          // s"io.flow.api.v0.$apidocType.$typeName"
+          name
+        }
+        case _ => {
+          sys.error(s"Failed to map import to API project for type[$name]")
+        }
+      }
     }
   }
 
