@@ -1,5 +1,7 @@
 package io.flow.oneapi
 
+import io.flow.build.BuildType
+
 import scala.util.matching.Regex
 
 sealed trait TextDatatype
@@ -33,7 +35,7 @@ object TextDatatype {
   * Parses a text datatype, removing specific namespaces as those
   * names are expected to be local
   */
-case class TextDatatypeParser() {
+case class TextDatatypeParser(buildType: BuildType) {
   import TextDatatype._
 
   def parse(value: String): Seq[TextDatatype] = {
@@ -65,7 +67,11 @@ case class TextDatatypeParser() {
 
   def maybeStripNamespace(value: String): String = {
     if (TextDatatype.isNamespaceInFlowApiProject(value)) {
-      value.split("\\.").last
+      val name = value.split("\\.").last
+      buildType match {
+        case BuildType.Api => name
+        case _ => s"io.flow.v0.$name"
+      }
     } else {
       value
     }
