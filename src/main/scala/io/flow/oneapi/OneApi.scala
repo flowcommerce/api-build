@@ -2,7 +2,7 @@ package io.flow.oneapi
 
 import io.apibuilder.spec.v0.models._
 import io.flow.build.BuildType
-import play.api.libs.json.{Json, JsString}
+import play.api.libs.json.{JsString, Json}
 
 private[oneapi] case class ContextualValue(context: String, value: String)
 
@@ -59,7 +59,26 @@ case class OneApi(
     }
   }
 
+  private[this] lazy val FlowApiImport = Import(
+    uri = "https://app.apibuilder.io/flow/api/latest/service.json",
+    namespace = flowApi.namespace,
+    organization = Organization(key = flowApi.organization.key),
+    application = Application(key = flowApi.application.key),
+    version = "latest",
+    enums = flowApi.enums.map(_.name),
+    unions = flowApi.unions.map(_.name),
+    models = flowApi.models.map(_.name),
+    annotations = Nil
+  )
+
   def buildOneApi(): Service = {
+    def importsWithFlowApi = services.flatMap { _.imports }.map { i =>
+      if (ApibuilderType.allDefinedInService(flowApi, i)) {
+        FlowApiImport
+      } else {
+        i
+      }
+    }.distinct
     val (name, key, ns, imports) = buildType match {
       case BuildType.Api => {
         val imports = services.flatMap { _.imports }.filter { i =>
