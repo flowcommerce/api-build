@@ -7,6 +7,7 @@ import play.api.libs.json.{JsString, Json}
 private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(
+  flowApi: Service,
   buildType: BuildType,
   services: Seq[Service]
 ) {
