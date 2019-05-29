@@ -8,6 +8,7 @@ private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(
   buildType: BuildType,
+  flowApi: Service,
   services: Seq[Service]
 ) {
 
@@ -59,47 +60,63 @@ case class OneApi(
     }
   }
 
+  private[this] lazy val FlowApiImport = Import(
+    uri = "https://app.apibuilder.io/flow/api/latest/service.json",
+    namespace = flowApi.namespace,
+    organization = Organization(key = flowApi.organization.key),
+    application = Application(key = flowApi.application.key),
+    version = "latest",
+    enums = flowApi.enums.map(_.name),
+    unions = flowApi.unions.map(_.name),
+    models = flowApi.models.map(_.name),
+    annotations = Nil
+  )
+  println(s"flowApi.namespace: ${flowApi.namespace}")
+  //println(s"flowApi Models: " + flowApi.models.map(_.name).mkString("\n -  "))
+
   def buildOneApi(): Service = {
+    def nonApiImports = services.flatMap { _.imports }.map { i =>
+      if (TextDatatype.definedInService(flowApi, i.namespace)) {
+        FlowApiImport
+      } else {
+        i
+      }
+    }.distinct
+
     val (name, key, ns, imports) = buildType match {
       case BuildType.Api => {
         val imports = services.flatMap { _.imports }.filter { i =>
-          !TextDatatype.isNamespaceInFlowApiProject(i.namespace)
+          !TextDatatype.definedInService(i.namespace)
         }
         ("API", "api", "io.flow", imports)
       }
 
       case BuildType.ApiEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API Event", "api-event", "io.flow.event", imports)
+        ("API Event", "api-event", "io.flow.event", nonApiImports)
       }
 
       case BuildType.ApiInternal => {
-        val imports = services.flatMap { _.imports }
-        ("API Internal", "api-internal", "io.flow.internal", imports)
+        ("API Internal", "api-internal", "io.flow.internal", nonApiImports)
       }
 
       case BuildType.ApiInternalEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API Internal Event", "api-internal-event", "io.flow.internal.event", imports)
+        ("API Internal Event", "api-internal-event", "io.flow.internal.event", nonApiImports)
       }
 
       case BuildType.ApiMisc => {
-        val imports = services.flatMap { _.imports }
-        ("API misc", "api-misc", "io.flow.misc", imports)
+        ("API misc", "api-misc", "io.flow.misc", nonApiImports)
       }
 
       case BuildType.ApiMiscEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API misc Event", "api-misc-event", "io.flow.misc.event", imports)
+        ("API misc Event", "api-misc-event", "io.flow.misc.event", nonApiImports)
       }
 
       case BuildType.ApiPartner => {
-        val imports = services.flatMap { _.imports }
-        ("API Partner", "api-partner", "io.flow.partner", imports)
+        ("API Partner", "api-partner", "io.flow.partner", nonApiImports)
       }
     }
 
-    val parser = TextDatatypeParser(buildType)
+    val parser = TextDatatypeParser(flowApi, buildType)
     val localTypes: Seq[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }
@@ -151,6 +168,7 @@ case class OneApi(
       annotations = allAnnotations
     )
 
+    println(s"Service imports: ${service.imports.map(_.namespace).mkString(", ")}")
     buildType match {
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner | BuildType.ApiMisc => service
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent => createEventService(service)
@@ -172,9 +190,9 @@ case class OneApi(
 
 
   private[this] def withNamespace(service: Service, name: String): String = {
-    apidocType(service, name) match {
+    ApibuilderType(service, name) match {
       case None => name
-      case Some(apidocType) => s"${service.namespace}.$apidocType.$name"
+      case Some(t) => t.qualified
     }
   }
 
@@ -187,22 +205,10 @@ case class OneApi(
       qualifiedName
     }
 
+    println(s" $qualifiedName = $finalType")
     resource.copy(
       `type` = finalType
     )
-  }
-
-  private[this] def apidocType(service: Service, name: String): Option[String] = {
-    service.enums.find(_.name == name) match {
-      case Some(_) => Some("enums")
-      case None => service.models.find(_.name == name) match {
-        case Some(_) => Some("models")
-        case None => service.unions.find(_.name == name) match {
-          case None => None
-          case Some(_) => Some("unions")
-        }
-      }
-    }
   }
 
   /**
