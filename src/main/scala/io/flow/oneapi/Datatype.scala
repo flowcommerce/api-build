@@ -2,7 +2,6 @@ package io.flow.oneapi
 
 import io.apibuilder.spec.v0.models.Service
 import io.flow.build.BuildType
-
 import scala.util.matching.Regex
 
 sealed trait TextDatatype
@@ -56,7 +55,7 @@ case class TextDatatypeParser(flowApi: Service, buildType: BuildType) {
   }
 
   def maybeStripNamespace(value: String): String = {
-    val fin = ApibuilderType(flowApi, value.split("\\.").last) match {
+    ApibuilderType(flowApi, value.split("\\.").last) match {
       case None => {
         value
       }
@@ -65,13 +64,10 @@ case class TextDatatypeParser(flowApi: Service, buildType: BuildType) {
         t.name
       }
       case Some(t) => {
-        // rewrites the namespace to io.flow.v0.models.xxx
-        println(s" => ${t.qualified}")
-        t.qualified
+        // TODO
+        value
       }
     }
-    println(s" - strip: ${value} => $fin")
-    fin
   }
 
 }
