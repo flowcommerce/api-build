@@ -70,7 +70,7 @@ case class TextDatatypeParser(buildType: BuildType) {
       val name = value.split("\\.").last
       buildType match {
         case BuildType.Api => name
-        case _ => s"io.flow.$name"
+        case _ => s"io.flow.v0.$name"
       }
     } else {
       value
