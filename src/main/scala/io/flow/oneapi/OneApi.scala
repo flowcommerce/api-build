@@ -71,12 +71,10 @@ case class OneApi(
     models = flowApi.models.map(_.name),
     annotations = Nil
   )
-  println(s"flowApi.namespace: ${flowApi.namespace}")
-  //println(s"flowApi Models: " + flowApi.models.map(_.name).mkString("\n -  "))
 
   def buildOneApi(): Service = {
-    def nonApiImports = services.flatMap { _.imports }.map { i =>
-      if (TextDatatype.definedInService(flowApi, i.namespace)) {
+    def importsWithFlowApi = services.flatMap { _.imports }.map { i =>
+      if (ApibuilderType.allDefinedInService(flowApi, i)) {
         FlowApiImport
       } else {
         i
@@ -86,33 +84,33 @@ case class OneApi(
     val (name, key, ns, imports) = buildType match {
       case BuildType.Api => {
         val imports = services.flatMap { _.imports }.filter { i =>
-          !TextDatatype.definedInService(i.namespace)
+          !ApibuilderType.allDefinedInService(flowApi, i)
         }
         ("API", "api", "io.flow", imports)
       }
 
       case BuildType.ApiEvent => {
-        ("API Event", "api-event", "io.flow.event", nonApiImports)
+        ("API Event", "api-event", "io.flow.event", importsWithFlowApi)
       }
 
       case BuildType.ApiInternal => {
-        ("API Internal", "api-internal", "io.flow.internal", nonApiImports)
+        ("API Internal", "api-internal", "io.flow.internal", importsWithFlowApi)
       }
 
       case BuildType.ApiInternalEvent => {
-        ("API Internal Event", "api-internal-event", "io.flow.internal.event", nonApiImports)
+        ("API Internal Event", "api-internal-event", "io.flow.internal.event", importsWithFlowApi)
       }
 
       case BuildType.ApiMisc => {
-        ("API misc", "api-misc", "io.flow.misc", nonApiImports)
+        ("API misc", "api-misc", "io.flow.misc", importsWithFlowApi)
       }
 
       case BuildType.ApiMiscEvent => {
-        ("API misc Event", "api-misc-event", "io.flow.misc.event", nonApiImports)
+        ("API misc Event", "api-misc-event", "io.flow.misc.event", importsWithFlowApi)
       }
 
       case BuildType.ApiPartner => {
-        ("API Partner", "api-partner", "io.flow.partner", nonApiImports)
+        ("API Partner", "api-partner", "io.flow.partner", importsWithFlowApi)
       }
     }
 
@@ -190,7 +188,7 @@ case class OneApi(
 
 
   private[this] def withNamespace(service: Service, name: String): String = {
-    ApibuilderType(service, name) match {
+    ApibuilderType(service, name.split("\\.").last) match {
       case None => name
       case Some(t) => t.qualified
     }

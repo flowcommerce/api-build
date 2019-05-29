@@ -19,19 +19,6 @@ object TextDatatype {
   val MapRx: Regex = "^map\\[(.*)\\]$".r
   val MapDefaultRx: Regex = "^map$".r
 
-  def definedInService(service: Service, namespace: String): Boolean = {
-    if (namespace.startsWith("io.flow.")) {
-      val parts = namespace.split("\\.")
-      if (parts.contains("internal") || parts.contains("external") || parts.contains("misc")) {
-        false
-      } else {
-        true
-      }
-    } else {
-      false
-    }
-  }
-
 }
 
 /**
@@ -69,29 +56,22 @@ case class TextDatatypeParser(flowApi: Service, buildType: BuildType) {
   }
 
   def maybeStripNamespace(value: String): String = {
-    if (TextDatatype.definedInService(value)) {
-      val name = value.split("\\.").last
-      buildType match {
-        case BuildType.Api => {
-          // unqalified as local to the api project
-          name
-        }
-        case _ => {
-          ApibuilderType(flowApi, name) match {
-            case None => {
-              value
-            }
-            case Some(t) => {
-              // rewrites the namespace to io.flow.v0.models.xxx
-              println(s" => ${t.qualified}")
-              t.qualified
-            }
-          }
-        }
+    val fin = ApibuilderType(flowApi, value.split("\\.").last) match {
+      case None => {
+        value
       }
-    } else {
-      value
+      case Some(t) if buildType == BuildType.Api => {
+        // unqualified as local to the api project
+        t.name
+      }
+      case Some(t) => {
+        // rewrites the namespace to io.flow.v0.models.xxx
+        println(s" => ${t.qualified}")
+        t.qualified
+      }
     }
+    println(s" - strip: ${value} => $fin")
+    fin
   }
 
 }
