@@ -30,12 +30,17 @@ case class Controller() extends io.flow.build.Controller {
       }
     }
 
+    val flowApi = downloader.service(Application("flow", "api", "latest")) match {
+      case Left(errors) => sys.error(s"Failed to download flow api: $errors")
+      case Right(s) => s
+    }
+
     val all = services ++ eventService
     println("Building single API from: " + all.map(_.name).mkString(", "))
-    OneApi(buildType, all).process match {
+    OneApi(flowApi, buildType, all).process() match {
       case Left(errs) => {
         println(s"Errors from building single API:\n - ${errs.mkString("\n")}")
-        errs.foreach { addError(_) }
+        errs.foreach { addError }
       }
 
       case Right(service) => {
@@ -45,7 +50,7 @@ case class Controller() extends io.flow.build.Controller {
         val path = s"/tmp/flow-$buildType.json"
         new java.io.PrintWriter(path) {
           write(Json.prettyPrint(Json.toJson(service)))
-          close
+          close()
         }
         println(s"One API file created. See: $path")
       }
