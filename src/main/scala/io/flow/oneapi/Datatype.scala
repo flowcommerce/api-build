@@ -63,7 +63,7 @@ case class TextDatatypeParser(flowApi: Service, buildType: BuildType) {
         // unqualified as local to the api project
         t.name
       }
-      case Some(t) => {
+      case Some(_) => {
         // TODO
         value
       }
