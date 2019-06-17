@@ -1,7 +1,7 @@
 package io.flow.stream
 import com.github.ghik.silencer.silent
-import io.apibuilder.spec.v0.models.{Field, Model, Service, Union, UnionType}
-import io.apibuilder.validation.{ApiBuilderService, ApibuilderType, MultiService}
+import io.apibuilder.spec.v0.models.{Field, Service, UnionType}
+import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService}
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
 
@@ -9,7 +9,10 @@ import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 
 case class Controller() extends io.flow.build.Controller {
-  private val BannedStreamNames = Set("production.local.item.event.v0.local_item_event.json", "production.localized.item.internal.event.v0.localized_item_event.json")
+  private val BannedStreamNames = Set(
+    "production.local.item.event.v0.local_item_event.json",
+    "production.localized.item.internal.event.v0.localized_item_event.json"
+  )
 
   override val name = "Stream"
   override val command = "stream"
@@ -44,7 +47,7 @@ case class Controller() extends io.flow.build.Controller {
       case class Aggregator(streams: Seq[KinesisStream] = Nil, cache: Map[String, Service] = Map.empty)
         val result = services.foldLeft(Aggregator()) { case (agg, service) =>
           val allServices = loadImports(Seq(service), agg.cache)
-          val ms = MultiService(allServices.map(ApiBuilderService.apply))
+          val ms = MultiService(allServices.map(ApiBuilderService.apply).toList)
           val streams = processService(ms, service)
           Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s))
         }
@@ -55,109 +58,122 @@ case class Controller() extends io.flow.build.Controller {
 
   private def processService(multiService: MultiService, service: Service): Seq[KinesisStream] = {
     service.unions.filter(u => u.name.endsWith("_event") && u.discriminator.isDefined).flatMap { union =>
-      val types = multiService.findType(union.name)
-      if (types.isEmpty) {
-        println(s"[ERROR] Unable to find union ${union.name}")
-      }
-      types.flatMap { typ =>
-        val className = s"${ApiBuilderUtils.toPackageName(typ.service.namespace, quoteKeywords = false)}.${ApiBuilderUtils.toClassName(union.name, quoteKeywords =false)}"
-        StreamNames(FlowEnvironment.Production).json(className) match {
-          case None =>
-            println(s"[ERROR] Unable to generate stream name for union ${union.name} [$className]")
-            None
-          case Some(streamName) if BannedStreamNames.contains(streamName) =>
-            println(s"Skipping banned stream $streamName")
-            None
-          case Some(streamName) =>
-            val candidates = processUnion(multiService, union, streamName).toList
-            val upserted = candidates.collect { case u: EventType.Upserted => u }
-            val deleted  = candidates.collect { case d: EventType.Deleted => d }
-            val pairs = pairUpEvents(upserted, deleted)
-            if (pairs.isEmpty) {
-              None
-            } else {
-              val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0L)
-              val internal = if (service.name.contains("-internal-") && !union.name.contains("_internal_")) "internal_" else ""
-              val shortName = s"${union.name}_${internal}v$serviceMajorVersion"
-              val allModels = multiService.services.flatMap(_.service.models)
-              val allUnions = multiService.services.flatMap(_.service.unions)
-              val allEnums = multiService.services.flatMap(_.service.enums)
-              Some(KinesisStream(streamName, shortName, pairs, allModels, allUnions, allEnums))
-            }
+      multiService.findType(
+        defaultNamespace = service.namespace,
+        typeName = union.name
+      ) match {
+        case None => {
+          println(s"[ERROR] Unable to find union ${union.name} in service ${service.name}")
+          None
         }
+        case Some(typ: ApiBuilderType.Union) => {
+          val className = s"${ApiBuilderUtils.toPackageName(typ.namespace, quoteKeywords = false)}.${ApiBuilderUtils.toClassName(typ.name, quoteKeywords = false)}"
+          StreamNames(FlowEnvironment.Production).json(className) match {
+            case None =>
+              println(s"[ERROR] Unable to generate stream name for union ${typ.qualified} [$className]")
+              None
+            case Some(streamName) if BannedStreamNames.contains(streamName) =>
+              println(s"Skipping banned stream $streamName")
+              None
+            case Some(streamName) =>
+              val candidates = processUnion(multiService, typ, streamName).toList
+              val upserted = candidates.collect { case u: EventType.Upserted => u }
+              val deleted = candidates.collect { case d: EventType.Deleted => d }
+              val pairs = pairUpEvents(upserted, deleted)
+              if (pairs.isEmpty) {
+                None
+              } else {
+                val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0L)
+                val internal = if (service.name.contains("-internal-") && !union.name.contains("_internal_")) "internal_" else ""
+                val shortName = s"${union.name}_${internal}v$serviceMajorVersion"
+                val allModels = multiService.allModels.map(_.model)
+                val allUnions = multiService.allUnions.map(_.union)
+                val allEnums = multiService.allEnums.map(_.enum)
+                Some(KinesisStream(streamName, shortName, pairs, allModels, allUnions, allEnums))
+              }
+          }
+        }
+        case Some(typ) => {
+          println(s"[ERROR] Expected the type of ${typ.qualified} to be a union and not a[${typ.getClass.getName}]")
+          None
+        }
+
       }
     }
   }
 
   private val UnionMemberRx = "(.*)_(upserted|deleted)_?(.*)".r
 
-  private def processUnion(multiService: MultiService, union: Union, streamName: String): Seq[EventType] = {
-    union.types.flatMap { member =>
-      val types = multiService.findType(member.`type`)
+  private def processUnion(multiService: MultiService, apiBuilderUnion: ApiBuilderType.Union, streamName: String): Seq[EventType] = {
+    apiBuilderUnion.union.types.flatMap { member =>
+      val types = multiService.findType(
+        defaultNamespace = apiBuilderUnion.service.namespace,
+        typeName = member.`type`
+      )
       if (types.isEmpty) {
-        println(s"[ERROR] Unable to find model for union ${union.name} member ${member.`type`}")
+        println(s"[ERROR] Unable to find model for union ${apiBuilderUnion.qualified} member ${member.`type`}")
       }
-      types.flatMap {
-        case ApibuilderType.Model(_, model) =>
-          processModel(multiService, union, member, model)
-        case ApibuilderType.Union(_, nestedUnion) =>
-          processUnion(multiService, nestedUnion, streamName)
-        case ApibuilderType.Enum(_, enum) =>
-          println(s"[ERROR] Don't know what to do with an union ${union.name} member $enum of type enum")
+      types.toSeq.flatMap {
+        case m: ApiBuilderType.Model =>
+          processModel(multiService, apiBuilderUnion, member, m)
+        case u: ApiBuilderType.Union =>
+          processUnion(multiService, u, streamName)
+        case ApiBuilderType.Enum(_, enum) =>
+          println(s"[ERROR] Don't know what to do with an union ${apiBuilderUnion.qualified} member $enum of type enum")
           Nil
         case other =>
-          println(s"[ERROR] Don't know what to do with an union ${union.name} member $other")
+          println(s"[ERROR] Don't know what to do with an union ${apiBuilderUnion.qualified} member $other")
           Nil
       }
     }
   }
 
-  private def processModel(multiService: MultiService, union: Union, unionMember: UnionType, model: Model): Seq[EventType] = {
+  private def processModel(multiService: MultiService, apiBuilderUnion: ApiBuilderType.Union, unionMember: UnionType, apiBuilderModel: ApiBuilderType.Model): Seq[EventType] = {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
-    model.name match {
+    apiBuilderModel.name match {
       case UnionMemberRx(typeName, eventType, _) =>
         if (eventType == "upserted") {
-          val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
+          val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
           if (payloadField.isEmpty) {
-            println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: field not found")
+            println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: field not found")
           }
-          val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(pf, multiService))
+          val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
           if (payloadTypes.isEmpty) {
-            println(s"Skipping non v2 upserted union ${union.name} member ${model.name}: payload type not found")
+            println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: payload type not found")
           }
           for {
             pt <- payloadTypes
             fld <- payloadField.toSeq
           } yield {
-            EventType.Upserted(model.name, typeName, fld.name, pt, discriminator)
+            EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, discriminator)
           }
         } else {
-          val idField = model.fields.find(f => f.name == "id" && f.`type` == "string")
-          val payloadField = model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
-          val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(pf, multiService))
+          val idField = apiBuilderModel.model.fields.find(f => f.name == "id" && f.`type` == "string")
+          val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
+          val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
           if (payloadTypes.isEmpty && idField.isDefined) {
-            Seq(EventType.Deleted(model.name, typeName, None, discriminator))
+            Seq(EventType.Deleted(apiBuilderModel.name, typeName, None, discriminator))
           } else if (payloadTypes.nonEmpty) {
-            payloadTypes.map { pt => EventType.Deleted(model.name, typeName, Some(pt), discriminator) }
+            payloadTypes.map { pt => EventType.Deleted(apiBuilderModel.name, typeName, Some(pt.model), discriminator) }
           } else {
-            println(s"Skipping non v2 deleted union ${union.name} member ${model.name}")
+            println(s"Skipping non v2 deleted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
             Nil
           }
         }
       case _ =>
-        println(s"Skipping misnamed union ${union.name} member ${model.name}")
+        println(s"Skipping misnamed union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
         Nil
     }
   }
 
-  private def extractPayloadModels(typeField: Field, multiService: MultiService): Seq[Model] = {
-    for {
-      payloadType: ApibuilderType <- multiService.findType(typeField.`type`)
-      model <- payloadType match {
-        case ApibuilderType.Model(_, model) => Some(model)
-        case _ => None
-      }
-    } yield model
+  private def extractPayloadModels(model: ApiBuilderType.Model, typeField: Field, multiService: MultiService): Option[ApiBuilderType.Model] = {
+    multiService.findType(
+      defaultNamespace = model.namespace,
+      typeName = typeField.`type`
+    ) match {
+      case Some(m: ApiBuilderType.Model) => Some (m)
+      case _ => None
+    }
   }
 
   private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
