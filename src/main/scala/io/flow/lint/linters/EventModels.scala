@@ -40,7 +40,7 @@ case object EventModels extends Linter with Helpers {
   }
 
   private[this] def validateFieldNames(model: Model): Seq[String] = {
-    val fieldNames = model.fields.map(_.name)
+    val fieldNames = model.fields.map(_.name).toList
     fieldNames match {
       case "event_id" :: "timestamp" :: "organization" :: "number" :: _ => Nil
 
