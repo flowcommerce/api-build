@@ -64,7 +64,7 @@ case object ErrorModels extends Linter with Helpers {
   }
 
   private[this] def validateModel(service: Service, model: Model): Seq[String] = {
-    val fieldNames = model.fields.map(_.name)
+    val fieldNames = model.fields.map(_.name).toList
     fieldNames match {
       case "code" :: "messages" :: _ => {
         val codeErrors = model.fields.head.`type` == "string" match {
