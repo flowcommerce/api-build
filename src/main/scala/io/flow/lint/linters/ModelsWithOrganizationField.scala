@@ -17,7 +17,7 @@ case object ModelsWithOrganizationField extends Linter with Helpers {
   }
 
   def validateModel(model: Model): Seq[String] = {
-    val fieldNames = model.fields.map(_.name).toList
+    val fieldNames = model.fields.filter(_.required).map(_.name).toList
     val index = fieldNames.indexOf("organization")
 
     if (index < 0) {
