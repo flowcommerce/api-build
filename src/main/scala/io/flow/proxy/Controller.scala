@@ -11,7 +11,7 @@ case class Controller() extends io.flow.build.Controller {
   /**
     * Whitelist of applications in the 'api' repo that do not exist in registry
     */
-  private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "usage")
+  private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "usage", "gift-card")
 
   private[this] val HostingMap = Map(
     "optin"->"content",
