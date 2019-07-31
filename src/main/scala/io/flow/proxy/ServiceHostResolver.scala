@@ -14,6 +14,7 @@ case class ServiceHostResolver(services: Seq[Service]) {
     "checkout" -> "experience",
     "checkout-configuration" -> "organization"
   )
+
   def host(serviceName: String): String = {
     apiBuildAttributes.host(serviceName).getOrElse {
       val formattedName = Text.stripSuffix(
