@@ -13,15 +13,6 @@ case class Controller() extends io.flow.build.Controller {
     */
   private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "usage", "gift-card")
 
-  private[this] val HostingMap = Map(
-    "optin"->"content",
-    "consumer-invoice" -> "order-messenger",
-    "shopify-session" -> "session",
-    "permission"        -> "organization",
-    "checkout" -> "experience",
-    "checkout-configuration" -> "organization"
-  )
-
   /**
     * This is the hostname of the services when running in docker on
     * our development machines.
@@ -74,23 +65,8 @@ case class Controller() extends io.flow.build.Controller {
       filter { s => s.resources.nonEmpty }.
       filterNot { s => ExcludeWhiteList.exists(ew => s.name.startsWith(ew)) }
 
-    def serviceHost(name: String): String = {
-      buildType match {
-        case BuildType.Api => {
-          val specName = name.toLowerCase
-          HostingMap.getOrElse(specName, specName)
-        }
-        case BuildType.ApiEvent => name.toLowerCase
-        case BuildType.ApiInternal => {
-          val specName = Text.stripSuffix(name.toLowerCase, "-internal")
-          HostingMap.getOrElse(specName, specName)
-        }
-        case BuildType.ApiInternalEvent => Text.stripSuffix(name.toLowerCase, "-internal-event")
-        case BuildType.ApiMisc | BuildType.ApiMiscEvent => sys.error("Proxy does not support api-misc")
-        case BuildType.ApiPartner => name.toLowerCase
-      }
-    }
-
+    val serviceHostResolver = ServiceHostResolver(allServices)
+    
     val version = downloader.service(Application("flow", buildType.toString, "latest")) match {
       case Left(error) => {
         sys.error(s"Failed to download '$buildType' service from apibuilder: $error")
@@ -108,17 +84,17 @@ case class Controller() extends io.flow.build.Controller {
     val registryClient = new RegistryClient()
     try {
       buildProxyFile(buildType, services, version, "production") { service =>
-        s"https://${serviceHost(service.name)}.api.flow.io"
+        s"https://${serviceHostResolver.host(service.name)}.api.flow.io"
       }
 
       val cache = RegistryApplicationCache(registryClient)
 
       buildProxyFile(buildType, services, version, "development") { service =>
-        s"http://$DevelopmentHostname:${cache.externalPort(serviceHost(service.name))}"
+        s"http://$DevelopmentHostname:${cache.externalPort(serviceHostResolver.host(service.name))}"
       }
 
       buildProxyFile(buildType, services, version, "workstation") { service =>
-        s"http://$DockerHostname:${cache.externalPort(serviceHost(service.name))}"
+        s"http://$DockerHostname:${cache.externalPort(serviceHostResolver.host(service.name))}"
       }
     } finally {
       registryClient.closeAsyncHttpClient()
