@@ -14,10 +14,10 @@ case class Controller() extends io.flow.build.Controller {
   private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "usage", "gift-card")
 
   private[this] val HostingMap = Map(
-    "optin"->"content",
+    "optin"-> "content",
     "consumer-invoice" -> "order-messenger",
     "shopify-session" -> "session",
-    "permission"        -> "organization",
+    "permission" -> "organization",
     "checkout" -> "experience",
     "checkout-configuration" -> "organization"
   )
@@ -75,19 +75,11 @@ case class Controller() extends io.flow.build.Controller {
       filterNot { s => ExcludeWhiteList.exists(ew => s.name.startsWith(ew)) }
 
     def serviceHost(name: String): String = {
-      buildType match {
-        case BuildType.Api => {
-          val specName = name.toLowerCase
-          HostingMap.getOrElse(specName, specName)
-        }
-        case BuildType.ApiEvent => name.toLowerCase
-        case BuildType.ApiInternal => {
-          val specName = Text.stripSuffix(name.toLowerCase, "-internal")
-          HostingMap.getOrElse(specName, specName)
-        }
-        case BuildType.ApiInternalEvent => Text.stripSuffix(name.toLowerCase, "-internal-event")
-        case BuildType.ApiMisc | BuildType.ApiMiscEvent => sys.error("Proxy does not support api-misc")
-        case BuildType.ApiPartner => name.toLowerCase
+      val formattedName = Text.stripSuffix(
+        Text.stripSuffix(name.toLowerCase, "-internal-event"), "-internal"
+      )
+      ApiBuildAttributes(allServices).host(formattedName).getOrElse {
+        HostingMap.getOrElse(formattedName, formattedName)
       }
     }
 
