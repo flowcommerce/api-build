@@ -89,12 +89,17 @@ case class Controller() extends io.flow.build.Controller {
 
       val cache = RegistryApplicationCache(registryClient)
 
+      def externalPort(service: Service): Long = cache.externalPort(
+        registryName = serviceHostResolver.host(service.name),
+        serviceName = service.name
+      )
+
       buildProxyFile(buildType, services, version, "development") { service =>
-        s"http://$DevelopmentHostname:${cache.externalPort(serviceHostResolver.host(service.name))}"
+        s"http://$DevelopmentHostname:${externalPort(service)}"
       }
 
       buildProxyFile(buildType, services, version, "workstation") { service =>
-        s"http://$DockerHostname:${cache.externalPort(serviceHostResolver.host(service.name))}"
+        s"http://$DockerHostname:${externalPort(service)}"
       }
     } finally {
       registryClient.closeAsyncHttpClient()

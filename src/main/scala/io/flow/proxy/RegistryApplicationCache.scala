@@ -35,14 +35,15 @@ private[proxy] case class RegistryApplicationCache(
     * name, throwing an error if the application does not exist in the
     * registry.
     *
-    * @param name Application name in registry
+   * @param registryName Application name in registry (ex. experience)
+   * @param serviceName Actual service name (ex. experience-internal)
     */
-  def externalPort(name: String): Long = {
-    val app = get(name).getOrElse {
-      sys.error(s"Could not find application named[$name] in Registry at[${client.baseUrl}]. Either add the application to the registry or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
+  def externalPort(registryName: String, serviceName: String): Long = {
+    val app = get(registryName).getOrElse {
+      sys.error(s"Could not find application named[$serviceName] in Registry at[${client.baseUrl}]. Either add the application to the registry, add an attribute named api-build/host to the apibuilder spec or, if it should never be part of api.flow.io, add to the proxy whitelist in api-build:src/main/scala/io/flow/proxy/Controller.scala")
     }
     app.ports.headOption.map(_.external).getOrElse {
-      sys.error(s"Application named[$name] does not have any ports in Registry at[${client.baseUrl}]")
+      sys.error(s"Application named[$registryName] does not have any ports in Registry at[${client.baseUrl}]")
     }
   }
 
