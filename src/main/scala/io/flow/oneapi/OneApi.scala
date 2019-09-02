@@ -3,6 +3,7 @@ package io.flow.oneapi
 import io.apibuilder.spec.v0.models._
 import io.flow.build.{BuildType, Config}
 import play.api.libs.json.{Json, JsString}
+import io.flow.oneapi.Util.namespaceTypeName
 
 private[oneapi] case class ContextualValue(context: String, value: String)
 
@@ -46,30 +47,31 @@ case class OneApi(
     }
   }
 
-  private[this] val dups = findDups {
-    services.flatMap { s =>
-      s.models.map { m =>
-        ContextualValue(
-          context = s"${s.name}:${m.name}",
-          value = m.name
-        )
-      }
-    } ++ services.flatMap { s =>
-      s.unions.map { u =>
-        ContextualValue(
-          context = s"${s.name}:${u.name}",
-          value = u.name
-        )
-      }
-    } ++ services.flatMap { s =>
-      s.enums.map { e =>
-        ContextualValue(
-          context = s"${s.name}:${e.name}",
-          value = e.name
-        )
+  private[this] val dups = if (!config.dedup) Seq() else
+    findDups {
+      services.flatMap { s =>
+        s.models.map { m =>
+          ContextualValue(
+            context = s"${s.name}:${m.name}",
+            value = m.name
+          )
+        }
+      } ++ services.flatMap { s =>
+        s.unions.map { u =>
+          ContextualValue(
+            context = s"${s.name}:${u.name}",
+            value = u.name
+          )
+        }
+      } ++ services.flatMap { s =>
+        s.enums.map { e =>
+          ContextualValue(
+            context = s"${s.name}:${e.name}",
+            value = e.name
+          )
+        }
       }
     }
-  }
 
   def process(): Either[Seq[String], Service] = {
     val pathErrors = validatePaths()
@@ -207,7 +209,7 @@ case class OneApi(
     val qualifiedName = withNamespace(service, resource.`type`)
 
     val finalType = if (localTypes.contains(qualifiedName)) {
-      parser.toString(parser.parse(qualifiedName))
+      parser.toString(parser.parse(qualifiedName, dups))
     } else {
       qualifiedName
     }
@@ -297,22 +299,21 @@ case class OneApi(
     }.toInt
   }
 
-  private def namespaceTypeName(ns: String, t: String) =
-    (ns.split('.') ++ t.split('_')).mkString("_")
-
   def localize(parser: TextDatatypeParser, service: Service, enum: Enum): Enum = {
-    if (dups.contains(enum.name))
+    if (dups.contains(enum.name)) {
+      println(s"${enum.name} -> ${namespaceTypeName(service.namespace, enum.name)}")
       enum.copy(name = namespaceTypeName(service.namespace, enum.name))
-    else
+    } else
       enum
   }
 
   def localize(parser: TextDatatypeParser, service: Service, model: Model): Model = {
     model.copy(
       name =
-        if (dups.contains(model.name))
+        if (dups.contains(model.name)) {
+          println(s"${model.name} -> ${namespaceTypeName(service.namespace, model.name)}")
           namespaceTypeName(service.namespace, model.name)
-        else
+        } else
           model.name,
       fields = model.fields.map(localize(parser, service, _))
     )
@@ -320,7 +321,7 @@ case class OneApi(
 
   def localize(parser: TextDatatypeParser, service: Service, field: Field): Field = {
     field.copy(
-      `type` = localizeType(parser, field.`type`),
+      `type` = localizeType(parser, service, field.`type`),
       description = (
         field.description match {
           case Some(d) => Some(d)
@@ -333,9 +334,10 @@ case class OneApi(
   def localize(parser: TextDatatypeParser, service: Service, union: Union): Union = {
     union.copy(
       name =
-        if (dups.contains(union.name))
+        if (dups.contains(union.name)) {
+          println(s"${union.name} -> ${namespaceTypeName(service.namespace, union.name)}")
           namespaceTypeName(service.namespace, union.name)
-        else
+        } else
           union.name,
       types = union.types.map(localize(parser, service, _))
     )
@@ -343,7 +345,7 @@ case class OneApi(
 
   def localize(parser: TextDatatypeParser, service: Service, ut: UnionType): UnionType = {
     ut.copy(
-      `type` = localizeType(parser, ut.`type`)
+      `type` = localizeType(parser, service, ut.`type`)
     )
   }
 
@@ -372,7 +374,7 @@ case class OneApi(
     }
 
     resource.copy(
-      `type` = localizeType(parser, resource.`type`),
+      `type` = localizeType(parser, service, resource.`type`),
       operations = resource.operations.
         map { localize(parser, service, _) }.
         sortBy(OperationSort.key),
@@ -418,13 +420,13 @@ case class OneApi(
 
   def localize(parser: TextDatatypeParser, service: Service, body: Body): Body = {
     body.copy(
-      `type` = localizeType(parser, body.`type`)
+      `type` = localizeType(parser, service, body.`type`)
     )
   }
 
   def localize(parser: TextDatatypeParser, service: Service, param: Parameter): Parameter = {
     param.copy(
-      `type` = localizeType(parser, param.`type`),
+      `type` = localizeType(parser, service, param.`type`),
       description = (
         param.description match {
           case Some(d) => Some(d)
@@ -436,7 +438,7 @@ case class OneApi(
 
   def localize(parser: TextDatatypeParser, service: Service, response: Response): Response = {
     response.copy(
-      `type` = localizeType(parser, response.`type`),
+      `type` = localizeType(parser, service, response.`type`),
       description = (
         response.description match {
           case Some(d) => Some(d)
@@ -453,9 +455,12 @@ case class OneApi(
     }
   }
 
-  def localizeType(parser: TextDatatypeParser, name: String): String = {
+  // given [io.flow.currency.v0.models.rate]
+  // given [rate]
+  //
+  def localizeType(parser: TextDatatypeParser, service: Service, name: String): String = {
     config.buildType match {
-      case BuildType.Api => parser.toString(parser.parse(name))
+      case BuildType.Api => parser.toString(parser.parse(name, dups, Some(service.namespace)))
       case BuildType.ApiEvent => toApiImport(parser, name)
       case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
     }
@@ -469,7 +474,7 @@ case class OneApi(
     * Rewrite imports in api-event to allow imports from api
     */
   def toApiImport(parser: TextDatatypeParser, name: String): String = {
-    val simpleName = parser.toString(parser.parse(name))
+    val simpleName = parser.toString(parser.parse(name, dups))
     if (simpleName == name) {
       name
     } else {

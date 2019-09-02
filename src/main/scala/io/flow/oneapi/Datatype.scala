@@ -1,5 +1,7 @@
 package io.flow.oneapi
 
+import io.flow.oneapi.Util.namespaceTypeName
+
 sealed trait TextDatatype
 
 object TextDatatype {
@@ -20,12 +22,29 @@ object TextDatatype {
 case class TextDatatypeParser() {
   import TextDatatype._
 
-  def parse(value: String): Seq[TextDatatype] = {
+  def parse(value: String, dups: Seq[String] = Seq(), namespace: Option[String] = None): Seq[TextDatatype] = {
     value match {
-      case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
-      case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
+      case ListRx(t) => Seq(TextDatatype.List) ++ parse(t, dups, namespace)
+      case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t, dups, namespace)
       case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
-      case _ => Seq(TextDatatype.Singleton(value.split("\\.").last))
+      case _ =>
+        val name =
+          if (value.contains('.'))
+            value
+          else
+            namespace.map(ns => s"$ns.types.$value").getOrElse(value)
+
+        val parts = name.split('.')
+
+        val dedupedName =
+          if (dups.contains(parts.last)) {
+            // .init.init because we want to remove the .models, .enums, or .unions
+            println(namespace, parts.toList)
+            namespaceTypeName(parts.init.init.mkString("."), parts.last)
+          } else
+            parts.last
+
+        Seq(TextDatatype.Singleton(dedupedName))
     }
   }
 
@@ -40,7 +59,7 @@ case class TextDatatypeParser() {
           case Map => "map[" + toString(rest) + "]"
           case Singleton(name) => sys.error("Did not expect singleton here")
         }
-        
+
       }
     }
   }
