@@ -44,7 +44,7 @@ case class Controller() extends io.flow.build.Controller {
 
     buildType match {
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent =>
-      case class Aggregator(streams: Seq[KinesisStream] = Nil, cache: Map[String, Service] = Map.empty)
+        case class Aggregator(streams: Seq[KinesisStream] = Nil, cache: Map[String, Service] = Map.empty)
         val result = services.foldLeft(Aggregator()) { case (agg, service) =>
           val allServices = loadImports(Seq(service), agg.cache)
           val ms = MultiService(allServices.map(ApiBuilderService.apply).toList)
