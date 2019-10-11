@@ -46,6 +46,7 @@ object Main extends App {
 
         arg[String]("<flow/experience>...")
           .text("API specs from APIBuilder")
+          .action((api, c) => c.copy(apis = c.apis :+ api))
           .unbounded()
           .optional()
           .validate(api => Application.parse(api) match {
@@ -104,7 +105,6 @@ object Main extends App {
   }
 
   private[this] def run(buildType: BuildType, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]): Unit = {
-
     val errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (globalErrors.nonEmpty) {
       errors += ("config" -> globalErrors)
