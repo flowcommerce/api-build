@@ -3,7 +3,6 @@ package io.flow.proxy
 import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
-import Text._
 import play.api.libs.json.Json
 
 case class Controller() extends io.flow.build.Controller {

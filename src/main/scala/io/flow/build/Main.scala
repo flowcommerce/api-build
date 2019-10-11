@@ -29,28 +29,28 @@ object Main extends App {
     }
     case Right(profile) => {
       implicit val buildTypeRead: scopt.Read[BuildType] =
-        scopt.Read.reads(s => BuildType.fromString(s).get)
+        scopt.Read.reads(s => BuildType.fromString(s).getOrElse(sys.error(s"Unknown BuildType '$s'")))
 
       val parser = new scopt.OptionParser[Config]("api-build") {
         override def showUsageOnError = true
 
         arg[BuildType]("<build type>")
           .action((bt, c) => c.copy(buildType = bt))
-          .text(BuildType.all.map(_.toString).mkString(", "))
+          .text("One of: " + BuildType.all.map(_.toString).mkString(", "))
           .required()
 
         arg[String]("<build command>")
           .action((cmd, c) => c.copy(buildCommand = cmd))
-          .text(controllers(BuildType.Api).map(_.command).mkString("all, ", ", ", ""))
+          .text("One of: " + controllers(BuildType.Api).map(_.command).mkString("all, ", ", ", ""))
           .required()
 
-        arg[String]("<flow/api1>...")
+        arg[String]("<flow/experience>...")
           .text("API specs from APIBuilder")
           .unbounded()
           .optional()
           .validate(api => Application.parse(api) match {
             case Some(_) => success
-            case None => failure(s"Could not parse application[${api}]")
+            case None => failure(s"Could not parse application[$api]")
           })
 
         help("help")
