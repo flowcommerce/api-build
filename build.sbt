@@ -1,8 +1,3 @@
-import com.github.retronym.SbtOneJar._
-import sbt.Credentials
-
-oneJarSettings
-
 name := "api-build"
 
 organization := "io.flow"
@@ -11,7 +6,15 @@ scalaVersion in ThisBuild := "2.12.10"
 
 version := "0.2.36"
 
-exportJars := true
+assemblyMergeStrategy in assembly := {
+  case PathList("io", "flow", _*) =>
+    // we have multiple copies of apibuilder generated code
+    // just take the first one, it's no worse than whatever happens in production
+    MergeStrategy.first
+  case x =>
+    val oldStrategy = (assemblyMergeStrategy in assembly).value
+    oldStrategy(x)
+}
 
 lazy val root = project
   .in(file("."))

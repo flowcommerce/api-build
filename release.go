@@ -12,9 +12,9 @@ func main() {
 	executor = executor.Add("cd ../aws-s3-public\ngit fetch --tags origin")
 
 	executor = executor.Add("dev tag")
-	executor = executor.Add("sbt clean one-jar")
-	executor = executor.Add("cp ./target/scala-2.12/api-build*-one-jar.jar ../aws-s3-public/util/api-build/")
-	executor = executor.Add("cp ./target/scala-2.12/api-build*-one-jar.jar ../aws-s3-public/util/api-build/api-build.jar")
+	executor = executor.Add("sbt clean assembly")
+	executor = executor.Add("cp ./target/scala-2.12/api-build-assembly-*.jar ../aws-s3-public/util/api-build/")
+	executor = executor.Add("cp ./target/scala-2.12/api-build-assembly-*.jar ../aws-s3-public/util/api-build/api-build.jar")
 
 	executor = executor.Add("cd ../aws-s3-public\ngit add util/api-build/*")
 	executor = executor.Add("cd ../aws-s3-public\ngit commit -m 'Add new version of api-build' util/api-build")
