@@ -39,7 +39,6 @@ object Lint {
           linters.MinimumMaximum,
           linters.ModelsWithOrganizationField,
           linters.PathsDoNotHaveTrailingSlash,
-          linters.PrimaryResourcesHaveVersionsOperation,
           linters.ProxyQueryParameters,
           linters.PublishedEventModels,
           linters.SortAttribute,
