@@ -3,7 +3,6 @@ package io.flow.proxy
 import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
-import Text._
 import play.api.libs.json.Json
 
 case class Controller() extends io.flow.build.Controller {
@@ -66,7 +65,7 @@ case class Controller() extends io.flow.build.Controller {
       filterNot { s => ExcludeWhiteList.exists(ew => s.name.startsWith(ew)) }
 
     val serviceHostResolver = ServiceHostResolver(allServices)
-    
+
     val version = downloader.service(Application("flow", buildType.toString, "latest")) match {
       case Left(error) => {
         sys.error(s"Failed to download '$buildType' service from apibuilder: $error")
