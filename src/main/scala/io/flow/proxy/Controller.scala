@@ -139,10 +139,10 @@ case class Controller() extends io.flow.build.Controller {
         val all = s"""version: $version
 
 servers:
-${serversYaml.indent(2)}
+${Text.indent(serversYaml, 2)}
 
 operations:
-${operationsYaml.indent(2)}
+${Text.indent(operationsYaml, 2)}
 """
 
         val path = s"/tmp/${buildType}-proxy.$env.config"
