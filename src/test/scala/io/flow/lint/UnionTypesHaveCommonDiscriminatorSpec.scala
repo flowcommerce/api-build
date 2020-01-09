@@ -41,6 +41,10 @@ class UnionTypesHaveCommonDiscriminatorSpec extends FunSpec with Matchers {
     linter.validate(buildService("expandable_user", Some("discriminator"))) should be (Nil)
   }
 
+  it("with valid discriminator for localized_price hack") {
+    linter.validate(buildService("localized_price", Some("key"))) should be (Nil)
+  }
+
   it("union types that end in _error must have a discriminator named 'code'") {
     linter.validate(buildService("user_error", None)) should be (
       Seq("Union user_error: Must have a discriminator with value 'code'")

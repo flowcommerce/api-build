@@ -28,7 +28,7 @@ case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
       "code"
     } else if (typeName == "localized_price") {
       // one time hack - do not repeat
-      "hack"
+      "key"
     } else {
       "discriminator"
     }
