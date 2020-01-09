@@ -10,9 +10,7 @@ import io.apibuilder.spec.v0.models.{Service, Union}
 case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.unions.
-      filter(op => !ignored(op.attributes, "discriminator")).
-      flatMap(validateUnion)
+    service.unions.flatMap(validateUnion)
   }
 
   def validateUnion(union: Union): Seq[String] = {
