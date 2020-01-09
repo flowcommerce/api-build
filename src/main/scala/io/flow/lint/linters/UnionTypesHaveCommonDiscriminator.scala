@@ -26,6 +26,9 @@ case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
   private[this] def expectedDiscriminator(typeName: String): String = {
     if (isError(typeName)) {
       "code"
+    } else if (typeName == "localized_price") {
+      // one time hack - do not repeat
+      "hack"
     } else {
       "discriminator"
     }
