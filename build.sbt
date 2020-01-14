@@ -4,7 +4,7 @@ organization := "io.flow"
 
 scalaVersion in ThisBuild := "2.12.10"
 
-version := "0.2.47"
+version := "0.2.48"
 
 assemblyMergeStrategy in assembly := {
   case PathList("io", "flow", _*) =>
