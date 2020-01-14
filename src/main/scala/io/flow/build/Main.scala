@@ -27,65 +27,84 @@ object Main extends App {
       println(s"** Error loading apibuilder config: $error")
       System.exit(1)
     }
-
     case Right(profile) => {
-      args.toList match {
-        case Nil => {
-          println(s"** ERROR: Specify type[${BuildType.all.mkString(", ")}] and command[lint|oneapi|all]")
-        }
+      implicit val buildTypeRead: scopt.Read[BuildType] =
+        scopt.Read.reads(s => BuildType.fromString(s).getOrElse(sys.error(s"Unknown BuildType '$s'")))
 
-        case _ :: Nil => {
-          println(s"** ERROR: Specify type[${BuildType.all.mkString(", ")}] and command[lint|oneapi|all]")
-        }
+      val parser = new scopt.OptionParser[Config]("api-build") {
+        override def showUsageOnError = true
 
-        case typ :: command :: rest => {
-          BuildType.fromString(typ) match {
-            case None => {
-              println(s"** ERROR: Invalid buildType[$typ]. Must be one of: " + BuildType.all.mkString(", "))
+        arg[BuildType]("<build type>")
+          .action((bt, c) => c.copy(buildType = bt))
+          .text("One of: " + BuildType.all.map(_.toString).mkString(", "))
+          .required()
+
+        arg[String]("<build command>")
+          .action((cmd, c) => c.copy(buildCommand = cmd))
+          .text("One of: " + controllers(BuildType.Api).map(_.command).mkString("all, ", ", ", ""))
+          .required()
+
+        arg[String]("<flow/experience>...")
+          .text("API specs from APIBuilder")
+          .action((api, c) => c.copy(apis = c.apis :+ api))
+          .unbounded()
+          .optional()
+          .validate(api => Application.parse(api) match {
+            case Some(_) => success
+            case None => failure(s"Could not parse application[$api]")
+          })
+
+        help("help")
+
+        checkConfig(c => {
+          val selected = if (c.buildCommand == "all") {
+            controllers(c.buildType)
+          } else {
+            controllers(c.buildType).filter(_.command == c.buildCommand)
+          }
+          selected.toList match {
+            case Nil => {
+              failure(s"Invalid command[${c.buildCommand}] for build type[${c.buildType}]. " +
+                s"Must be one of: all, " + controllers(c.buildType).map(_.command).mkString(", "))
             }
+            case _ => {
+              success
+            }
+          }
+        })
+      }
 
-            case Some(buildType) => {
-              val selected = if (command == "all") { controllers(buildType) } else { controllers(buildType).filter(_.command == command) }
-              selected.toList match {
-                case Nil => {
-                  println(s"** ERROR: Invalid command[$command]. Must be one of: all, " + controllers(buildType).map(_.command).mkString(", "))
-                }
+      parser.parse(args, Config()) match {
+        case Some(config) =>
+          val selected = if (config.buildCommand == "all") {
+            controllers(config.buildType)
+          } else {
+            controllers(config.buildType).filter(_.command == config.buildCommand)
+          }
 
-                case _ => {
-                  Downloader.withClient(profile) { dl =>
-                    val services = rest.flatMap { name =>
-                      Application.parse(name) match {
-                        case None => {
-                          globalErrors += s"Could not parse application[$name]"
-                          None
-                        }
-
-                        case Some(app) => {
-                          dl.service(app) match {
-                            case Left(error) => {
-                              globalErrors += s"Failed to download app[${app.label}]: $error"
-                              None
-                            }
-                            case Right(service) => {
-                              Some(service)
-                            }
-                          }
-                        }
-                      }
-                    }
-                    run(buildType, dl, selected, services)
+          Downloader.withClient(profile) { dl =>
+            val services = config.apis.flatMap { name =>
+              Application.parse(name).flatMap { app =>
+                dl.service(app) match {
+                  case Left(error) => {
+                    globalErrors += s"Failed to download app[${app.label}]: $error"
+                    None
+                  }
+                  case Right(service) => {
+                    Some(service)
                   }
                 }
               }
             }
+            run(config.buildType, dl, selected, services)
           }
-        }
+        case None =>
+          // error message already printed
       }
     }
   }
 
   private[this] def run(buildType: BuildType, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]): Unit = {
-
     val errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (globalErrors.nonEmpty) {
       errors += ("config" -> globalErrors)

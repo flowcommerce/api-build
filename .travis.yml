@@ -9,7 +9,7 @@ cache:
     - $HOME/.sbt
     - $HOME/.cache/coursier
 script: 
-  - sbt ++$TRAVIS_SCALA_VERSION clean compile test doc
+  - sbt ++$TRAVIS_SCALA_VERSION clean compile test doc assembly
 branches:
   only:
     - master

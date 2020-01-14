@@ -26,6 +26,7 @@ lazy val root = project
       "com.typesafe.play" %% "play-json" % "2.7.4",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.0.8" % Test,
+      "com.github.scopt" %% "scopt" % "3.7.1",
       compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.4.2"),
       "com.github.ghik" %% "silencer-lib" % "1.4.2" % Provided
     )
