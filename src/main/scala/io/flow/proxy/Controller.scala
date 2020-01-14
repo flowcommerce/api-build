@@ -2,7 +2,6 @@ package io.flow.proxy
 
 import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
-import io.flow.proxy.Text._
 import io.flow.registry.v0.{Client => RegistryClient}
 import play.api.libs.json.Json
 
