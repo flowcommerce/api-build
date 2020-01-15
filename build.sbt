@@ -22,7 +22,7 @@ lazy val root = project
     scalacOptions += "-P:silencer:pathFilters=src/main/scala/io/flow/generated/.*",
     libraryDependencies ++= Seq(
       "io.flow" %% "lib-util" % "0.1.34",
-      "io.flow" %% "apibuilder-validation" % "0.4.15",
+      "io.apibuilder" %% "apibuilder-validation" % "0.4.17",
       "com.typesafe.play" %% "play-json" % "2.7.4",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.0.8" % Test,
