@@ -1,10 +1,11 @@
 package io.flow.lint
 
 import io.apibuilder.spec.v0.models._
-import org.scalatest.{FunSpec, Matchers}
 import play.api.libs.json.{JsObject, Json}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class StandardResponseSpec extends FunSpec with Matchers {
+class StandardResponseSpec extends AnyFunSpec with Matchers {
 
   private[this] val linter = linters.StandardResponse
 

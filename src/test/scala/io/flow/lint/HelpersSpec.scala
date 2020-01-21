@@ -1,8 +1,9 @@
 package io.flow.lint.linters
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class HelpersSpec extends FunSpec with Matchers {
+class HelpersSpec extends AnyFunSpec with Matchers {
 
   case object TestHelper extends Helpers
 

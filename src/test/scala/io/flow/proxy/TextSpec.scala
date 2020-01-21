@@ -1,8 +1,9 @@
 package io.flow.proxy
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class TextSpec extends FunSpec with Matchers {
+class TextSpec extends AnyFunSpec with Matchers {
 
   it("stripSuffix") {
     Text.stripSuffix("", "-internal") should be("")

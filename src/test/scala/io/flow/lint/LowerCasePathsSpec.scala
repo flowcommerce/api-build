@@ -1,8 +1,9 @@
 package io.flow.lint
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class LowerCasePathsSpec extends FunSpec with Matchers {
+class LowerCasePathsSpec extends AnyFunSpec with Matchers {
 
   private[this] val linter = linters.LowerCasePaths
 
