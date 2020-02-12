@@ -14,7 +14,8 @@ case class OneApi(
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
     "timezone" -> "/",
-    "query_builder" -> "/:organization/query/builders"
+    "query_builder" -> "/:organization/query/builders",
+    "order" -> "/:organization/shopify/ensure/order"
   )
 
   private[this] val DefaultFieldDescriptions = Map(
