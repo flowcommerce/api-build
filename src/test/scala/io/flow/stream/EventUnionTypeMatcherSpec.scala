@@ -1,9 +1,10 @@
 package io.flow.stream
 
 import io.apibuilder.spec.v0.models.Field
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class EventUnionTypeMatcherSpec extends FunSpec with Matchers {
+class EventUnionTypeMatcherSpec extends AnyFunSpec with Matchers {
   it ("matches field name, field type and union type name the same") {
     val field = Field(name = "organization", `type` = "organization", required = true)
     EventUnionTypeMatcher.matchFieldToPayloadType(field, "organization") shouldBe true

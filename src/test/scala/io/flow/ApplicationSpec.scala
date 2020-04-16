@@ -1,8 +1,9 @@
 package io.flow.build
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class ApplicationSpec extends FunSpec with Matchers {
+class ApplicationSpec extends AnyFunSpec with Matchers {
 
   it("parse valid strings") {
     Application.parse("flow/user") should be(Some(Application("flow", "user", "latest")))

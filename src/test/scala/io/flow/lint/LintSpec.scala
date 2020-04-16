@@ -1,9 +1,10 @@
 package io.flow.lint
 
 import io.flow.build.BuildType
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class LintSpec extends FunSpec with Matchers {
+class LintSpec extends AnyFunSpec with Matchers {
 
   val Dir = new java.io.File("src/main/scala/io/flow/lint/linters")
 

@@ -1,8 +1,9 @@
 package io.flow.lint
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class PathsDoNotHaveTrailingSlash extends FunSpec with Matchers {
+class PathsDoNotHaveTrailingSlash extends AnyFunSpec with Matchers {
 
   private[this] val linter = linters.PathsDoNotHaveTrailingSlash
 

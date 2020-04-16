@@ -1,9 +1,10 @@
 package io.flow.proxy
 
 import io.flow.helpers.ServiceHostHelpers
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class ServiceHostResolverSpec extends FunSpec with Matchers
+class ServiceHostResolverSpec extends AnyFunSpec with Matchers
   with ServiceHostHelpers
 {
 

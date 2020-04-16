@@ -1,9 +1,10 @@
 package io.flow.lint
 
 import io.apibuilder.spec.v0.models.{Attribute, Service}
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class PublishedEventModelsSpec extends FunSpec with Matchers {
+class PublishedEventModelsSpec extends AnyFunSpec with Matchers {
 
   private[this] val linter = linters.PublishedEventModels
 
