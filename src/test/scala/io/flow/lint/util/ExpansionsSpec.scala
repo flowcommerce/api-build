@@ -1,8 +1,9 @@
 package io.flow.lint.util
 
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class ExpansionsSpec extends FunSpec with Matchers {
+class ExpansionsSpec extends AnyFunSpec with Matchers {
 
   it("fromFieldTypes") {
     Expansions.fromFieldTypes(Nil) should be(Nil)

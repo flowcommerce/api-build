@@ -2,9 +2,10 @@ package io.flow.oneapi
 
 import io.apibuilder.spec.v0.models.Method
 import io.flow.lint.Services
-import org.scalatest.{FunSpec, Matchers}
+import org.scalatest.funspec.AnyFunSpec
+import org.scalatest.matchers.should.Matchers
 
-class OperationSortSpec extends FunSpec with Matchers {
+class OperationSortSpec extends AnyFunSpec with Matchers {
 
   it("static paths") {
     Seq(
