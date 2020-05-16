@@ -11,6 +11,8 @@ assemblyMergeStrategy in assembly := {
     // we have multiple copies of apibuilder generated code
     // just take the first one, it's no worse than whatever happens in production
     MergeStrategy.first
+  case "module-info.class" =>
+    MergeStrategy.discard
   case x =>
     val oldStrategy = (assemblyMergeStrategy in assembly).value
     oldStrategy(x)
