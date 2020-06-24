@@ -25,7 +25,7 @@ lazy val root = project
     libraryDependencies ++= Seq(
       "io.flow" %% "lib-util" % "0.1.37",
       "io.apibuilder" %% "apibuilder-validation" % "0.4.17",
-      "com.typesafe.play" %% "play-json" % "2.8.1",
+      "com.typesafe.play" %% "play-json" % "2.9.0",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.1.1" % Test,
       "com.github.scopt" %% "scopt" % "3.7.1",
