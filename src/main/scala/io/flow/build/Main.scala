@@ -19,7 +19,7 @@ object Main extends App {
     if (buildType.proxy) {
       all.append(proxy.Controller())
     }
-    all
+    all.toSeq
   }
 
   ApibuilderConfig.load() match {
@@ -107,7 +107,7 @@ object Main extends App {
   private[this] def run(buildType: BuildType, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]): Unit = {
     val errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (globalErrors.nonEmpty) {
-      errors += ("config" -> globalErrors)
+      errors += ("config" -> globalErrors.toSeq)
     }
 
     controllers.foreach { controller =>

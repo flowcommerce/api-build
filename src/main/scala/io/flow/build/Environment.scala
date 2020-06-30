@@ -116,7 +116,7 @@ object ApibuilderConfig {
       }
     ) match {
       case Success(_) => {
-        Right(allProfiles)
+        Right(allProfiles.toSeq)
       }
       case Failure(ex) => Left(ex.toString)
     }
