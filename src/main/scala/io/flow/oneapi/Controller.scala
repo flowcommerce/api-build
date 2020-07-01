@@ -32,7 +32,7 @@ case class Controller() extends io.flow.build.Controller {
 
     val all = services ++ eventService
     println("Building single API from: " + all.map(_.name).mkString(", "))
-    OneApi(buildType, all).process match {
+    OneApi(buildType, all).process() match {
       case Left(errs) => {
         println(s"Errors from building single API:\n - ${errs.mkString("\n")}")
         errs.foreach { addError(_) }

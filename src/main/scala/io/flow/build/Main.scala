@@ -116,7 +116,7 @@ object Main extends App {
       println("==================================================")
 
       controller.run(buildType, downloader, services)
-      controller.errors.foreach {
+      controller.errors().foreach {
         case (key, errs) => {
           errors.get(key) match {
             case None => {
