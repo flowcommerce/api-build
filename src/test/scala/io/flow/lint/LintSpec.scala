@@ -18,7 +18,7 @@ class LintSpec extends AnyFunSpec with Matchers {
 
     for ( file <- Dir.listFiles if file.getName.endsWith(".scala") && !file.getName.endsWith("Helpers.scala") ) {
       var found = false
-      scala.io.Source.fromFile(file).getLines.foreach {
+      scala.io.Source.fromFile(file).getLines().foreach {
         case Pattern(className) => {
           found = true
           if (!all.contains(className)) {

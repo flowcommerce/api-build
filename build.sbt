@@ -2,7 +2,7 @@ name := "api-build"
 
 organization := "io.flow"
 
-scalaVersion in ThisBuild := "2.12.10"
+scalaVersion in ThisBuild := "2.13.3"
 
 version := "0.2.59"
 
@@ -29,8 +29,8 @@ lazy val root = project
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.1.1" % Test,
       "com.github.scopt" %% "scopt" % "3.7.1",
-      compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.4.2"),
-      "com.github.ghik" %% "silencer-lib" % "1.4.2" % Provided
+      compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.7.0" cross CrossVersion.full),
+      "com.github.ghik" %% "silencer-lib" % "1.7.0" % Provided cross CrossVersion.full
     )
   )
 

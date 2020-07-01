@@ -53,7 +53,7 @@ object Lint {
   }
 
   def fromFile(buildType: BuildType, path: String): Seq[String] = {
-    val contents = scala.io.Source.fromFile(path).getLines.mkString("\n")
+    val contents = scala.io.Source.fromFile(path).getLines().mkString("\n")
     val service = Json.parse(contents).as[Service]
     Lint(buildType).validate(service)
   }

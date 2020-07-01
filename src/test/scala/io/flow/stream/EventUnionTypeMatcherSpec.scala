@@ -34,4 +34,9 @@ class EventUnionTypeMatcherSpec extends AnyFunSpec with Matchers {
     val field = Field(name = "organization", `type` = "io.flow.blah.v0.organization", required = true)
     EventUnionTypeMatcher.matchFieldToPayloadType(field, "foo_organization_bar") shouldBe true
   }
+
+  it ("field name short and type long of union type with namespace") {
+    val field = Field(name = "organization", `type` = "io.flow.blah.v0.foo_organization_bar", required = true)
+    EventUnionTypeMatcher.matchFieldToPayloadType(field, "organization") shouldBe true
+  }
 }

@@ -88,7 +88,7 @@ object ApibuilderConfig {
       if (new java.io.File(fullPath).exists) {
         var currentProfile: Option[ApibuilderProfile] = None
 
-        scala.io.Source.fromFile(fullPath).getLines.map(_.trim).foreach {
+        scala.io.Source.fromFile(fullPath).getLines().map(_.trim).foreach {
           case Profile(name) => {
             currentProfile.map { p => allProfiles += p }
             currentProfile = Some(ApibuilderProfile(name = name, baseUrl = DefaultApibuilderProfile.baseUrl))
@@ -116,7 +116,7 @@ object ApibuilderConfig {
       }
     ) match {
       case Success(_) => {
-        Right(allProfiles)
+        Right(allProfiles.toSeq)
       }
       case Failure(ex) => Left(ex.toString)
     }

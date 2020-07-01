@@ -35,7 +35,7 @@ object ApiBuilderUtils {
   private[this] val WordDelimiterRx = "_|\\-|\\.|:|/| ".r
 
   private def splitIntoWords(value: String): Seq[String] = {
-    WordDelimiterRx.split(camelCaseToUnderscore(value)).map(_.trim).filter(!_.isEmpty)
+    WordDelimiterRx.split(camelCaseToUnderscore(value)).toSeq.map(_.trim).filter(!_.isEmpty)
   }
 
   private[this] val Capitals = """([A-Z])""".r
