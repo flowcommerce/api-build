@@ -21,6 +21,7 @@ case class Controller() extends io.flow.build.Controller {
       Lint(buildType).validate(service) match {
         case Nil => println(" Valid!")
         case errors => {
+          println(s"Lint.service ${service.namespace}: ${errors}")
           errors.size match {
             case 1 => println(" 1 error:")
             case n => println(s" $n errors:")

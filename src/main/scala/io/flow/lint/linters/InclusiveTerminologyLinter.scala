@@ -75,8 +75,14 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   }
 
   def validateUnionType(union: Union, unionType: UnionType): Seq[String] = {
-    validateName(unionType.`type`) { m => error(union, unionType, m) } ++
-      unionType.discriminatorValue
+    validateName(unionType.`type`) { m => error(union, unionType, m) } ++ validateUnionTypeDiscriminatorValue(union, unionType)
+  }
+
+  def validateUnionTypeDiscriminatorValue(union: Union, unionType: UnionType): Seq[String] = {
+    unionType.discriminatorValue match {
+      case None => Nil
+      case Some(dv) => validateName(dv) { m => error(union, unionType, s"discriminator value: $m") }
+    }
   }
 
   def validateResource(resource: Resource): Seq[String] = {
