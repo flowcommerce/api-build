@@ -16,8 +16,6 @@ case class Controller() extends io.flow.build.Controller {
     implicit ec: scala.concurrent.ExecutionContext
   ): Unit = {
     services.foreach { service =>
-      print(s"${service.name}...")
-
       Lint(buildType).validate(service) match {
         case Nil => println(" Valid!")
         case errors => {
