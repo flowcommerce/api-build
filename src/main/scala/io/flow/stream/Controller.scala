@@ -17,7 +17,6 @@ case class Controller() extends io.flow.build.Controller {
   override val name = "Stream"
   override val command = "stream"
 
-
   override def run(buildType: BuildType, downloader: Downloader, services: Seq[Service])(implicit ec: ExecutionContext): Unit = {
 
     @tailrec
@@ -29,7 +28,6 @@ case class Controller() extends io.flow.build.Controller {
       } else {
         val importedServices = filteredImports.flatMap { imp =>
           cached.get(imp.organization.key + imp.application.key).orElse {
-            println("Loading imports")
             downloader.service(Application(imp.organization.key, imp.application.key, Application.Latest)) match {
               case Right(svc) => Some(svc)
               case Left(_) =>
@@ -73,7 +71,6 @@ case class Controller() extends io.flow.build.Controller {
               println(s"[ERROR] Unable to generate stream name for union ${typ.qualified} [$className]")
               None
             case Some(streamName) if BannedStreamNames.contains(streamName) =>
-              println(s"Skipping banned stream $streamName")
               None
             case Some(streamName) =>
               val candidates = processUnion(multiService, typ, streamName).toList
@@ -134,11 +131,11 @@ case class Controller() extends io.flow.build.Controller {
       case UnionMemberRx(typeName, eventType, _) if eventType == "upserted" =>
         val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
         if (payloadField.isEmpty) {
-          println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: field not found")
+          // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: field not found")
         }
         val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
         if (payloadTypes.isEmpty) {
-          println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: payload type not found")
+          // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: payload type not found")
         }
         for {
           pt <- payloadTypes
