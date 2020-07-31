@@ -109,4 +109,21 @@ class InclusiveTerminologyLinterSpec extends AnyFunSpec with Matchers {
       Seq("Union example type blacklist: The term 'blacklist' must be replaced by 'denylist'")
     )
   }
+
+  it("parameter.name") {
+    test(resources = Seq(
+      buildResource(
+        "user",
+        operations = Seq(
+          buildSimpleOperation(
+            parameters = Seq(
+              buildParameter("blacklist"),
+            )
+          )
+        )
+      )
+    )) should be(
+      Seq("Resource users GET / Parameter blacklist: The term 'blacklist' must be replaced by 'denylist'")
+    )
+  }
 }

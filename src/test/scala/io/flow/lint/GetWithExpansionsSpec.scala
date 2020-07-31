@@ -137,7 +137,6 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
 
     val resource = Services.buildResource(
       "authorization",
-      "authorizations",
       Seq(
         Services.buildSimpleOperation(
           path = "/authorizations",

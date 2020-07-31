@@ -190,17 +190,16 @@ object Services {
 
   def buildResource(
     `type`: String,
-    plural: String,
     operations: Seq[Operation] = Nil
   ): Resource = Resource(
     `type` = `type`,
-    plural = plural,
+    plural = `type` + "s",
     operations = operations
   )
 
   def buildSimpleOperation(
     method: Method = Method.Get,
-    path: String,
+    path: String = "/",
     parameters: Seq[Parameter] = Nil,
     responseCode: Int = 200,
     responseType: String = "string",

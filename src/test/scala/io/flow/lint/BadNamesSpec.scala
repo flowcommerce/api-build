@@ -32,7 +32,6 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
       resources = Seq(
         Services.buildResource(
           `type` = "user",
-          plural = "users",
           operations = Seq(
             Services.buildSimpleOperation(
               path = "/users",
@@ -46,7 +45,7 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
       )
     )
   }
-  
+
   it("model fields") {
     linter.validate(buildModel("country_of_origin")) should be(
       Seq("Model user Field[country_of_origin]: Name must be 'origin'")
@@ -61,7 +60,7 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
     )
   }
 
-  
+
   it("resource parameter names") {
     linter.validate(buildResource("country_of_origin")) should be(
       Seq("Resource users GET /users Parameter country_of_origin: Name must be 'origin'")
@@ -75,5 +74,5 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
       Seq("Resource users GET /users Parameter postal_code: Name must be 'postal'")
     )
   }
-  
+
 }
