@@ -61,4 +61,28 @@ class InclusiveTerminologyLinterSpec extends AnyFunSpec with Matchers {
       Seq("Model example Field[blacklist]: The term 'blacklist' must be replaced by 'denylist'")
     )
   }
+
+  it("header") {
+    test(headers = Seq(
+      buildHeader(name = "blacklist"))
+    ) should be(
+      Seq("Header blacklist: The term 'blacklist' must be replaced by 'denylist'")
+    )
+  }
+
+  it("enum") {
+    test(enums = Seq(
+      buildEnum(name = "blacklist")
+    )) should be(
+      Seq("Enum blacklist: The term 'blacklist' must be replaced by 'denylist'")
+    )
+  }
+
+  it("enum.value") {
+    test(enums = Seq(
+      buildEnum(name = "example", values = Seq(buildEnumValue("blacklist")))
+    )) should be(
+      Seq("Enum example value blacklist: The term 'blacklist' must be replaced by 'denylist'")
+    )
+  }
 }

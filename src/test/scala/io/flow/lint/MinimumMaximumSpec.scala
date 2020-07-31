@@ -74,7 +74,7 @@ class MinimumMaximumSpec extends AnyFunSpec with Matchers {
   ): Service = {
     Services.Base.copy(
       enums = Seq(
-        Services.buildSimpleEnum(paramName, paramName, Seq(EnumValue(name = paramType)))
+        Services.buildSimpleEnum(paramName, Seq(EnumValue(name = paramType)))
       ),
       models = Seq(
         Services.buildSimpleModel("user")
@@ -154,7 +154,7 @@ class MinimumMaximumSpec extends AnyFunSpec with Matchers {
       minimum = Some(1)
     )) should be(Nil)
   }
-  
+
   it("Param w/out min/max is fine") {
     linter.validate(buildServiceWithParameter()) should be(Nil)
   }

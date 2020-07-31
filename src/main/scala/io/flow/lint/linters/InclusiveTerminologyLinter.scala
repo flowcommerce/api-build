@@ -40,7 +40,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   }
 
   def validateEnum(enum: Enum): Seq[String] = {
-    enum.values.flatMap { validateEnumValue(enum, _) }
+    validateName(enum.name) { m => error(enum, m) } ++ enum.values.flatMap { validateEnumValue(enum, _) }
   }
 
   def validateEnumValue(enum: Enum, enumValue: EnumValue): Seq[String] = {

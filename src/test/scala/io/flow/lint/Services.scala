@@ -23,19 +23,28 @@ object Services {
 
   def buildEnum(
     name: String,
-    plural: String,
     description: Option[String] = None,
     deprecation: Option[Deprecation] = None,
     values: Seq[EnumValue] = Nil,
-    attributes: Seq[Attribute] = Nil
+    attributes: Seq[Attribute] = Nil,
   ): Enum = {
     Enum(
-      name,
-      plural,
-      description,
-      deprecation,
-      values,
-      attributes
+      name = name,
+      plural = name + "s",
+      description = description,
+      deprecation = deprecation,
+      values = values,
+      attributes = attributes,
+    )
+  }
+
+  def buildEnumValue(
+    name: String,
+    value: Option[String] = None,
+  ): EnumValue = {
+    EnumValue(
+      name = name,
+      value = value,
     )
   }
 
@@ -81,6 +90,14 @@ object Services {
     Attribute(
       name = name,
       value = value
+    )
+  }
+
+  def buildHeader(name: String): Header = {
+    Header(
+      name = name,
+      `type` = "string",
+      required = false,
     )
   }
 
@@ -137,10 +154,9 @@ object Services {
     )
   }
 
-  def buildSimpleEnum(name: String, plural: String, values: Seq[EnumValue] = Nil): Enum = {
+  def buildSimpleEnum(name: String, values: Seq[EnumValue] = Nil): Enum = {
     Services.buildEnum(
       name = name,
-      plural = plural,
       values = values
     )
   }
