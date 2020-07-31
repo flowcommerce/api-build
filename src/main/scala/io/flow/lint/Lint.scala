@@ -8,7 +8,7 @@ import play.api.libs.json.Json
 case class Lint(
   buildType: BuildType
 ) {
-  
+
   def validate(service: Service): Seq[String] = {
     Lint.forBuildType(buildType).flatMap(_.validate(service))
   }
@@ -34,6 +34,7 @@ object Lint {
           linters.ExpandableUnionsAreConsistent,
           linters.Get,
           linters.GetByIdIsExpandable,
+          linters.InclusiveTerminologyLinter,
           linters.LowerCasePaths,
           linters.MappingModels,
           linters.MinimumMaximum,

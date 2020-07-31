@@ -125,9 +125,21 @@ trait Helpers {
       typ.substring(i + 1, typ.indexOf("]"))
     }
   }
-  
+
   def nonHealthcheckResources(service: Service): Seq[Resource] = {
     service.resources.filter( _.plural != "healthchecks")
+  }
+
+  def error(enum: Enum, error: String): String = {
+    s"Enum ${enum.name}: $error"
+  }
+
+  def error(header: Header, error: String): String = {
+    s"Header ${header.name}: $error"
+  }
+
+  def error(enum: Enum, enumValue: EnumValue, error: String): String = {
+    s"Enum ${enum.name} value ${enumValue.name}: $error"
   }
 
   def error(union: Union, error: String): String = {
@@ -140,6 +152,14 @@ trait Helpers {
 
   def error(model: Model, error: String): String = {
     s"Model ${model.name}: $error"
+  }
+
+  def error(interface: Interface, field: Field, error: String): String = {
+    s"interface ${interface.name} Field[${field.name}]: $error"
+  }
+
+  def error(interface: Interface, error: String): String = {
+    s"interface ${interface.name}: $error"
   }
 
   def error(model: Model, field: Field, error: String): String = {
