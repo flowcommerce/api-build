@@ -155,11 +155,11 @@ trait Helpers {
   }
 
   def error(interface: Interface, field: Field, error: String): String = {
-    s"interface ${interface.name} Field[${field.name}]: $error"
+    s"Interface ${interface.name} Field[${field.name}]: $error"
   }
 
   def error(interface: Interface, error: String): String = {
-    s"interface ${interface.name}: $error"
+    s"Interface ${interface.name}: $error"
   }
 
   def error(model: Model, field: Field, error: String): String = {

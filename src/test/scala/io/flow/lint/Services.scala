@@ -5,7 +5,7 @@ import play.api.libs.json.{JsObject, Json}
 
 object Services {
 
-  val Base = Service(
+  val Base: Service = Service(
     apidoc = Apidoc(
       version = "0.9.50"
     ),
@@ -89,6 +89,17 @@ object Services {
     fields: Seq[Field] = Nil
   ): Model = {
     Model(
+      name = name,
+      plural = name + "s",
+      fields = fields
+    )
+  }
+
+  def buildInterface(
+    name: String,
+    fields: Seq[Field] = Nil
+  ): Interface = {
+    Interface(
       name = name,
       plural = name + "s",
       fields = fields
@@ -203,7 +214,7 @@ object Services {
     maximum = maximum,
     example = example
   )
-  
+
   def buildResponse(
     code: Int = 200,
     `type`: String

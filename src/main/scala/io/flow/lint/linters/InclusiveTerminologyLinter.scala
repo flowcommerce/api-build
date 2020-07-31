@@ -46,7 +46,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   def validateEnumValue(enum: Enum, enumValue: EnumValue): Seq[String] = {
     validateName(enumValue.name) { m => error(enum, enumValue, m) } ++ (enumValue.value match {
       case None => Nil
-      case Some(v) => validateName(v) { m => error(enum, enumValue, s" value: $m") }
+      case Some(v) => validateName(v) { m => error(enum, enumValue, s"value: $m") }
     })
   }
 
@@ -65,7 +65,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   def validateDiscriminator(union: Union): Seq[String] = {
     union.discriminator match {
       case None => Nil
-      case Some(disc) => validateName(disc) { m => error(union, s" discriminator: $m") }
+      case Some(disc) => validateName(disc) { m => error(union, s"discriminator: $m") }
     }
   }
 
@@ -89,7 +89,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   def validateName(name: String)(errorF: String => String): Seq[String] = {
     Suggestions.get(name) match {
       case None => Nil
-      case Some(s) => Seq(errorF(s" The term '$name' must be replaced by '$s''"))
+      case Some(s) => Seq(errorF(s"The term '$name' must be replaced by '$s'"))
     }
   }
 
