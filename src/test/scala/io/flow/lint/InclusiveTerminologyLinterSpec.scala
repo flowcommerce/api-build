@@ -85,4 +85,28 @@ class InclusiveTerminologyLinterSpec extends AnyFunSpec with Matchers {
       Seq("Enum example value blacklist: The term 'blacklist' must be replaced by 'denylist'")
     )
   }
+
+  it("union") {
+    test(unions = Seq(
+      buildUnion(name = "blacklist")
+    )) should be(
+      Seq("Union blacklist: The term 'blacklist' must be replaced by 'denylist'")
+    )
+  }
+
+  it("union.discriminator") {
+    test(unions = Seq(
+      buildUnion(name = "example", discriminator = Some("blacklist"))
+    )) should be(
+      Seq("Union example: discriminator: The term 'blacklist' must be replaced by 'denylist'")
+    )
+  }
+
+  it("union.type") {
+    test(unions = Seq(
+      buildUnion(name = "example", types = Seq(buildUnionType("blacklist")))
+    )) should be(
+      Seq("Union example type blacklist: The term 'blacklist' must be replaced by 'denylist'")
+    )
+  }
 }

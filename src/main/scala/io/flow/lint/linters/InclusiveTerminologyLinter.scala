@@ -24,7 +24,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   // Note leaving 'gender' out of linter as capturing gender is a valid use case
 
   override def validate(service: Service): Seq[String] = {
-    service.models.flatMap(validateModel) ++ service.enums.flatMap(validateEnum) ++ service.unions.flatMap(validateUnions) ++ service.interfaces.flatMap(validateInterface) ++ service.headers.flatMap(validateHeader)
+    service.models.flatMap(validateModel) ++ service.enums.flatMap(validateEnum) ++ service.unions.flatMap(validateUnion) ++ service.interfaces.flatMap(validateInterface) ++ service.headers.flatMap(validateHeader)
   }
 
   def validateInterface(interface: Interface): Seq[String] = {
@@ -58,8 +58,8 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
     validateName(field.name) { m => error(model, field, m) }
   }
 
-  def validateUnions(union: Union): Seq[String] = {
-     validateDiscriminator(union) ++ union.types.flatMap { validateUnionType(union, _) }
+  def validateUnion(union: Union): Seq[String] = {
+    validateName(union.name) { m => error(union, m) } ++ validateDiscriminator(union) ++ union.types.flatMap { validateUnionType(union, _) }
   }
 
   def validateDiscriminator(union: Union): Seq[String] = {
