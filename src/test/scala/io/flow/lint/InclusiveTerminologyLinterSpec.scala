@@ -110,6 +110,14 @@ class InclusiveTerminologyLinterSpec extends AnyFunSpec with Matchers {
     )
   }
 
+  it("union.type.discriminatorValue") {
+    test(unions = Seq(
+      buildUnion(name = "example", types = Seq(buildUnionType(`type` = "type1", discriminatorValue = Some("blacklist"))))
+    )) should be(
+      Seq("Union example type type1: discriminator value: The term 'blacklist' must be replaced by 'denylist'")
+    )
+  }
+
   it("parameter.name") {
     test(resources = Seq(
       buildResource(

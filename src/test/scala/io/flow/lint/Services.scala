@@ -62,10 +62,12 @@ object Services {
   }
 
   def buildUnionType(
-    `type`: String
+    `type`: String,
+    discriminatorValue: Option[String] = None,
   ): UnionType = {
     UnionType(
-      `type` = `type`
+      `type` = `type`,
+      discriminatorValue = discriminatorValue,
     )
   }
 
