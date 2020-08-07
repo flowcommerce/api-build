@@ -137,6 +137,10 @@ case class OneApi(
         s.models.map(localizeModel(parser, _))
       }.sortBy { _.name.toLowerCase },
 
+      interfaces = services.flatMap { s =>
+        s.interfaces.map(localizeInterface(parser, _))
+      }.sortBy { _.name.toLowerCase },
+
       unions = services.flatMap { s =>
         s.unions.map(localizeUnion(parser, _))
       }.sortBy { _.name.toLowerCase },
@@ -275,6 +279,12 @@ case class OneApi(
   def localizeModel(parser: TextDatatypeParser, model: Model): Model = {
     model.copy(
       fields = model.fields.map(localizeField(parser, _))
+    )
+  }
+
+  def localizeInterface(parser: TextDatatypeParser, interface: Interface): Interface = {
+    interface.copy(
+      fields = interface.fields.map(localizeField(parser, _))
     )
   }
 
