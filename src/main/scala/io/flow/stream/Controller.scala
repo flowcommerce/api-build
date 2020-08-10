@@ -112,7 +112,7 @@ case class Controller() extends io.flow.build.Controller {
       }
       types.toSeq.flatMap {
         case m: ApiBuilderType.Model =>
-          processModel(multiService, apiBuilderUnion, member, m)
+          processModel(multiService, member, m)
         case u: ApiBuilderType.Union =>
           processUnion(multiService, u, streamName)
         case ApiBuilderType.Enum(_, enum) =>
@@ -125,7 +125,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def processModel(multiService: MultiService, apiBuilderUnion: ApiBuilderType.Union, unionMember: UnionType, apiBuilderModel: ApiBuilderType.Model): Seq[EventType] = {
+  private def processModel(multiService: MultiService, unionMember: UnionType, apiBuilderModel: ApiBuilderType.Model): Seq[EventType] = {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
     apiBuilderModel.name match {
       case UnionMemberRx(typeName, eventType, _) if eventType == "upserted" =>
