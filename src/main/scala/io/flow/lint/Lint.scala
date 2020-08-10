@@ -29,6 +29,7 @@ object Lint {
           linters.CommonFieldTypes,
           linters.CommonParameterTypes,
           linters.CommonParametersHaveNoDescriptions,
+          linters.DuplicateMethodAndPath,
           linters.ErrorModels,
           linters.EventModels,
           linters.ExpandableUnionsAreConsistent,
