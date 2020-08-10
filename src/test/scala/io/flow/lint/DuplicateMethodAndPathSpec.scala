@@ -30,18 +30,21 @@ class DuplicateMethodAndPathSpec extends AnyFunSpec with Matchers {
     )
   }
 
-  it("valid services") {
+  it("different paths") {
     linter.validate(buildService(
-      (Method.Get,"/users"),
+      (Method.Get, "/users"),
+      (Method.Get, "/experiences"),
     ))
+  }
 
+  it("different methods") {
     linter.validate(buildService(
       (Method.Get, "/users"),
       (Method.Post, "/users"),
     )) should be(Nil)
   }
 
-  it("validates response type") {
+  it("validates duplicate method and path") {
     linter.validate(buildService(
       (Method.Get, "/users"),
       (Method.Get, "/users"),
