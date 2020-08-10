@@ -152,11 +152,11 @@ case class Controller() extends io.flow.build.Controller {
         } else if (payloadTypes.nonEmpty) {
           payloadTypes.map { pt => EventType.Deleted(apiBuilderModel.name, typeName, Some(pt.model), discriminator) }
         } else {
-          println(s"Skipping non v2 deleted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
+          // println(s"Skipping non v2 deleted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
           Nil
         }
       case _ =>
-        println(s"Skipping misnamed union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
+        // println(s"Skipping misnamed union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
         Nil
     }
   }
