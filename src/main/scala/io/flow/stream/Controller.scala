@@ -91,7 +91,7 @@ case class Controller() extends io.flow.build.Controller {
           }
         }
         case Some(typ) => {
-          println(s"[ERROR] Expected the type of ${typ.qualified} to be a union and not a[${typ.getClass.getName}]")
+          println(s"[ERROR] Expected the type of ${typ.name} to be a union and not a[${typ.getClass.getName}]")
           None
         }
 
