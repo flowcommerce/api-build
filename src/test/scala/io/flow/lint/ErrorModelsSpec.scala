@@ -3,6 +3,7 @@ package io.flow.lint
 import io.apibuilder.spec.v0.models._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
+import play.api.libs.json.Json
 
 class ErrorModelsSpec extends AnyFunSpec with Matchers {
 
@@ -10,15 +11,24 @@ class ErrorModelsSpec extends AnyFunSpec with Matchers {
 
   private[this] val code = Services.buildField("code")
   private[this] val messages = Services.buildField("messages", "[string]", minimum = Some(1))
+  private[this] val errors = Services.buildField("errors", `type` = "[object]")
 
-  def buildService(
-    fields: Seq[Field]
-  ): Service = {
+  def buildV2Service(fields: Seq[Field]): Service = {
+    buildService(
+      fields = fields,
+      attributes = Seq(
+        Services.buildAttribute("linter", Json.obj("error_version" -> 2))
+      )
+    )
+  }
+
+  def buildService(fields: Seq[Field], attributes: Seq[Attribute] = Nil): Service = {
     Services.Base.copy(
       models = Seq(
         Services.buildModel(
           name = "test_error",
-          fields = fields
+          fields = fields,
+          attributes = attributes,
         )
       )
     )
@@ -54,10 +64,10 @@ class ErrorModelsSpec extends AnyFunSpec with Matchers {
   }
 
   it("messages must have a minimum >= 1") {
-    linter.validate(buildService(Seq(code, messages.copy(minimum=None)))) should be(Seq(
+    linter.validate(buildService(Seq(code, messages.copy(minimum = None)))) should be(Seq(
       "Model test_error Field[messages]: missing minimum"
     ))
-    linter.validate(buildService(Seq(code, messages.copy(minimum=Some(0))))) should be(Seq(
+    linter.validate(buildService(Seq(code, messages.copy(minimum = Some(0))))) should be(Seq(
       "Model test_error Field[messages]: minimum must be >= 1"
     ))
   }
@@ -84,6 +94,22 @@ class ErrorModelsSpec extends AnyFunSpec with Matchers {
       ))
     )
     linter.validate(baseService) should be(Nil)
+  }
+
+  it("respects hint for v2") {
+    linter.validate(buildV2Service(Seq(errors))) should be(Nil)
+
+    linter.validate(buildV2Service(Seq(errors.copy(`type` = "string")))) should be(
+      Seq(
+        "Model test_error: Field 'errors' type must be an array and not 'string'",
+      )
+    )
+
+    linter.validate(buildV2Service(Seq(code, messages))) should be(
+      Seq(
+        "Model test_error: requires a field named 'errors'",
+      )
+    )
   }
 
 }
