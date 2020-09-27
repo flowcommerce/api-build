@@ -2,6 +2,7 @@ package io.flow.lint.linters
 
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
+import io.flow.lint.util.{ErrorModelsV1, ErrorModelsV2}
 
 /**
   * For error models (those with an error_id field in position 1), validate:
@@ -63,27 +64,14 @@ case object ErrorModels extends Linter with Helpers {
 
   }
 
-  private[this] val DefaultVersion = "1"
   private[this] def validateModel(service: Service, model: Model): Seq[String] = {
-    println(s"linterAttributeValues(model.attributes, error_version): ${linterAttributeValues(model.attributes, "error_version")}")
-    linterAttributeValues(model.attributes, "error_version").toList match {
-      case Nil => validateModelVersion(service, model, DefaultVersion)
-      case one :: Nil => validateModelVersion(service, model, one)
-      case _ => attributeError(model, "multiple values found for attribute")
-    }
-  }
-
-  private[this] def validateModelVersion(service: Service, model: Model, version: String): Seq[String] = {
-    println(s"VERSI: ${version}")
+    val version = linterAttributeAsMapString(model.attributes).getOrElse("error_version", ErrorModelsV1.Version)
     version.trim match {
-      case DefaultVersion => ErrorModelsV1.validateModel(service, model)
-      case "2" => ErrorModelsV2.validateModel(model)
-      case other => attributeError(model, s"invalid value '$other' - must be '1' or '2'")
+      case ErrorModelsV1.Version => ErrorModelsV1.validateModel(service, model)
+      case ErrorModelsV2.Version => ErrorModelsV2.validateModel(model)
+      case other => Seq(error(model, s"attribute 'linter' name 'error_version' invalid value '$other' - must be '1' or '2'"))
     }
   }
 
-  private[this] def attributeError(model: Model, message: String): Seq[String] = {
-    Seq(error(model, s"attribute 'linter' name 'error_version' $message"))
-  }
 }
 

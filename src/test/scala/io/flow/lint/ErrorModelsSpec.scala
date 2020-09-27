@@ -101,15 +101,26 @@ class ErrorModelsSpec extends AnyFunSpec with Matchers {
 
     linter.validate(buildV2Service(Seq(errors.copy(`type` = "string")))) should be(
       Seq(
-        "Model test_error: Field 'errors' type must be an array and not 'string'",
+        "Model test_error Field[errors]: type must be an array and not 'string'",
       )
     )
 
     linter.validate(buildV2Service(Seq(code, messages))) should be(
       Seq(
-        "Model test_error: requires a field named 'errors'",
+        "Model test_error: must contain a field named 'errors'",
       )
     )
+  }
+
+  it("validates 'error_version'") {
+    linter.validate(buildService(
+      Seq(errors),
+      attributes = Seq(
+        Services.buildAttribute("linter", Json.obj("error_version" -> "foo"))
+      )
+    )) should be(Seq(
+      "Model test_error: attribute 'linter' name 'error_version' invalid value 'foo' - must be '1' or '2'"
+    ))
   }
 
 }

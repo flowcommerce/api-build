@@ -1,13 +1,15 @@
-package io.flow.lint.linters
+package io.flow.lint.util
 
 import io.apibuilder.spec.v0.models.{Field, Model}
+import io.flow.lint.linters.Helpers
 
 /**
-  * For error models (those models ending with _error), validate:
-  *
-  *   a. contains a field named errors that is an array
-  */
+ * For error models (those models ending with _error), validate:
+ *
+ *   a. contains a field named errors that is an array
+ */
 case object ErrorModelsV2 extends Helpers {
+  val Version = "2"
 
   def validateModel(model: Model): Seq[String] = {
     model.fields.find(_.name == "errors") match {

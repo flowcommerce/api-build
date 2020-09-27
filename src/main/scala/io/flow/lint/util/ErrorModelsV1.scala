@@ -1,11 +1,13 @@
-package io.flow.lint.linters
+package io.flow.lint.util
 
 import io.apibuilder.spec.v0.models.{Field, Model, Service}
+import io.flow.lint.linters.Helpers
 
 /**
  * Validate model contains fields named 'code', 'messages'
  */
 case object ErrorModelsV1 extends Helpers {
+  val Version = "1"
 
   def validateModel(service: Service, model: Model): Seq[String] = {
     val fieldNames = model.fields.map(_.name).toList
