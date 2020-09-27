@@ -105,12 +105,14 @@ object Services {
 
   def buildModel(
     name: String,
-    fields: Seq[Field] = Nil
+    fields: Seq[Field] = Nil,
+    attributes: Seq[Attribute] = Nil,
   ): Model = {
     Model(
       name = name,
       plural = name + "s",
-      fields = fields
+      fields = fields,
+      attributes = attributes,
     )
   }
 

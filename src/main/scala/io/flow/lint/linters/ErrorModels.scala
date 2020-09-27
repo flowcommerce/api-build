@@ -2,10 +2,11 @@ package io.flow.lint.linters
 
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
+import io.flow.lint.util.{ErrorModelsV1, ErrorModelsV2}
 
 /**
   * For error models (those with an error_id field in position 1), validate:
-  * 
+  *
   *   a. second field is timestamp
   *   b. if 'organization', next
   *   c. if 'number', next
@@ -64,76 +65,13 @@ case object ErrorModels extends Linter with Helpers {
   }
 
   private[this] def validateModel(service: Service, model: Model): Seq[String] = {
-    val fieldNames = model.fields.map(_.name).toList
-    fieldNames match {
-      case "code" :: "messages" :: _ => {
-        val codeErrors = model.fields.head.`type` == "string" match {
-          case true => Nil
-          case false => {
-            if (hasEnum(service, model.fields.head.`type`)) {
-              Nil
-            } else {
-              Seq(error(model, model.fields.head, "type must be 'string' or a valid enum"))
-            }
-          }
-        }
-
-        val messagesErrors = validateMessageField(model, model.fields(1))
-
-        codeErrors ++ messagesErrors
-      }
-
-      case _ => {
-        val codeErrors = if (fieldNames.contains("code")) {
-          fieldNames match {
-            case "code" :: _ => Nil
-            case _ => Seq(error(model, "first field must be 'code'"))
-          }
-        } else {
-          Seq(error(model, "requires a field named 'code'"))
-        }
-
-        val messagesErrors = if (fieldNames.contains("messages")) {
-          fieldNames match {
-            case _ :: "messages" :: _ => Nil
-            case _ => {
-              if (fieldNames.contains("code")) {
-                Seq(error(model, "second field must be 'messages'"))
-              } else {
-                Nil
-              }
-            }
-          }
-        } else {
-          Seq(error(model, "requires a field named 'messages'"))
-        }
-
-        codeErrors ++ messagesErrors
-      }
+    val version = linterAttributeAsMapString(model.attributes).getOrElse("error_version", ErrorModelsV1.Version)
+    version.trim match {
+      case ErrorModelsV1.Version => ErrorModelsV1.validateModel(service, model)
+      case ErrorModelsV2.Version => ErrorModelsV2.validateModel(model)
+      case other => Seq(error(model, s"attribute 'linter' name 'error_version' invalid value '$other' - must be '1' or '2'"))
     }
-  }
-
-  def validateMessageField(model: Model, field: Field): Seq[String] = {
-    val typeErrors = if (field.`type` == "[string]") {
-      Nil
-    } else {
-      Seq(error(model, field, "type must be '[string]'"))
-    }
-
-    val minimumErrors = field.minimum match {
-      case Some(n) => {
-        if (n >= 1) {
-          Nil
-        } else {
-          Seq(error(model, field, "minimum must be >= 1"))
-        }
-      }
-      case None => {
-        Seq(error(model, field, "missing minimum"))
-      }
-    }
-
-    typeErrors ++ minimumErrors
   }
 
 }
+
