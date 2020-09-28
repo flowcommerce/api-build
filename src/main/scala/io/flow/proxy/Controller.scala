@@ -8,9 +8,9 @@ import play.api.libs.json.Json
 case class Controller() extends io.flow.build.Controller {
 
   /**
-    * Whitelist of applications in the 'api' repo that do not exist in registry
+    * Allowlist of applications in the 'api' repo that do not exist in registry
     */
-  private[this] val ExcludeWhiteList = Seq("common", "healthcheck", "usage", "gift-card")
+  private[this] val ExcludeAllowList = Seq("common", "healthcheck", "usage", "gift-card")
 
   /**
     * This is the hostname of the services when running in docker on
@@ -62,7 +62,7 @@ case class Controller() extends io.flow.build.Controller {
   ): Unit = {
     val services = allServices.
       filter { s => s.resources.nonEmpty }.
-      filterNot { s => ExcludeWhiteList.exists(ew => s.name.startsWith(ew)) }
+      filterNot { s => ExcludeAllowList.exists(ew => s.name.startsWith(ew)) }
 
     val serviceHostResolver = ServiceHostResolver(allServices)
 
