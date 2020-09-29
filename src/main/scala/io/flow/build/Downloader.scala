@@ -34,7 +34,7 @@ case class Downloader(config: ApibuilderProfile) {
         client.versions.getByApplicationKeyAndVersion(app.organization, app.application, app.version).map { v =>
           v.service
         },
-        Duration(15, "seconds")
+        Duration(45, "seconds")
       )
       println(" Done")
       result
