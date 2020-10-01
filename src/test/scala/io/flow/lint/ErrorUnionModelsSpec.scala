@@ -6,7 +6,7 @@ import org.scalatest.matchers.should.Matchers
 
 class ErrorUnionModelsSpec extends AnyFunSpec with Matchers {
 
-  private[this] val linter = linters.ErrorModels
+  private[this] val linter = linters.ErrorModelsV1
 
   private[this] val messages = Services.buildField("messages", "[string]", minimum = Some(1))
 
