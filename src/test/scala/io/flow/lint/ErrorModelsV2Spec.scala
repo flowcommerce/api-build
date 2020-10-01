@@ -50,4 +50,61 @@ class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
     linter.validate(buildService(Seq(errors))) should be(Nil)
   }
 
+  it("errors.errors must be an array") {
+    linter.validate(buildService(
+      Seq(Services.buildModel(
+        "checkout_errors",
+        fields = Seq(
+          Services.buildField("errors", "string")
+        )
+      ))
+    )) should be(Seq(
+      "Model checkout_errors Field[errors]: type must be an array and not 'string'",
+    ))
+  }
+
+  it("errors.errors base type must end in _error") {
+    linter.validate(buildService(
+      Seq(Services.buildModel(
+        "checkout_errors",
+        fields = Seq(
+          Services.buildField("errors", "[foo]")
+        )
+      ))
+    )) should be(Seq(
+      "Model checkout_errors Field[errors]: type '[foo]' must end in '_error'",
+    ))
+  }
+
+  it("errors must contain field named 'code' of type 'string'") {
+    def build(fields: Seq[Field]) = {
+      linter.validate(buildService(
+        Seq(Services.buildModel("test_error", fields = fields))
+      ))
+    }
+
+    build(Seq(
+      Services.buildField("foo", "string"),
+      Services.buildField("message", "string"),
+    )) should be(Seq(
+      "Model test_error: must contain a field named 'code'",
+    ))
+
+    build(Seq(
+      Services.buildField("code", "string"),
+      Services.buildField("bar", "string"),
+    )) should be(Seq(
+      "Model test_error: must contain a field named 'message'",
+    ))
+
+    build(Seq(
+      Services.buildField("code", "string"),
+      Services.buildField("message", "integer"),
+    )) should be(Seq(
+      "Model test_error Field[message]: type must be 'string' and not 'integer'",
+    ))
+
+    linter.validate(buildService(Seq(error))) should be(Nil)
+  }
+
 }

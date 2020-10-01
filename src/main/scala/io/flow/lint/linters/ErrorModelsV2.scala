@@ -37,7 +37,13 @@ case object ErrorModelsV2 extends Linter with Helpers {
 
   private[this] def validateWrapperType(model: Model, field: Field): Seq[String] = {
     if (isArray(field.`type`)) {
-      Nil
+      val fieldType = baseType(field.`type`)
+      if (fieldType.endsWith("_error")) {
+        Nil
+      } else {
+        // TODO: Verify type is a model
+        Seq(error(model, field, s"type '${field.`type`}' must end in '_error'"))
+      }
     } else {
       Seq(error(model, field, s"type must be an array and not '${field.`type`}'"))
     }
@@ -64,7 +70,7 @@ case object ErrorModelsV2 extends Linter with Helpers {
         if (f.`type` == "string") {
           Nil
         } else {
-          Seq(error(model, f, s"type must be 'string' and not '${f.`type`}"))
+          Seq(error(model, f, s"type must be 'string' and not '${f.`type`}'"))
         }
       }
     }
