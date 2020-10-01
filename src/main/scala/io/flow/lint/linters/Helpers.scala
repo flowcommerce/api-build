@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.apibuilder.spec.v0.models._
-import play.api.libs.json.{JsError, JsObject, JsString, JsSuccess, JsValue}
+import play.api.libs.json.{JsError, JsNumber, JsObject, JsString, JsSuccess, JsValue}
 
 trait Helpers {
 
@@ -240,6 +240,14 @@ trait Helpers {
           case s: JsSuccess[Seq[String]] => s.get
         }
       }
+    }
+  }
+
+  def errorVersion(attributes: Seq[Attribute]): Option[Int] = {
+    linterAttributeAsMap(attributes).get("error_version").flatMap {
+      case s: JsString => s.value.toIntOption
+      case n: JsNumber => Some(n.value.toInt)
+      case _ => None
     }
   }
 
