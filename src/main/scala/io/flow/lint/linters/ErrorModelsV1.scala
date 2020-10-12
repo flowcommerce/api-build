@@ -13,10 +13,13 @@ import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
 case object ErrorModelsV1 extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    val unionsThatEndInError = service.unions.filter { u => isError(u.name) }
+    val unionsThatEndInError = service.unions.
+      filter { u => !ignored(u.attributes, "error") }.
+      filter { u => isError(u.name) }
 
     val modelErrors = service.models.
       filter { m => isError(m.name) }.
+      filter { m => !ignored(m.attributes, "error") }.
       filter { m =>
         !unions(service, m).exists { u => isError(u.name) }
       }.

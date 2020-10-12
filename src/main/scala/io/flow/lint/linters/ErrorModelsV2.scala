@@ -15,7 +15,9 @@ import io.flow.lint.Linter
 case object ErrorModelsV2 extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.models.flatMap { m =>
+    service.models
+      .filter { m => !ignored(m.attributes, "error") }
+      .flatMap { m =>
       if (m.name.endsWith("_errors")) {
         validateWrapper(m)
       } else if (m.name.endsWith("_error") && errorVersion(m.attributes).contains(2)) {
