@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.apibuilder.spec.v0.models._
-import play.api.libs.json.{JsError, JsSuccess}
+import play.api.libs.json.{JsError, JsNumber, JsObject, JsString, JsSuccess, JsValue}
 
 trait Helpers {
 
@@ -238,6 +238,37 @@ trait Helpers {
         (attr.value \ "ignore").validate[Seq[String]] match {
           case _: JsError => Nil
           case s: JsSuccess[Seq[String]] => s.get
+        }
+      }
+    }
+  }
+
+  def errorVersion(attributes: Seq[Attribute]): Option[Int] = {
+    linterAttributeAsMap(attributes).get("error_version").flatMap {
+      case s: JsString => s.value.toIntOption
+      case n: JsNumber => Some(n.value.toInt)
+      case _ => None
+    }
+  }
+
+  def linterAttributeAsMapString(attributes: Seq[Attribute]): Map[String, String] = {
+    linterAttributeAsMap(attributes).map { case (k, v) =>
+      k -> (v match {
+        case v: JsString => v.value
+        case v => v.toString()
+      })
+    }
+  }
+
+  def linterAttributeAsMap(attributes: Seq[Attribute]): Map[String, JsValue] = {
+    attributes.find(_.name == "linter") match {
+      case None => {
+        Map.empty
+      }
+      case Some(attr) => {
+        attr.value match {
+          case m: JsObject => m.value.toMap
+          case _ => Map.empty
         }
       }
     }

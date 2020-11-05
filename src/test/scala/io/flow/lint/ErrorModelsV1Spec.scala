@@ -4,21 +4,20 @@ import io.apibuilder.spec.v0.models._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class ErrorModelsSpec extends AnyFunSpec with Matchers {
+class ErrorModelsV1Spec extends AnyFunSpec with Matchers {
 
-  private[this] val linter = linters.ErrorModels
+  private[this] val linter = linters.ErrorModelsV1
 
   private[this] val code = Services.buildField("code")
   private[this] val messages = Services.buildField("messages", "[string]", minimum = Some(1))
 
-  def buildService(
-    fields: Seq[Field]
-  ): Service = {
+  def buildService(fields: Seq[Field], attributes: Seq[Attribute] = Nil): Service = {
     Services.Base.copy(
       models = Seq(
         Services.buildModel(
           name = "test_error",
-          fields = fields
+          fields = fields,
+          attributes = attributes,
         )
       )
     )
@@ -54,10 +53,10 @@ class ErrorModelsSpec extends AnyFunSpec with Matchers {
   }
 
   it("messages must have a minimum >= 1") {
-    linter.validate(buildService(Seq(code, messages.copy(minimum=None)))) should be(Seq(
+    linter.validate(buildService(Seq(code, messages.copy(minimum = None)))) should be(Seq(
       "Model test_error Field[messages]: missing minimum"
     ))
-    linter.validate(buildService(Seq(code, messages.copy(minimum=Some(0))))) should be(Seq(
+    linter.validate(buildService(Seq(code, messages.copy(minimum = Some(0))))) should be(Seq(
       "Model test_error Field[messages]: minimum must be >= 1"
     ))
   }
@@ -85,5 +84,4 @@ class ErrorModelsSpec extends AnyFunSpec with Matchers {
     )
     linter.validate(baseService) should be(Nil)
   }
-
 }

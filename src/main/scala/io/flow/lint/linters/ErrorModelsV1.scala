@@ -5,20 +5,27 @@ import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
 
 /**
   * For error models (those with an error_id field in position 1), validate:
-  * 
+  *
   *   a. second field is timestamp
   *   b. if 'organization', next
   *   c. if 'number', next
   */
-case object ErrorModels extends Linter with Helpers {
+case object ErrorModelsV1 extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    val unionsThatEndInError = service.unions.filter { u => isError(u.name) }
+    val unionsThatEndInError = service.unions.
+      filter { u => !ignored(u.attributes, "error") }.
+      filter { u => isError(u.name) }
 
     val modelErrors = service.models.
       filter { m => isError(m.name) }.
+      filter { m => !ignored(m.attributes, "error") }.
       filter { m =>
         !unions(service, m).exists { u => isError(u.name) }
+      }.
+      filter { m =>
+        val version = errorVersion(m.attributes)
+        version.isEmpty || version.contains(1)
       }.
       flatMap(validateModel(service, _))
 
@@ -136,4 +143,6 @@ case object ErrorModels extends Linter with Helpers {
     typeErrors ++ minimumErrors
   }
 
+
 }
+

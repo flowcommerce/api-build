@@ -91,7 +91,7 @@ case class Controller() extends io.flow.build.Controller {
           }
         }
         case Some(typ) => {
-          println(s"[ERROR] Expected the type of ${typ.qualified} to be a union and not a[${typ.getClass.getName}]")
+          println(s"[ERROR] Expected the type of ${typ.name} to be a union and not a[${typ.getClass.getName}]")
           None
         }
 
@@ -112,7 +112,7 @@ case class Controller() extends io.flow.build.Controller {
       }
       types.toSeq.flatMap {
         case m: ApiBuilderType.Model =>
-          processModel(multiService, apiBuilderUnion, member, m)
+          processModel(multiService, member, m)
         case u: ApiBuilderType.Union =>
           processUnion(multiService, u, streamName)
         case ApiBuilderType.Enum(_, enum) =>
@@ -125,7 +125,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def processModel(multiService: MultiService, apiBuilderUnion: ApiBuilderType.Union, unionMember: UnionType, apiBuilderModel: ApiBuilderType.Model): Seq[EventType] = {
+  private def processModel(multiService: MultiService, unionMember: UnionType, apiBuilderModel: ApiBuilderType.Model): Seq[EventType] = {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
     apiBuilderModel.name match {
       case UnionMemberRx(typeName, eventType, _) if eventType == "upserted" =>
@@ -152,11 +152,11 @@ case class Controller() extends io.flow.build.Controller {
         } else if (payloadTypes.nonEmpty) {
           payloadTypes.map { pt => EventType.Deleted(apiBuilderModel.name, typeName, Some(pt.model), discriminator) }
         } else {
-          println(s"Skipping non v2 deleted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
+          // println(s"Skipping non v2 deleted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
           Nil
         }
       case _ =>
-        println(s"Skipping misnamed union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
+        // println(s"Skipping misnamed union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
         Nil
     }
   }
