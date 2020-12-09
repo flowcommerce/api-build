@@ -32,7 +32,7 @@ object Main extends App {
         scopt.Read.reads(s => BuildType.fromString(s).getOrElse(sys.error(s"Unknown BuildType '$s'")))
 
       val parser = new scopt.OptionParser[Config]("api-build") {
-        override def showUsageOnError = true
+        override def showUsageOnError = Some(true)
 
         arg[BuildType]("<build type>")
           .action((bt, c) => c.copy(buildType = bt))
