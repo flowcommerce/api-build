@@ -75,21 +75,14 @@ class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
     }
 
     build(Seq(
-      Services.buildField("foo", "string"),
-      Services.buildField("message", "string"),
-    )) should be(Seq(
-      "Model test_error: must contain a field named 'code'",
-    ))
-
-    build(Seq(
-      Services.buildField("code", "string"),
+      code,
       Services.buildField("bar", "string"),
     )) should be(Seq(
       "Model test_error: must contain a field named 'message'",
     ))
 
     build(Seq(
-      Services.buildField("code", "string"),
+      code,
       Services.buildField("message", "integer"),
     )) should be(Seq(
       "Model test_error Field[message]: type must be 'string' and not 'integer'",
