@@ -20,7 +20,7 @@ case object ErrorModelsV2 extends Linter with Helpers {
       .flatMap { m =>
       if (m.name.endsWith("_errors")) {
         validateWrapper(m)
-      } else if (m.name.endsWith("_error") && errorVersion(m.attributes).contains(2)) {
+      } else if (m.name.endsWith("_error") && !errorVersion(m.attributes).contains(1)) {
         validateModel(m)
       } else {
         Nil
