@@ -20,14 +20,17 @@ case object ErrorModelsV2 extends Linter with Helpers {
       .flatMap { m =>
       if (m.name.endsWith("_errors")) {
         validateWrapper(m)
-      } else if (m.name.endsWith("_error") && errorVersion(m.attributes).contains(2)) {
-        validateModel(m)
+      } else if (isErrorModel(m)) {
+        validateModel(service, m)
       } else {
         Nil
       }
     }
   }
 
+  private[this] def isErrorModel(m: Model): Boolean = {
+    m.name.endsWith("_error") && !errorVersion(m.attributes).contains(1) && m.fields.exists(_.name == "code")
+  }
   private[this] def validateWrapper(model: Model): Seq[String] = {
     model.fields.find(_.name == "errors") match {
       case None => Seq(error(model, "must contain a field named 'errors'"))
@@ -49,16 +52,18 @@ case object ErrorModelsV2 extends Linter with Helpers {
     }
   }
 
-  private[this] def validateModel(model: Model): Seq[String] = {
-    validateModelCode(model) ++ validateModelMessage(model)
+  private[this] def validateModel(service: Service, model: Model): Seq[String] = {
+    validateModelCode(service, model) ++ validateModelMessage(model)
   }
 
-  private[this] def validateModelCode(model: Model): Seq[String] = {
+  private[this] def validateModelCode(service: Service, model: Model): Seq[String] = {
     model.fields.find(_.name == "code") match {
       case None => Seq(error(model, "must contain a field named 'code'"))
-      case Some(_) => {
-        // TODO: resolve field type and ensure an enum
-        Nil
+      case Some(f) => {
+        service.enums.find(_.name == f.`type`) match {
+          case None => Seq(error(model, f, "type must resolve to a known enum"))
+          case Some(_) => Nil
+        }
       }
     }
   }

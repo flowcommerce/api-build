@@ -23,10 +23,7 @@ case object ErrorModelsV1 extends Linter with Helpers {
       filter { m =>
         !unions(service, m).exists { u => isError(u.name) }
       }.
-      filter { m =>
-        val version = errorVersion(m.attributes)
-        version.isEmpty || version.contains(1)
-      }.
+      filter { m => errorVersion(m.attributes).contains(1) }.
       flatMap(validateModel(service, _))
 
     val unionErrors = unionsThatEndInError.flatMap(validateUnion(service, _))

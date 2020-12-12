@@ -3,7 +3,6 @@ package io.flow.lint
 import io.apibuilder.spec.v0.models._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.Json
 
 class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
 
@@ -28,15 +27,7 @@ class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
   def buildService(models: Seq[Model]): Service = {
     Services.Base.copy(
       enums = Seq(codeEnum),
-      models = models.map { m =>
-        m.copy(
-          attributes = Seq(
-            Services.buildAttribute("linter", Json.obj(
-              "error_version" -> "2"
-            ))
-          )
-        )
-      }
+      models = models,
     )
   }
 
@@ -84,21 +75,14 @@ class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
     }
 
     build(Seq(
-      Services.buildField("foo", "string"),
-      Services.buildField("message", "string"),
-    )) should be(Seq(
-      "Model test_error: must contain a field named 'code'",
-    ))
-
-    build(Seq(
-      Services.buildField("code", "string"),
+      code,
       Services.buildField("bar", "string"),
     )) should be(Seq(
       "Model test_error: must contain a field named 'message'",
     ))
 
     build(Seq(
-      Services.buildField("code", "string"),
+      code,
       Services.buildField("message", "integer"),
     )) should be(Seq(
       "Model test_error Field[message]: type must be 'string' and not 'integer'",

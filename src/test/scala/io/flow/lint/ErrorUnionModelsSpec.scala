@@ -3,6 +3,7 @@ package io.flow.lint
 import io.apibuilder.spec.v0.models._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
+import play.api.libs.json.Json
 
 class ErrorUnionModelsSpec extends AnyFunSpec with Matchers {
 
@@ -29,7 +30,10 @@ class ErrorUnionModelsSpec extends AnyFunSpec with Matchers {
       models = Seq(
         Services.buildModel(
           name = modelName,
-          fields = fields
+          fields = fields,
+          attributes = Seq(
+            Services.buildAttribute("linter", Json.obj("error_version" -> "1"))
+          )
         )
       )
     )
