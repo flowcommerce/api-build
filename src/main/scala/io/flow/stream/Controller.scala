@@ -1,6 +1,6 @@
 package io.flow.stream
 import com.github.ghik.silencer.silent
-import io.apibuilder.spec.v0.models.{Field, Service, UnionType}
+import io.apibuilder.spec.v0.models.{Field, Model, Service, UnionType}
 import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService}
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
@@ -167,8 +167,47 @@ case class Controller() extends io.flow.build.Controller {
       typeName = typeField.`type`
     ) match {
       case Some(m: ApiBuilderType.Model) => Some (m)
+      case Some(m: ApiBuilderType.Union) => Some(sythesizeModelFromUnion(m, multiService))
       case _ => None
     }
+  }
+
+  private def sythesizeModelFromUnion(union: ApiBuilderType.Union, multiService: MultiService): ApiBuilderType.Model = {
+    val unionFields = union.types.map { unionType =>
+      (multiService.findType(
+        defaultNamespace = union.namespace,
+        typeName = unionType.`type`.`type`
+      ) collect {
+        case m: ApiBuilderType.Model => m.model.fields
+        case m: ApiBuilderType.Union => sythesizeModelFromUnion(m, multiService).model.fields
+      }).getOrElse(Nil)
+    }
+
+    // Collect Fields that are identical (same name, type and requiredness) across all union members
+    val sharedFields: Seq[Field] = unionFields.headOption.fold(Seq.empty[Field]){ head =>
+      val tail = unionFields.tail
+      head.filter(field =>
+        tail.forall(
+          _.exists(otherField =>
+            field.name == otherField.name &&
+            field.`type` == otherField.`type` &&
+            field.required == otherField.required
+          )
+        )
+      )
+    }
+
+    val model = Model(
+      name = union.union.name,
+      plural = union.union.plural,
+      description = union.union.description,
+      deprecation = union.union.deprecation,
+      fields = sharedFields,
+      attributes = union.union.attributes,
+      interfaces = union.union.interfaces,
+    )
+
+    ApiBuilderType.Model(union.service, model)
   }
 
   private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
