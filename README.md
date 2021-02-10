@@ -39,23 +39,25 @@ api-build needs to access apibuilder and requires an API Token:
   2. Create the ~/.apibuilder/config file - see https://github.com/apicollective/apibuilder-cli
 
 
+## building jar file
+
+We are using the sbt assembly plugin to build
+
+    sbt assembly
+
 ## publishing jar file
 
-We are using one-jar to publish (see https://github.com/sbt/sbt-onejar)
-
-    sbt
-
-    one-jar
+    go run ./release.go
 
 ## Running from the command line:
 
-    java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar lint flow/common flow/user
-    java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar oneapi flow/common flow/user
-    java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/common flow/user
+    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar lint flow/common flow/user
+    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar oneapi flow/common flow/user
+    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar all flow/common flow/user
 
 To specify a specific API Builder Profile:
 
-    APIBUILDER_PROFILE=xxx java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/common flow/user
+    APIBUILDER_PROFILE=xxx java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar all flow/common flow/user
 
 Or to specify a specific APIBUILDER URL and/or Token:
 

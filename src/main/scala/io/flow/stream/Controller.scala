@@ -1,6 +1,6 @@
 package io.flow.stream
 import com.github.ghik.silencer.silent
-import io.apibuilder.spec.v0.models.{Field, Service, UnionType}
+import io.apibuilder.spec.v0.models.{Field, Service, UnionType, Model}
 import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService}
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
@@ -167,8 +167,37 @@ case class Controller() extends io.flow.build.Controller {
       typeName = typeField.`type`
     ) match {
       case Some(m: ApiBuilderType.Model) => Some (m)
+      case Some(m: ApiBuilderType.Union) => Some(sythesizeModelFromUnion(m, multiService))
       case _ => None
     }
+  }
+
+  private def sythesizeModelFromUnion(union: ApiBuilderType.Union, multiService: MultiService): ApiBuilderType.Model = {
+    val model = Model(
+      name = union.union.name,
+      plural = union.union.plural,
+      description = union.union.description,
+      deprecation = union.union.deprecation,
+      fields = Nil,
+      attributes = union.union.attributes,
+      interfaces = union.union.interfaces,
+    )
+    val aggregatedModel = union.union.interfaces.foldLeft(model) { case (model, interface) =>
+      val interfaceTypes = multiService.findTypes(
+        defaultNamespace = union.namespace,
+        typeName = interface
+      ) collect {
+        case m: ApiBuilderType.Interface => m.interface
+      }
+      interfaceTypes.foldLeft(model) { case (model, interfaceType) =>
+        model.copy(
+          fields = model.fields ++ interfaceType.fields,
+          attributes = model.attributes ++ interfaceType.attributes,
+        )
+      }
+    }
+
+    ApiBuilderType.Model(union.service, aggregatedModel)
   }
 
   private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
