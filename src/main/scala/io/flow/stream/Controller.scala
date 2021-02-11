@@ -207,63 +207,25 @@ case class Controller() extends io.flow.build.Controller {
           // field present in some or all models, same type
           fields.headOption.map(_.copy(required = false))
         case _ =>
-          // different types, use obj
+          // different types, hacky-hack to use obj
+          val (arrayTypes, singularTypes) = types.partition(ArrayTypeMatcher.matches)
 
-          val partitioned: (List[String], List[String]) = types.partition(t => ArrayTypeMatcher.matches(t))
-          if (partitioned._1.size > 0 && partitioned._2.size > 0) {
+          if (arrayTypes.size > 0 && singularTypes.size > 0) {
+            // mix of arrays and singular types - can't support that, drop the field
             None
-          } else if (partitioned._1.size > 0 && requireds.size == 1) {
+          } else if (arrayTypes.size > 0 && requireds.size == 1) {
+            // Only arrays, all same requiredness
             fields.headOption.map(f => f.copy(`type` = "[obj]"))
-          } else if (partitioned._1.size > 0) {
+          } else if (arrayTypes.size > 0) {
+            // Only arrays, different requiredness
             fields.headOption.map(f => f.copy(`type` = "[obj]", required = false))
           } else if (requireds.size == 1) {
+            // Only singular types, all same requiredness
             fields.headOption.map(f => f.copy(`type` = "obj"))
-          }else {
+          } else {
+            // Only singular types, different requiredness
             fields.headOption.map(f => f.copy(`type` = "obj", required = false))
           }
-//
-//          sealed trait WrappedAnyType
-//          case class ArrayType(wrapped: AnyType) extends WrappedAnyType
-//          case class SingularType(wrapped: AnyType) extends WrappedAnyType
-//          case class UnknownType(name: String) extends WrappedAnyType
-//
-//          val partitioned = types.partitionMap { _ match {
-//            case ArrayTypeMatcher(contained) => Left(contained)
-//            case other => Right(other)
-//          }}
-//
-//          val partitionedArrays = partitioned._1.partitionMap { typ =>
-//            multiService.findType(
-//              defaultNamespace = namespace,
-//              typeName = typ
-//            )
-//            .map(t => Right(ArrayType(t)))
-//            .getOrElse(Left(UnknownType(typ)))
-//          }
-//
-//          val partitionedSingulars = partitioned._2.partitionMap { typ =>
-//            multiService.findType(
-//              defaultNamespace = namespace,
-//              typeName = typ
-//            )
-//              .map(t => Right(SingularType(t)))
-//              .getOrElse(Left(UnknownType(typ)))
-//          }
-//
-//          val resolvedArrays = partitionedArrays._2
-//          val unknownArrays = partitionedArrays._1
-//          val resolvedSingulars = partitionedSingulars._2
-//          val unknownSingulars = partitionedSingulars._1
-//
-//          def unifyTypes(types: Seq[AnyType]): Option[String] = ???
-//
-//          (resolvedArrays, unknownArrays, resolvedSingulars, unknownSingulars) match {
-//            case (some, Nil, Nil, Nil) => unifyTypes(some.map(_.wrapped)).map(t => s"[$t]")
-//            case (Nil, some, Nil, Nil) if some.toSet.size == 1 => some.headOption.map(_.name)
-//            case (Nil, Nil, some, Nil) =>unifyTypes(some.map(_.wrapped))
-//            case (Nil, Nil, Nil, some) if some.toSet.size == 1 => some.headOption.map(_.name)
-//            case _ => None
-//          }
       }
     }
 
