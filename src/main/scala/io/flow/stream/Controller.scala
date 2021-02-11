@@ -14,6 +14,8 @@ case class Controller() extends io.flow.build.Controller {
     "production.localized.item.internal.event.v0.localized_item_event.json"
   )
 
+  private val ArrayTypeMatcher = """\[(.+)\]""".r
+
   override val name = "Stream"
   override val command = "stream"
 
@@ -167,47 +169,115 @@ case class Controller() extends io.flow.build.Controller {
       typeName = typeField.`type`
     ) match {
       case Some(m: ApiBuilderType.Model) => Some (m)
-      case Some(m: ApiBuilderType.Union) => Some(sythesizeModelFromUnion(m, multiService))
+      case Some(m: ApiBuilderType.Union) => sythesizeModelFromUnion(m, multiService)
       case _ => None
     }
   }
 
-  private def sythesizeModelFromUnion(union: ApiBuilderType.Union, multiService: MultiService): ApiBuilderType.Model = {
-    val unionFields = union.types.map { unionType =>
-      (multiService.findType(
+  private def sythesizeModelFromUnion(union: ApiBuilderType.Union, multiService: MultiService): Option[ApiBuilderType.Model] = {
+    val unionModels = union.types.flatMap { unionType =>
+      multiService.findType(
         defaultNamespace = union.namespace,
         typeName = unionType.`type`.`type`
       ) collect {
-        case m: ApiBuilderType.Model => m.model.fields
-        case m: ApiBuilderType.Union => sythesizeModelFromUnion(m, multiService).model.fields
-      }).getOrElse(Nil)
+        case m: ApiBuilderType.Model =>  Some(m)
+        case m: ApiBuilderType.Union => sythesizeModelFromUnion(m, multiService)
+      }
+    }.flatten
+    unionModels.headOption.map { head =>
+      mergeModels(unionModels, union.name, head.service)
     }
+  }
 
-    // Collect Fields that are identical (same name, type and requiredness) across all union members
-    val sharedFields: Seq[Field] = unionFields.headOption.fold(Seq.empty[Field]){ head =>
-      val tail = unionFields.tail
-      head.filter(field =>
-        tail.forall(
-          _.exists(otherField =>
-            field.name == otherField.name &&
-            field.`type` == otherField.`type` &&
-            field.required == otherField.required
-          )
-        )
-      )
+  private def mergeModels(models: Seq[ApiBuilderType.Model], toName: String, service: ApiBuilderService): ApiBuilderType.Model = {
+    val allFields: Seq[Map[String, Field]] = models.map(_.model.fields).map { _.map(t => t.name -> t).toMap }
+
+    val allFieldNames = allFields.foldLeft(Set.empty[String]){ case (agg, fields) => agg ++ fields.keySet }
+
+    val mergedFields = allFieldNames.flatMap { fieldName =>
+      val fields = allFields.flatMap(_.get(fieldName))
+      val types = fields.map(_.`type`).toSet.toList
+      val requireds = fields.map(_.required).toSet
+
+      types match {
+        case _ :: Nil if fields.size == models.size && requireds.size == 1 =>
+          // field present in all models, same type and same requiredness
+          fields.headOption
+        case _ :: Nil =>
+          // field present in some or all models, same type
+          fields.headOption.map(_.copy(required = false))
+        case _ =>
+          // different types, use obj
+
+          val partitioned: (List[String], List[String]) = types.partition(t => ArrayTypeMatcher.matches(t))
+          if (partitioned._1.size > 0 && partitioned._2.size > 0) {
+            None
+          } else if (partitioned._1.size > 0 && requireds.size == 1) {
+            fields.headOption.map(f => f.copy(`type` = "[obj]"))
+          } else if (partitioned._1.size > 0) {
+            fields.headOption.map(f => f.copy(`type` = "[obj]", required = false))
+          } else if (requireds.size == 1) {
+            fields.headOption.map(f => f.copy(`type` = "obj"))
+          }else {
+            fields.headOption.map(f => f.copy(`type` = "obj", required = false))
+          }
+//
+//          sealed trait WrappedAnyType
+//          case class ArrayType(wrapped: AnyType) extends WrappedAnyType
+//          case class SingularType(wrapped: AnyType) extends WrappedAnyType
+//          case class UnknownType(name: String) extends WrappedAnyType
+//
+//          val partitioned = types.partitionMap { _ match {
+//            case ArrayTypeMatcher(contained) => Left(contained)
+//            case other => Right(other)
+//          }}
+//
+//          val partitionedArrays = partitioned._1.partitionMap { typ =>
+//            multiService.findType(
+//              defaultNamespace = namespace,
+//              typeName = typ
+//            )
+//            .map(t => Right(ArrayType(t)))
+//            .getOrElse(Left(UnknownType(typ)))
+//          }
+//
+//          val partitionedSingulars = partitioned._2.partitionMap { typ =>
+//            multiService.findType(
+//              defaultNamespace = namespace,
+//              typeName = typ
+//            )
+//              .map(t => Right(SingularType(t)))
+//              .getOrElse(Left(UnknownType(typ)))
+//          }
+//
+//          val resolvedArrays = partitionedArrays._2
+//          val unknownArrays = partitionedArrays._1
+//          val resolvedSingulars = partitionedSingulars._2
+//          val unknownSingulars = partitionedSingulars._1
+//
+//          def unifyTypes(types: Seq[AnyType]): Option[String] = ???
+//
+//          (resolvedArrays, unknownArrays, resolvedSingulars, unknownSingulars) match {
+//            case (some, Nil, Nil, Nil) => unifyTypes(some.map(_.wrapped)).map(t => s"[$t]")
+//            case (Nil, some, Nil, Nil) if some.toSet.size == 1 => some.headOption.map(_.name)
+//            case (Nil, Nil, some, Nil) =>unifyTypes(some.map(_.wrapped))
+//            case (Nil, Nil, Nil, some) if some.toSet.size == 1 => some.headOption.map(_.name)
+//            case _ => None
+//          }
+      }
     }
 
     val model = Model(
-      name = union.union.name,
-      plural = union.union.plural,
-      description = union.union.description,
-      deprecation = union.union.deprecation,
-      fields = sharedFields,
-      attributes = union.union.attributes,
-      interfaces = union.union.interfaces,
+      name = toName,
+      plural = toName,
+      description = None,
+      deprecation = None,
+      fields = mergedFields.toSeq,
+      attributes = Nil,
+      interfaces = Nil,
     )
 
-    ApiBuilderType.Model(union.service, model)
+    ApiBuilderType.Model(service, model)
   }
 
   private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
