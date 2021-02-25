@@ -29,8 +29,6 @@ lazy val root = project
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.2.3" % Test,
       "com.github.scopt" %% "scopt" % "4.0.0",
-      compilerPlugin("com.github.ghik" %% "silencer-plugin" % "1.7.2" cross CrossVersion.full),
-      "com.github.ghik" %% "silencer-lib" % "1.7.2" % Provided cross CrossVersion.full
     )
   )
 
