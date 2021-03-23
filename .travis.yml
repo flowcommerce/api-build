@@ -12,7 +12,7 @@ script:
   - sbt ++$TRAVIS_SCALA_VERSION clean compile test doc assembly
 branches:
   only:
-    - master
+    - main
 before_cache:
   - rm -fv $HOME/.ivy2/.sbt.ivy.lock
   - find $HOME/.ivy2/cache -name "ivydata-*.properties" -print -delete
