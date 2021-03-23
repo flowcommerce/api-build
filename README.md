@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/flowcommerce/api-build.png?branch=master)](https://travis-ci.org/flowcommerce/api-build)
+[![Build Status](https://travis-ci.org/flowcommerce/api-build.png?branch=main)](https://travis-ci.org/flowcommerce/api-build)
 
 # api-build
 
