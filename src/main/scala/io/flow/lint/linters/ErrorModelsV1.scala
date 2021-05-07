@@ -71,15 +71,12 @@ case object ErrorModelsV1 extends Linter with Helpers {
     val fieldNames = model.fields.map(_.name).toList
     fieldNames match {
       case "code" :: "messages" :: _ => {
-        val codeErrors = model.fields.head.`type` == "string" match {
-          case true => Nil
-          case false => {
-            if (hasEnum(service, model.fields.head.`type`)) {
-              Nil
-            } else {
-              Seq(error(model, model.fields.head, "type must be 'string' or a valid enum"))
-            }
-          }
+        val codeErrors = if (model.fields.head.`type` == "string") {
+          Nil
+        } else if (hasEnum(service, model.fields.head.`type`)) {
+          Nil
+        } else {
+          Seq(error(model, model.fields.head, s"type[${model.fields.head.`type`}] must refer to a valid enum"))
         }
 
         val messagesErrors = validateMessageField(model, model.fields(1))

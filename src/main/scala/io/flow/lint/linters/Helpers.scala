@@ -1,7 +1,8 @@
 package io.flow.lint.linters
 
 import io.apibuilder.spec.v0.models._
-import play.api.libs.json.{JsError, JsNumber, JsObject, JsString, JsSuccess, JsValue}
+import io.apibuilder.validation.{ApiBuilderService, TypeName}
+import play.api.libs.json._
 
 trait Helpers {
 
@@ -90,18 +91,11 @@ trait Helpers {
     * @param search the enum name or fully-qualified name (capture_decline_code or io.flow.error.v0.enums.generic_error)
     */
   def hasEnum(service: Service, search: String): Boolean = {
-    val (namespace, name) = search.split('.').toList match {
-      case x :: Nil => (service.namespace, x)
-      case ns :+ n => (ns.mkString("."), n)
-    }
-    service.enums.exists(_.name == name) || {
-      (for {
-        imp <- service.imports
-        if imp.namespace + ".enums" == namespace
-        enum <- imp.enums
-        if enum == name
-      } yield enum).nonEmpty
-    }
+    val t = TypeName.parse(search, service.namespace)
+    val svc = ApiBuilderService(service)
+    val all = svc.enums.filter(_.namespace == t.namespace).map(_.name) ++
+      svc.service.imports.filter(_.namespace == t.namespace).flatMap(_.enums)
+    all.contains(t.name)
   }
 
   /**
