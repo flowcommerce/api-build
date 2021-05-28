@@ -37,6 +37,16 @@ class UpsertedDeletedEventModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(buildService("card_authorization_upserted", "card_authorization", "foo")) should be(
       Seq("Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization")
     )
+    linter.validate(buildService("card_authorization_deleted", "card_authorization", "foo")) should be(
+      Seq("Model card_authorization_deleted: Event must contain a field whose name and type contain card or authorization")
+    )
+  }
+
+  it("deleted events can just use 'id' w/ type string") {
+    linter.validate(buildService("card_authorization_deleted", "id", "string")) should be(Nil)
+    linter.validate(buildService("card_authorization_deleted", "id", "object")) should be(
+      Seq("Model card_authorization_deleted: Type of field 'id' must be 'string' and not 'object'")
+    )
   }
 
   it("ignores legacy models") {

@@ -1,8 +1,28 @@
 package io.flow.lint.linters
 
-import io.apibuilder.spec.v0.models.{Model, Service}
+import io.apibuilder.spec.v0.models.{Field, Model, Service}
 import io.flow.lint.Linter
 import io.flow.stream.EventUnionTypeMatcher
+
+sealed trait EventModel {
+  // eg. user_upserted
+  def eventName: String
+
+  // eg. user
+  def baseName: String
+
+  def supportsId: Boolean
+}
+
+object EventModel {
+  case class Upserted(eventName: String, baseName: String) extends EventModel {
+    override val supportsId: Boolean = false
+  }
+
+  case class Deleted(eventName: String, baseName: String) extends EventModel {
+    override val supportsId: Boolean = true
+  }
+}
 
 /**
   * Match naming convention required to get events into s3
@@ -13,36 +33,53 @@ case object UpsertedDeletedEventModels extends Linter with Helpers {
     service.models.
       filterNot { m => LegacyModels.contains(m.name) }.
       flatMap { m =>
-      expectedFieldName(m.name).toSeq.flatMap { name =>
-        validateModel(m, name)
-      }
+        parse(m.name) match {
+          case None => Nil
+          case Some(t) => validateModel(m, t)
+        }
     }
   }
 
-  def expectedFieldName(name: String): Option[String] = {
+  private[this] def parse(name: String): Option[EventModel] = {
     val i = name.indexOf("_upserted")
     if (i > 0) {
-      Some(name.take(i))
+      Some(EventModel.Upserted(name, name.take(i)))
     } else {
       val j = name.indexOf("_deleted")
       if (j > 0) {
-        Some(name.take(j))
+        Some(EventModel.Deleted(name, name.take(j)))
       } else {
         None
       }
     }
   }
 
-  def validateModel(model: Model, expected: String): Seq[String] = {
+  private[this] def validateModel(model: Model, typ: EventModel): Seq[String] = {
+    lazy val idField = model.fields.find(_.name == "id")
+
     if (model.fields.exists { f =>
-      EventUnionTypeMatcher.matchFieldToPayloadType(f, expected)
+      EventUnionTypeMatcher.matchFieldToPayloadType(f, typ.baseName) || (typ.supportsId && isIdField(f))
     }) {
       Nil
+    } else if (typ.supportsId && idField.isDefined) {
+      val f = idField.get
+      if (f.`type` == "string") {
+        Nil
+      } else {
+        Seq(
+          error(model, s"Type of field 'id' must be 'string' and not '${f.`type`}'")
+        )
+      }
+
     } else {
       Seq(
-        error(model, s"Event must contain a field whose name and type contain " + expected.split("_").mkString(" or "))
+        error(model, s"Event must contain a field whose name and type contain " + typ.baseName.split("_").mkString(" or "))
       )
     }
+  }
+
+  private[this] def isIdField(field: Field): Boolean = {
+    field.name == "id" && field.`type` == "string"
   }
 
   private[this] val LegacyModels = Set(

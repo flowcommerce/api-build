@@ -2,6 +2,8 @@ package io.flow.stream
 
 import io.apibuilder.spec.v0.models.Field
 
+import scala.annotation.tailrec
+
 object EventUnionTypeMatcher {
 
   def matchFieldToPayloadType(field: Field, typeName: String): Boolean = {
@@ -21,6 +23,7 @@ object EventUnionTypeMatcher {
     matchLists(typeNameList, fieldTypeList) || matchLists(fieldTypeList, typeNameList)
   }
 
+  @tailrec
   private def matchLists(required: List[String], withExtras: List[String]): Boolean = (required, withExtras) match {
     case (Nil, _) => true
     case (_, Nil) => false
