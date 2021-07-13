@@ -9,28 +9,29 @@ import io.apibuilder.spec.v0.models.{Service, Union}
   */
 case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
 
+  private val ValidNames = Seq("discriminator", "type")
+
   override def validate(service: Service): Seq[String] = {
     service.unions.flatMap(validateUnion)
   }
 
   def validateUnion(union: Union): Seq[String] = {
-    val expected = expectedDiscriminator(union.name)
+    lazy val expected = expectedDiscriminator(union.name)
+    lazy val expectedStr = expected.map("'" + _ + "'").mkString("(", ", ", ")")
 
     union.discriminator match {
-      case None => Seq(error(union, s"Must have a discriminator with value '$expected'"))
-      case Some(actual) if actual == expected => Nil
-      case Some(actual) => Seq(error(union, s"Discriminator must have value '$expected' and not '$actual'"))
+      case None => Seq(error(union, s"Must have a discriminator with value one of $expectedStr"))
+      case Some(actual) if expected.contains(actual) => Nil
+      case Some(actual) => Seq(error(union, s"Discriminator must have value one of $expectedStr and not '$actual'"))
     }
   }
 
-  private[this] def expectedDiscriminator(typeName: String): String = {
-    if (isError(typeName)) {
-      "code"
-    } else if (typeName == "localized_price") {
+  private[this] def expectedDiscriminator(typeName: String): Seq[String] =
+    if (isError(typeName))
+      Seq("code")
+    else if (typeName == "localized_price")
       // one time hack - do not repeat
-      "key"
-    } else {
-      "discriminator"
-    }
-  }
+      Seq("key")
+    else
+      ValidNames
 }
