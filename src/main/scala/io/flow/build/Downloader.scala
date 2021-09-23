@@ -29,7 +29,7 @@ case class Downloader(config: ApibuilderProfile) {
     implicit ec: scala.concurrent.ExecutionContext
   ): Either[String, Service] = {
     Try {
-      print(s"${app.label} Downloading...")
+      print(s"${app.label} version:${app.version} Downloading...")
       val result = Await.result(
         client.versions.getByApplicationKeyAndVersion(app.organization, app.application, app.version).map { v =>
           v.service
