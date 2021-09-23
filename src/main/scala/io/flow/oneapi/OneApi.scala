@@ -135,24 +135,24 @@ case class OneApi(
       imports = importsWithNoAnnotations,
       attributes = Nil,
 
-      enums = services.flatMap { s =>
+      enums = definedServices.flatMap { s =>
         s.enums
       }.sortBy { _.name.toLowerCase },
 
-      models = services.flatMap { s =>
+      models = definedServices.flatMap { s =>
         s.models.map(localizeModel(parser, _))
       }.sortBy { _.name.toLowerCase },
 
-      interfaces = services.flatMap { s =>
+      interfaces = definedServices.flatMap { s =>
         s.interfaces.map(localizeInterface(parser, _))
       }.sortBy { _.name.toLowerCase },
 
-      unions = services.flatMap { s =>
+      unions = definedServices.flatMap { s =>
         s.unions.map(localizeUnion(parser, _))
       }.sortBy { _.name.toLowerCase },
 
       resources = mergeResources(
-        services.flatMap { s =>
+        definedServices.flatMap { s =>
           s.resources.
             map(normalizeName(parser, localTypes, s, _)).
             map(localize(parser, s, _))
