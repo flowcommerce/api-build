@@ -46,6 +46,11 @@ case class OneApi(
     }
   }
 
+  private[this] lazy val definedServices: Seq[Service] = {
+    val producedApis = BuildType.all.map(_.toString)
+    services.filterNot { s => producedApis.contains(s.application.key) }
+  }
+
   def process(): Either[Seq[String], Service] = {
     val pathErrors = validatePaths()
     val duplicateRecordErrors = validateRecordNames()
@@ -101,7 +106,7 @@ case class OneApi(
     }
 
     val parser = TextDatatypeParser()
-    val localTypes: Seq[String] = services.flatMap { s =>
+    val localTypes: Seq[String] = definedServices.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }
 
@@ -481,9 +486,6 @@ case class OneApi(
   }
 
   def validateRecordNames(): Seq[String] = {
-    val producedApis = BuildType.all.map(_.toString)
-    val definedServices = services.filterNot { s => producedApis.contains(s.application.key) }
-
     val names: Seq[ContextualValue] = definedServices.flatMap { s =>
       s.models.map { m =>
         ContextualValue(
