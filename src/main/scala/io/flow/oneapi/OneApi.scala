@@ -482,7 +482,7 @@ case class OneApi(
 
   def validateRecordNames(): Seq[String] = {
     val producedApis = BuildType.all.map(_.toString)
-    val definedServices = services.filterNot { s => producedApis.contains(s.name) }
+    val definedServices = services.filterNot { s => producedApis.contains(s.application.key) }
 
     val names: Seq[ContextualValue] = definedServices.flatMap { s =>
       s.models.map { m =>
@@ -513,7 +513,7 @@ case class OneApi(
   /**
     * Returns an error message if there are duplicate values
     */
-  private[oneapi]def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
+  private[oneapi] def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
     values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
       val dupValues = values.filter { v => dup == v.value.toLowerCase }
       assert(

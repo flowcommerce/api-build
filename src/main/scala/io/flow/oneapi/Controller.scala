@@ -25,7 +25,7 @@ case class Controller() extends io.flow.build.Controller {
     ) match {
       case None => Nil
       case Some(name) => downloader.service(Application("flow", name, "latest")) match {
-        case Left(errors) => sys.error(s"Failed to download apibuilder application flow/$name: $errors")
+        case Left(errors) => sys.error(s"Failed to download API Builder application flow/$name: $errors")
         case Right(service) => Seq(service)
       }
     }
