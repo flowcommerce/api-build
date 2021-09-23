@@ -46,11 +46,6 @@ case class OneApi(
     }
   }
 
-  private[this] lazy val definedServices: Seq[Service] = {
-    val producedApis = BuildType.all.map(_.toString)
-    services.filterNot { s => producedApis.contains(s.application.key) }
-  }
-
   def process(): Either[Seq[String], Service] = {
     val pathErrors = validatePaths()
     val duplicateRecordErrors = validateRecordNames()
@@ -106,7 +101,7 @@ case class OneApi(
     }
 
     val parser = TextDatatypeParser()
-    val localTypes: Seq[String] = definedServices.flatMap { s =>
+    val localTypes: Seq[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }
 
@@ -135,24 +130,24 @@ case class OneApi(
       imports = importsWithNoAnnotations,
       attributes = Nil,
 
-      enums = definedServices.flatMap { s =>
+      enums = services.flatMap { s =>
         s.enums
       }.sortBy { _.name.toLowerCase },
 
-      models = definedServices.flatMap { s =>
+      models = services.flatMap { s =>
         s.models.map(localizeModel(parser, _))
       }.sortBy { _.name.toLowerCase },
 
-      interfaces = definedServices.flatMap { s =>
+      interfaces = services.flatMap { s =>
         s.interfaces.map(localizeInterface(parser, _))
       }.sortBy { _.name.toLowerCase },
 
-      unions = definedServices.flatMap { s =>
+      unions = services.flatMap { s =>
         s.unions.map(localizeUnion(parser, _))
       }.sortBy { _.name.toLowerCase },
 
       resources = mergeResources(
-        definedServices.flatMap { s =>
+        services.flatMap { s =>
           s.resources.
             map(normalizeName(parser, localTypes, s, _)).
             map(localize(parser, s, _))
@@ -486,21 +481,21 @@ case class OneApi(
   }
 
   def validateRecordNames(): Seq[String] = {
-    val names: Seq[ContextualValue] = definedServices.flatMap { s =>
+    val names: Seq[ContextualValue] = services.flatMap { s =>
       s.models.map { m =>
         ContextualValue(
           context = s"${s.name}:${m.name}",
           value = m.name
         )
       }
-    } ++ definedServices.flatMap { s =>
+    } ++ services.flatMap { s =>
       s.unions.map { u =>
         ContextualValue(
           context = s"${s.name}:${u.name}",
           value = u.name
         )
       }
-    } ++ definedServices.flatMap { s =>
+    } ++ services.flatMap { s =>
       s.enums.map { e =>
         ContextualValue(
           context = s"${s.name}:${e.name}",
