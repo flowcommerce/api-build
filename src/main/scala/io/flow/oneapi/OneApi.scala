@@ -481,21 +481,24 @@ case class OneApi(
   }
 
   def validateRecordNames(): Seq[String] = {
-    val names: Seq[ContextualValue] = services.flatMap { s =>
+    val producedApis = BuildType.all.map(_.toString)
+    val definedServices = services.filterNot { s => producedApis.contains(s.name) }
+
+    val names: Seq[ContextualValue] = definedServices.flatMap { s =>
       s.models.map { m =>
         ContextualValue(
           context = s"${s.name}:${m.name}",
           value = m.name
         )
       }
-    } ++ services.flatMap { s =>
+    } ++ definedServices.flatMap { s =>
       s.unions.map { u =>
         ContextualValue(
           context = s"${s.name}:${u.name}",
           value = u.name
         )
       }
-    } ++ services.flatMap { s =>
+    } ++ definedServices.flatMap { s =>
       s.enums.map { e =>
         ContextualValue(
           context = s"${s.name}:${e.name}",

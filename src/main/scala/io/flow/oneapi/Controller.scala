@@ -35,7 +35,7 @@ case class Controller() extends io.flow.build.Controller {
     OneApi(buildType, all).process() match {
       case Left(errs) => {
         println(s"Errors from building single API:\n - ${errs.mkString("\n")}")
-        errs.foreach { addError(_) }
+        errs.foreach(addError)
       }
 
       case Right(service) => {
@@ -45,7 +45,7 @@ case class Controller() extends io.flow.build.Controller {
         val path = s"/tmp/flow-$buildType.json"
         new java.io.PrintWriter(path) {
           write(Json.prettyPrint(Json.toJson(service)))
-          close
+          close()
         }
         println(s"One API file created. See: $path")
       }
