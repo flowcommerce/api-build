@@ -1,4 +1,6 @@
 package io.flow.stream
+import cats.data.Validated.{Invalid, Valid}
+
 import scala.annotation.nowarn
 import io.apibuilder.spec.v0.models.{Field, Model, Service, UnionType}
 import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService}
@@ -30,10 +32,10 @@ case class Controller() extends io.flow.build.Controller {
       } else {
         val importedServices = filteredImports.flatMap { imp =>
           cached.get(imp.organization.key + imp.application.key).orElse {
-            downloader.service(Application(imp.organization.key, imp.application.key, Application.Latest)) match {
-              case Right(svc) => Some(svc)
-              case Left(_) =>
-                println(s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}")
+            downloader.downloadService(Application.latest(imp.organization.key, imp.application.key)) match {
+              case Valid(svc) => Some(svc)
+              case Invalid(errors) =>
+                println(s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}: ${errors.toNonEmptyList.toList.mkString(", ")}")
                 None
             }
           }

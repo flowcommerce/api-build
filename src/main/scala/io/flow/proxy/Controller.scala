@@ -1,5 +1,6 @@
 package io.flow.proxy
 
+import cats.data.Validated.{Invalid, Valid}
 import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
 import io.flow.registry.v0.{Client => RegistryClient}
@@ -66,13 +67,9 @@ case class Controller() extends io.flow.build.Controller {
 
     val serviceHostResolver = ServiceHostResolver(allServices)
 
-    val version = downloader.service(Application("flow", buildType.toString, "latest")) match {
-      case Left(error) => {
-        sys.error(s"Failed to download '$buildType' service from apibuilder: $error")
-      }
-      case Right(svc) => {
-        svc.version
-      }
+    val version = downloader.downloadService(Application.latest("flow", buildType.key)) match {
+      case Invalid(error) => sys.error(s"Failed to download '$buildType' service from API Builder: $error")
+      case Valid(svc) => svc.version
     }
 
     println("Building authorization from: " + services.map(_.name).mkString(", "))

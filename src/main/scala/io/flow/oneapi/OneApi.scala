@@ -55,12 +55,8 @@ case class OneApi(
     val duplicateRecordErrors = validateRecordNames()
 
     (pathErrors ++ duplicateRecordErrors).toList match {
-      case Nil => {
-        Right(buildOneApi())
-      }
-      case errors => {
-        Left(errors)
-      }
+      case Nil => Right(buildOneApi())
+      case errors => Left(errors)
     }
   }
 
@@ -68,6 +64,7 @@ case class OneApi(
     val localTypes: Set[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }.toSet
+    println(s"local types: ${localTypes.take(10)}")
     val parser = TextDatatypeParser(localTypes)
 
     // Annotations are not namespaced, they're global. For convenience, we'll collect them from
