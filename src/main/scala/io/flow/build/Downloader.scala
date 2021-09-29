@@ -102,10 +102,7 @@ case class Downloader(config: ApibuilderProfile) {
         )
       }
     } match {
-      case Success(result) => {
-        println("Done")
-        result.applications.map(_.service).validNec
-      }
+      case Success(result) => result.applications.map(_.service).validNec
       case Failure(ex) => {
         ex match {
           case io.apibuilder.api.v0.errors.UnitResponse(401) => {
