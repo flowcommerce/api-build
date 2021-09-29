@@ -1,8 +1,11 @@
 package io.flow.oneapi
 
+import cats.data.Validated.{Invalid, Valid}
+import cats.data.ValidatedNec
+import cats.implicits._
 import io.apibuilder.spec.v0.models._
 import io.flow.build.BuildType
-import play.api.libs.json.{Json, JsString}
+import play.api.libs.json.{JsString, Json}
 
 private[oneapi] case class ContextualValue(context: String, value: String)
 
@@ -15,7 +18,9 @@ case class OneApi(
     "organization" -> "/organizations",
     "timezone" -> "/",
     "query_builder" -> "/:organization/query/builders",
-    "io.flow.external.paypal.v1.models.webhook_event" -> "/"
+    "io.flow.external.paypal.v1.models.webhook_event" -> "/",
+    "io.flow.reference.v0.models.timezone" -> "/reference/timezones",
+    "io.flow.common.v0.models.organization" -> "/organizations"
   )
 
   private[this] val DefaultFieldDescriptions = Map(
@@ -63,9 +68,7 @@ case class OneApi(
   private[this] def buildOneApi(): Service = {
     val (name, key, ns, imports) = buildType match {
       case BuildType.Api => {
-        val imports = services.flatMap { _.imports }.filter { i =>
-          !TextDatatype.isNamespaceInFlowApiProject(i.namespace)
-        }
+        val imports = services.flatMap { _.imports }
         ("API", "api", "io.flow", imports)
       }
 
@@ -152,7 +155,10 @@ case class OneApi(
             map(normalizeName(parser, localTypes, s, _)).
             map(localize(parser, s, _))
         }
-      ).sortBy { resourceSortKey },
+      ) match {
+        case Invalid(errors) => sys.error(errors.toList.mkString("\n"))
+        case Valid(r) => r.sortBy { resourceSortKey }
+      },
       annotations = allAnnotations
     )
 
@@ -163,13 +169,18 @@ case class OneApi(
   }
 
   @scala.annotation.tailrec
-  private[this] def mergeResources(resources: Seq[Resource], merged: Seq[Resource] = Nil): Seq[Resource] = {
+  private[this] def mergeResources(resources: Seq[Resource], merged: Seq[Resource] = Nil): ValidatedNec[String, Seq[Resource]] = {
     resources.toList match {
-      case Nil => merged
+      case Nil => merged.validNec
       case one :: rest => {
         merged.find(_.`type` == one.`type`) match {
           case None => mergeResources(rest, merged ++ Seq(one))
-          case Some(r) => mergeResources(rest, merged.filter(_.`type` != one.`type`) ++ Seq(merge(r, one)))
+          case Some(r) => {
+            merge(r, one) match {
+              case Invalid(errors) => errors.toList.mkString("\n").invalidNec
+              case Valid(result) => mergeResources(rest, merged.filter(_.`type` != one.`type`) ++ Seq(result))
+            }
+          }
         }
       }
     }
@@ -215,7 +226,7 @@ case class OneApi(
     *   - Takes fields from the first resource if both provide (e.g. description)
     *   - If paths are different, raises an error
     */
-  private[this] def merge(a: Resource, b: Resource): Resource = {
+  private[this] def merge(a: Resource, b: Resource): ValidatedNec[String, Resource] = {
     assert(a.`type` == b.`type`)
 
     // Ideally the resource paths are the same; if not we have to
@@ -223,30 +234,33 @@ case class OneApi(
     // influence method names in the code generators and thus
     // important to get right.
     val allPaths = Seq(a.path, b.path).flatten.distinct
-    val path: Option[String] = allPaths.toList match {
-      case Nil => None
-      case one :: Nil => Some(one)
+    val attributeNames = a.attributes.map(_.name)
+
+    val path: ValidatedNec[String, Option[String]] = allPaths.toList match {
+      case Nil => None.validNec
+      case one :: Nil => Some(one).validNec
       case multiple => {
         MergeResourcePathsHack.get(a.`type`) match {
           case Some(defaultPath) => {
             if (allPaths.contains(defaultPath)) {
-              Some(defaultPath)
+              Some(defaultPath).validNec
             } else if (defaultPath == "/") {
-              Some(defaultPath)
+              Some(defaultPath).validNec
             } else {
-              sys.error(s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]")
+              s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]".invalidNec
             }
           }
           case None => {
             val (internal, public) = multiple.partition(p => p.startsWith("/internal"))
             public match {
-              case Nil => internal.headOption
-              case one :: Nil => Some(one)
+              case Nil => internal.headOption.validNec
+              case one :: Nil => Some(one).validNec
               case multiplePublic => {
-                sys.error(s"Cannot merge resources of type[${a.`type`}] with more than one non internal path:\n" +
+                (
+                  s"Cannot merge resources of type[${a.`type`}] with more than one non internal path:\n" +
                   multiplePublic.sorted.mkString("  - ", "\n  - ", "\n") +
                   "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack to add an explicit path for this resource"
-                )
+                ).invalidNec
               }
             }
           }
@@ -254,17 +268,17 @@ case class OneApi(
       }
     }
 
-    val attributeNames = a.attributes.map(_.name)
-
-    a.copy(
-      path = path,
-      description = a.description match {
-        case Some(desc) => Some(desc)
-        case None => b.description
-      },
-      operations = a.operations ++ b.operations,
-      attributes = a.attributes ++ b.attributes.filter(attr => !attributeNames.contains(attr.name))
-    )
+    path.map { p =>
+      a.copy(
+        path = p,
+        description = a.description match {
+          case Some(desc) => Some(desc)
+          case None => b.description
+        },
+        operations = a.operations ++ b.operations,
+        attributes = a.attributes ++ b.attributes.filter(attr => !attributeNames.contains(attr.name))
+      )
+    }
   }
 
   /**

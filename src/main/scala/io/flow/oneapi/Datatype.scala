@@ -14,19 +14,6 @@ object TextDatatype {
   val MapRx: Regex = "^map\\[(.*)\\]$".r
   val MapDefaultRx: Regex = "^map$".r
 
-  def isNamespaceInFlowApiProject(namespace: String): Boolean = {
-    if (namespace.startsWith("io.flow.")) {
-      val parts = namespace.split("\\.")
-      if (parts.contains("external") || parts.contains("misc")) {
-        false
-      } else {
-        true
-      }
-    } else {
-      false
-    }
-  }
-
 }
 
 /**
@@ -64,11 +51,7 @@ case class TextDatatypeParser() {
   }
 
   def maybeStripNamespace(value: String): String = {
-    if (TextDatatype.isNamespaceInFlowApiProject(value)) {
-      value.split("\\.").last
-    } else {
-      value
-    }
+    value
   }
 
 }
