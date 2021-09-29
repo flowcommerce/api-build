@@ -20,7 +20,7 @@ object TextDatatype {
   * Parses a text datatype, removing specific namespaces as those
   * names are expected to be local
   */
-case class TextDatatypeParser() {
+case class TextDatatypeParser(localTypes: Set[String]) {
   import TextDatatype._
 
   def parse(value: String): Seq[TextDatatype] = {
@@ -51,7 +51,12 @@ case class TextDatatypeParser() {
   }
 
   def maybeStripNamespace(value: String): String = {
-    value
+    if (localTypes.contains(value)) {
+      println(s"Value '$value' found in local types")
+      value.split("\\.").last
+    } else {
+      value
+    }
   }
 
 }
