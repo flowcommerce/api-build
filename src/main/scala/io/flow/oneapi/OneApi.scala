@@ -185,7 +185,7 @@ case class OneApi(
     val qualifiedName = withNamespace(service, resource.`type`)
 
     val finalType = if (localTypes.contains(qualifiedName)) {
-      parser.toString(parser.parse(qualifiedName))
+      parser.toTypeLabel(parser.parse(qualifiedName))
     } else {
       qualifiedName
     }
@@ -418,7 +418,7 @@ case class OneApi(
 
   private[this] def localizeType(parser: TextDatatypeParser, name: String): String = {
     buildType match {
-      case BuildType.Api | BuildType.ApiEvent => parser.toString(parser.parse(name))
+      case BuildType.Api | BuildType.ApiEvent => parser.toTypeLabel(parser.parse(name))
       case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
     }
   }

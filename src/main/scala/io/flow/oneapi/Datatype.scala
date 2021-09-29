@@ -18,7 +18,7 @@ object TextDatatype {
 
 /**
   * Parses a text datatype, removing specific namespaces as those
-  * names are expected to be local
+  * names are expected to be local.
   */
 case class TextDatatypeParser(localTypes: Set[String]) {
   import TextDatatype._
@@ -56,16 +56,15 @@ case class TextDatatypeParser(localTypes: Set[String]) {
     }
   }
 
-  def toString(parts: Seq[TextDatatype]): String = {
+  def toTypeLabel(parts: Seq[TextDatatype]): String = {
     parts.toList match {
       case Nil => ""
       case one :: rest => {
         one match {
-          case List => "[" + toString(rest) + "]"
-          case Map => "map[" + toString(rest) + "]"
+          case List => "[" + toTypeLabel(rest) + "]"
+          case Map => "map[" + toTypeLabel(rest) + "]"
           case Singleton(name) => name
         }
-        
       }
     }
   }
