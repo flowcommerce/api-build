@@ -15,11 +15,9 @@ case class OneApi(
 ) {
 
   private[this] val MergeResourcePathsHack = Map(
-    "organization" -> "/organizations",
-    "timezone" -> "/",
     "query_builder" -> "/:organization/query/builders",
     "io.flow.external.paypal.v1.models.webhook_event" -> "/",
-    "io.flow.reference.v0.models.timezone" -> "/reference/timezones",
+    "io.flow.reference.v0.models.timezone" -> "/",
     "io.flow.common.v0.models.organization" -> "/organizations"
   )
 
