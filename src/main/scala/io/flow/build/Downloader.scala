@@ -80,9 +80,12 @@ case class Downloader(config: ApibuilderProfile) {
       "All applications must belong to the same org for batch download"
     )
 
+    println(
+      s"Downloading API Builder Service Spec for $orgKey: " +
+      applications.map(_.applicationVersionLabel).sorted.mkString(" ") +
+    )
     Try {
-      print(s"Downloading org $orgKey: " + applications.map(_.applicationVersionLabel).sorted.mkString(" "))
-      val result = withClient { client =>
+      withClient { client =>
         Await.result(
           client.batchDownloadApplications.post(
             orgKey = orgKey,
@@ -98,10 +101,11 @@ case class Downloader(config: ApibuilderProfile) {
           FiniteDuration(45, SECONDS)
         )
       }
-      println(" Done")
-      result
     } match {
-      case Success(result) => result.applications.map(_.service).validNec
+      case Success(result) => {
+        println("Done")
+        result.applications.map(_.service).validNec
+      }
       case Failure(ex) => {
         ex match {
           case io.apibuilder.api.v0.errors.UnitResponse(401) => {

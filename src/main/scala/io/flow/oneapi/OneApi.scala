@@ -19,7 +19,7 @@ case class OneApi(
     "timezone" -> "/",
     "io.flow.reference.v0.models.timezone" -> "/",
     "io.flow.common.v0.models.organization" -> "/organizations",
-    "io.flow.external.paypal.v1.models.webhook_event" -> "/payment/callbacks"
+    "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
 
   private[this] val DefaultFieldDescriptions = Map(
@@ -64,7 +64,6 @@ case class OneApi(
     val localTypes: Set[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }.toSet
-    println(s"local types: ${localTypes.take(10)}")
     val parser = TextDatatypeParser(localTypes)
 
     // Annotations are not namespaced, they're global. For convenience, we'll collect them from
@@ -136,14 +135,16 @@ case class OneApi(
    */
   private[this] def buildImports(baseService: Service, services: Seq[Service]): Seq[Import] = {
     val parser = TextDatatypeParser(Set.empty)
-    val allNames = (
-      baseService.models.map(_.name) ++ baseService.unions.map(_.name) ++ baseService.enums.map(_.name) ++ baseService.interfaces.map(_.name)
-    )
+    val allNames = baseService.models.map(_.name) ++ baseService.unions.map(_.name) ++ baseService.enums.map(_.name) ++ baseService.interfaces.map(_.name)
     val allNamespaces = allNames.flatMap(parser.toNamespace).toSet
     val availableImports = services.flatMap(_.imports).distinctBy(_.namespace)
-    println("names (longest 10): " + allNames.sortBy(_.length).reverse.take(10).sorted.mkString(", "))
-    println("Needed imports (10): " + allNamespaces.toList.sorted.take(10).mkString(", "))
-    println("available imports (10: " + availableImports.map(_.namespace).sorted.take(10).mkString(", "))
+
+    println("-"*100)
+    println(" allNames (longest 3): " + allNames.sortBy(_.length).reverse.take(3).sorted.mkString(", "))
+    println("    allNamespaces (5): " + allNamespaces.toList.sorted.take(5).mkString(", "))
+    println("available imports (5): " + availableImports.map(_.namespace).sorted.take(5).mkString(", "))
+    println("-"*100)
+
     availableImports.filter { imp =>
       allNamespaces.contains(imp.namespace)
     }
