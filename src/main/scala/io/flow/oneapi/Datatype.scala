@@ -52,7 +52,6 @@ case class TextDatatypeParser(localTypes: Set[String]) {
 
   def maybeStripNamespace(value: String): String = {
     if (localTypes.contains(value)) {
-      println(s"Value '$value' found in local types")
       value.split("\\.").last
     } else {
       value

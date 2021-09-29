@@ -66,43 +66,37 @@ case class OneApi(
   }
 
   private[this] def buildOneApi(): Service = {
-    val (name, key, ns, imports) = buildType match {
+    val (name, key, ns) = buildType match {
       case BuildType.Api => {
-        val imports = services.flatMap { _.imports }
-        ("API", "api", "io.flow", imports)
+        ("API", "api", "io.flow")
       }
 
       case BuildType.ApiEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API Event", "api-event", "io.flow.event", imports)
+        ("API Event", "api-event", "io.flow.event")
       }
 
       case BuildType.ApiInternal => {
-        val imports = services.flatMap { _.imports }
-        ("API Internal", "api-internal", "io.flow.internal", imports)
+        ("API Internal", "api-internal", "io.flow.internal")
       }
 
       case BuildType.ApiInternalEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API Internal Event", "api-internal-event", "io.flow.internal.event", imports)
+        ("API Internal Event", "api-internal-event", "io.flow.internal.event")
       }
 
       case BuildType.ApiMisc => {
-        val imports = services.flatMap { _.imports }
-        ("API misc", "api-misc", "io.flow.misc", imports)
+        ("API misc", "api-misc", "io.flow.misc")
       }
 
       case BuildType.ApiMiscEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API misc Event", "api-misc-event", "io.flow.misc.event", imports)
+        ("API misc Event", "api-misc-event", "io.flow.misc.event")
       }
 
       case BuildType.ApiPartner => {
-        val imports = services.flatMap { _.imports }
-        ("API Partner", "api-partner", "io.flow.partner", imports)
+        ("API Partner", "api-partner", "io.flow.partner")
       }
     }
 
+    val imports = services.flatMap { _.imports }.groupBy(_.uri).values.flatMap(_.headOption).toSeq
     val localTypes: Set[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }.toSet
