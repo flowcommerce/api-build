@@ -139,17 +139,9 @@ case class OneApi(
     val allTypeNames = AllTypeNames.find(baseService)
     val allNamespaces = allTypeNames.flatMap(parser.toNamespace)
     val availableImports = imports.distinctBy(_.namespace)
-    val result = availableImports.filter { imp =>
+    availableImports.filter { imp =>
       allNamespaces.contains(imp.namespace)
     }
-
-    println("-"*100)
-    println(" allTypeNames (longest 3): " + allTypeNames.toList.sortBy(_.length).reverse.take(3).sorted.mkString(", "))
-    println("        allNamespaces (5): " + allNamespaces.toList.sorted.take(5).mkString(", "))
-    println("    available imports (5): " + availableImports.map(_.namespace).sorted.take(5).mkString(", "))
-    println("               result (5): " + result.map(_.namespace).sorted.take(5).mkString(", "))
-    println("-"*100)
-    result
   }
 
   private[this] def stripAnnotations(imports: Seq[Import]): Seq[Import] = {
