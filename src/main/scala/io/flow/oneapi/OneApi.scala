@@ -60,7 +60,7 @@ case class OneApi(
     }
   }
 
-  def buildOneApi(): Service = {
+  private[this] def buildOneApi(): Service = {
     val (name, key, ns, imports) = buildType match {
       case BuildType.Api => {
         val imports = services.flatMap { _.imports }.filter { i =>
@@ -177,9 +177,9 @@ case class OneApi(
 
 
   private[this] def withNamespace(service: Service, name: String): String = {
-    apidocType(service, name) match {
+    apiBuilderType(service, name) match {
       case None => name
-      case Some(apidocType) => s"${service.namespace}.$apidocType.$name"
+      case Some(apiBuilderType) => s"${service.namespace}.$apiBuilderType.$name"
     }
   }
 
@@ -197,7 +197,7 @@ case class OneApi(
     )
   }
 
-  private[this] def apidocType(service: Service, name: String): Option[String] = {
+  private[this] def apiBuilderType(service: Service, name: String): Option[String] = {
     service.enums.find(_.name == name) match {
       case Some(_) => Some("enums")
       case None => service.models.find(_.name == name) match {
@@ -212,7 +212,7 @@ case class OneApi(
 
   /**
     * Merges the two resources:
-    *   - Takes fields from the first resource if both provide (e.g. decription)
+    *   - Takes fields from the first resource if both provide (e.g. description)
     *   - If paths are different, raises an error
     */
   private[this] def merge(a: Resource, b: Resource): Resource = {
@@ -271,25 +271,25 @@ case class OneApi(
     * Given a string version number in semver, e.g. 1.2.3, returns the
     * major version number as an integer (e.g. 1)
     */
-  def majorVersion(version: String): Int = {
+  private[this] def majorVersion(version: String): Int = {
     version.split("\\.").headOption.getOrElse {
       sys.error(s"Version[$version] must be in semver")
     }.toInt
   }
 
-  def localizeModel(parser: TextDatatypeParser, model: Model): Model = {
+  private[this] def localizeModel(parser: TextDatatypeParser, model: Model): Model = {
     model.copy(
       fields = model.fields.map(localizeField(parser, _))
     )
   }
 
-  def localizeInterface(parser: TextDatatypeParser, interface: Interface): Interface = {
+  private[this] def localizeInterface(parser: TextDatatypeParser, interface: Interface): Interface = {
     interface.copy(
       fields = interface.fields.map(localizeField(parser, _))
     )
   }
 
-  def localizeField(parser: TextDatatypeParser, field: Field): Field = {
+  private[this] def localizeField(parser: TextDatatypeParser, field: Field): Field = {
     field.copy(
       `type` = localizeType(parser, field.`type`),
       description = field.description match {
@@ -299,19 +299,19 @@ case class OneApi(
     )
   }
 
-  def localizeUnion(parser: TextDatatypeParser, union: Union): Union = {
+  private[this] def localizeUnion(parser: TextDatatypeParser, union: Union): Union = {
     union.copy(
       types = union.types.map(localizeUnionType(parser, _))
     )
   }
 
-  def localizeUnionType(parser: TextDatatypeParser, ut: UnionType): UnionType = {
+  private[this] def localizeUnionType(parser: TextDatatypeParser, ut: UnionType): UnionType = {
     ut.copy(
       `type` = localizeType(parser, ut.`type`)
     )
   }
 
-  def resourceSortKey(resource: Resource): String = {
+  private[this] def resourceSortKey(resource: Resource): String = {
     val docs = resource.attributes.find(_.name == "docs").getOrElse {
       sys.error("Resource is missing the 'docs' attribute")
     }
@@ -323,7 +323,7 @@ case class OneApi(
     ).mkString(":")
   }
 
-  def localize(parser: TextDatatypeParser, service: Service, resource: Resource): Resource = {
+  private[this] def localize(parser: TextDatatypeParser, service: Service, resource: Resource): Resource = {
     val additionalAttributes = resource.attributes.find(_.name == "docs") match {
       case None => {
         val module = Module.findByServiceName(service.name.toLowerCase).getOrElse {
@@ -354,7 +354,7 @@ case class OneApi(
     * when empty, with the description from the model associated with
     * the resource.
     */
-  def recordDescription(service: Service, typ: String): Option[String] = {
+  private[this] def recordDescription(service: Service, typ: String): Option[String] = {
     service.enums.find(_.name == typ) match {
       case Some(e) => e.description
       case None => {
@@ -371,7 +371,7 @@ case class OneApi(
     }
   }
 
-  def localizeOperation(parser: TextDatatypeParser, op: Operation): Operation = {
+  private[this] def localizeOperation(parser: TextDatatypeParser, op: Operation): Operation = {
     op.copy(
       body = op.body.map(localizeBody(parser, _)),
       parameters = op.parameters.map(localizeParameter(parser, _)),
@@ -379,13 +379,13 @@ case class OneApi(
     )
   }
 
-  def localizeBody(parser: TextDatatypeParser, body: Body): Body = {
+  private[this] def localizeBody(parser: TextDatatypeParser, body: Body): Body = {
     body.copy(
       `type` = localizeType(parser, body.`type`)
     )
   }
 
-  def localizeParameter(parser: TextDatatypeParser, param: Parameter): Parameter = {
+  private[this] def localizeParameter(parser: TextDatatypeParser, param: Parameter): Parameter = {
     param.copy(
       `type` = localizeType(parser, param.`type`),
       description = param.description match {
@@ -395,7 +395,7 @@ case class OneApi(
     )
   }
 
-  def localizeResponse(parser: TextDatatypeParser, response: Response): Response = {
+  private[this] def localizeResponse(parser: TextDatatypeParser, response: Response): Response = {
     response.copy(
       `type` = localizeType(parser, response.`type`),
       description = response.description match {
@@ -405,14 +405,14 @@ case class OneApi(
     )
   }
 
-  def responseCodeToString(code: ResponseCode): String = {
+  private[this] def responseCodeToString(code: ResponseCode): String = {
     code match {
       case ResponseCodeInt(c) => c.toString
       case ResponseCodeOption.Default | ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => "*"
     }
   }
 
-  def localizeType(parser: TextDatatypeParser, name: String): String = {
+  private[this] def localizeType(parser: TextDatatypeParser, name: String): String = {
     buildType match {
       case BuildType.Api => parser.toString(parser.parse(name))
       case BuildType.ApiEvent => toApiImport(parser, name)
@@ -427,7 +427,7 @@ case class OneApi(
   /**
     * Rewrite imports in api-event to allow imports from api
     */
-  def toApiImport(parser: TextDatatypeParser, name: String): String = {
+  private[this] def toApiImport(parser: TextDatatypeParser, name: String): String = {
     val simpleName = parser.toString(parser.parse(name))
     if (simpleName == name) {
       name
@@ -439,7 +439,7 @@ case class OneApi(
           // api-event. Probably need to move the generate event
           // union/enum into api-event
           //
-          // s"io.flow.api.v0.$apidocType.$typeName"
+          // s"io.flow.api.v0.$apiBuilderType.$typeName"
           name
         }
         case _ => {
@@ -449,7 +449,7 @@ case class OneApi(
     }
   }
 
-  def validatePaths(): Seq[String] = {
+  private[this] def validatePaths(): Seq[String] = {
     val allPaths: Seq[ContextualValue] = services.flatMap { s =>
       s.resources.flatMap { r =>
         r.operations.map { op =>
@@ -464,7 +464,7 @@ case class OneApi(
     dups(allPaths, "path")
   }
 
-  def normalizePath(method: Method, path: String): String = {
+  private[this] def normalizePath(method: Method, path: String): String = {
     val pathParts: Seq[String] = path.split("[/.]").toSeq.map { name =>
       if (name.startsWith(":")) {
         // Use a standard name here as this is a pattern - doesn't
@@ -480,7 +480,7 @@ case class OneApi(
     method.toString + " " + pathParts.mkString("/")
   }
 
-  def validateRecordNames(): Seq[String] = {
+  private[this] def validateRecordNames(): Seq[String] = {
     val names: Seq[ContextualValue] = services.flatMap { s =>
       s.models.map { m =>
         ContextualValue(
@@ -521,7 +521,7 @@ case class OneApi(
     }
   }
 
-  def createEventService(service: Service): Service = {
+  private[this] def createEventService(service: Service): Service = {
     val event = createEventUnion(service.unions)
     val eventType = createEventTypeEnum(event)
     service.copy(
@@ -530,7 +530,7 @@ case class OneApi(
     )
   }
 
-  def createEventUnion(unions: Seq[Union]): Union = {
+  private[this] def createEventUnion(unions: Seq[Union]): Union = {
     unions.map(_.discriminator).distinct.toList match {
       case discriminator :: Nil => {
         val types = unions.flatMap { _.types }
@@ -556,7 +556,7 @@ case class OneApi(
     }
   }
 
-  def createEventTypeEnum(event: Union): Enum = {
+  private[this] def createEventTypeEnum(event: Union): Enum = {
     Enum(
       name = "event_type",
       plural = "event_types",
@@ -570,7 +570,7 @@ case class OneApi(
     )
   }
 
-  def docsAttribute(module: Module) = Attribute(
+  private[this] def docsAttribute(module: Module): Attribute = Attribute(
     name = "docs",
     value = Json.obj(
       "module" -> module.name
