@@ -144,9 +144,9 @@ case class OneApi(
     )
     val allNamespaces = allNames.flatMap(parser.toNamespace).toSet
     val availableImports = services.flatMap(_.imports).distinctBy(_.namespace)
-    println("all names: " + allNames.sorted.mkString(", "))
-    println("Needed imports: " + allNamespaces.toList.sorted.mkString(", "))
-    println("available imports: " + availableImports.map(_.namespace).sorted.mkString(", "))
+    println("names (longest 10): " + allNames.sortBy(_.length).reverse.take(10).sorted.mkString(", "))
+    println("Needed imports (10): " + allNamespaces.toList.sorted.take(10).mkString(", "))
+    println("available imports (10: " + availableImports.map(_.namespace).sorted.take(10).mkString(", "))
     availableImports.filter { imp =>
       allNamespaces.contains(imp.namespace)
     }
@@ -202,8 +202,11 @@ case class OneApi(
       case None => service.models.find(_.name == name) match {
         case Some(_) => Some("models")
         case None => service.unions.find(_.name == name) match {
-          case None => None
           case Some(_) => Some("unions")
+          case None => service.interfaces.find(_.name == name) match {
+            case Some(_) => Some("interfaces")
+            case None => None
+          }
         }
       }
     }
