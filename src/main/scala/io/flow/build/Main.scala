@@ -13,7 +13,7 @@ object Main extends App {
     val all = scala.collection.mutable.ListBuffer[Controller]()
     all.append(lint.Controller())
     all.append(stream.Controller())
-    if (buildType.oneapi) {
+    if (buildType.oneApi) {
       all.append(oneapi.Controller())
     }
     if (buildType.proxy) {

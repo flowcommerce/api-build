@@ -24,13 +24,35 @@ case class TextDatatypeParser(localTypes: Set[String]) {
   import TextDatatype._
 
   def parse(value: String): Seq[TextDatatype] = {
+    internalParse(value).map {
+      case s: TextDatatype.Singleton => TextDatatype.Singleton(
+        maybeStripNamespace(s.name)
+      )
+      case other => other
+    }
+  }
+
+  private[this] def internalParse(value: String): Seq[TextDatatype] = {
     value match {
       case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
       case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
       case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
-      case _ => Seq(TextDatatype.Singleton(
-        maybeStripNamespace(value)
-      ))
+      case _ => Seq(TextDatatype.Singleton(value))
+    }
+  }
+
+  def toNamespace(value: String): Option[String] = {
+    internalParse(value).lastOption.flatMap {
+      case s: TextDatatype.Singleton => {
+        val parts = s.name.split("\\.")
+        if (parts.length > 2) {
+          // eg. io.flow.search.v0.models.foo => namespace is "io.flow.search.v0"
+          Some(parts.dropRight(2).mkString("."))
+        } else {
+          None
+        }
+      }
+      case _ => None
     }
   }
 

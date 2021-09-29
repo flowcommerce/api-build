@@ -18,7 +18,8 @@ case class OneApi(
     "organization" -> "/organizations",
     "timezone" -> "/",
     "io.flow.reference.v0.models.timezone" -> "/",
-    "io.flow.common.v0.models.organization" -> "/organizations"
+    "io.flow.common.v0.models.organization" -> "/organizations",
+    "io.flow.external.paypal.v1.models.webhook_event" -> "/payment/callbacks"
   )
 
   private[this] val DefaultFieldDescriptions = Map(
@@ -64,55 +65,23 @@ case class OneApi(
   }
 
   private[this] def buildOneApi(): Service = {
-    val (name, key, ns) = buildType match {
-      case BuildType.Api => {
-        ("API", "api", "io.flow")
-      }
-
-      case BuildType.ApiEvent => {
-        ("API Event", "api-event", "io.flow.event")
-      }
-
-      case BuildType.ApiInternal => {
-        ("API Internal", "api-internal", "io.flow.internal")
-      }
-
-      case BuildType.ApiInternalEvent => {
-        ("API Internal Event", "api-internal-event", "io.flow.internal.event")
-      }
-
-      case BuildType.ApiMisc => {
-        ("API misc", "api-misc", "io.flow.misc")
-      }
-
-      case BuildType.ApiMiscEvent => {
-        ("API misc Event", "api-misc-event", "io.flow.misc.event")
-      }
-
-      case BuildType.ApiPartner => {
-        ("API Partner", "api-partner", "io.flow.partner")
-      }
-    }
-
-    val imports = services.flatMap { _.imports }.groupBy(_.uri).values.flatMap(_.headOption).toSeq
     val localTypes: Set[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }.toSet
     val parser = TextDatatypeParser(localTypes)
 
-    //Annotations are not namespaced, they're global. For convenience, we'll collect them from all imports and add them
-    //to the root service
-    val allAnnotations = services.flatMap { _.imports.flatMap(_.annotations) }.distinct
-    val importsWithNoAnnotations = imports.map(_.copy(annotations = Nil))
+    // Annotations are not namespaced, they're global. For convenience, we'll collect them from
+    // all imports and add them to the root service
+    val allAnnotations = services.flatMap { _.imports.flatMap(_.annotations) }.distinctBy(_.name)
 
-    val service = Service(
+    val baseService = Service(
       apidoc = canonical.apidoc,
-      name = name,
+      name = buildType.name,
       organization = canonical.organization,
       application = Application(
-        key = key
+        key = buildType.key
       ),
-      namespace = s"${ns}.v" + majorVersion(canonical.version),
+      namespace = s"${buildType.namespace}.v" + majorVersion(canonical.version),
       version = canonical.version,
       baseUrl = Some(
         canonical.baseUrl.getOrElse {
@@ -122,7 +91,7 @@ case class OneApi(
       description = canonical.description,
       info = canonical.info,
       headers = Nil,
-      imports = importsWithNoAnnotations,
+      imports = Nil,
       attributes = Nil,
 
       enums = services.flatMap { s =>
@@ -154,10 +123,37 @@ case class OneApi(
       annotations = allAnnotations
     )
 
+    val service = baseService.copy(
+      imports = stripAnnotations(buildImports(baseService, services))
+    )
+
     buildType match {
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner | BuildType.ApiMisc => service
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent => createEventService(service)
     }
+  }
+
+  /**
+   * Filter imports to the namespaces actually referenced in the service and ensure each import namespace
+   * is specified exactly once.
+   */
+  private[this] def buildImports(baseService: Service, services: Seq[Service]): Seq[Import] = {
+    val parser = TextDatatypeParser(Set.empty)
+    val allNames = (
+      baseService.models.map(_.name) ++ baseService.unions.map(_.name) ++ baseService.enums.map(_.name) ++ baseService.interfaces.map(_.name)
+    )
+    val allNamespaces = allNames.flatMap(parser.toNamespace).toSet
+    val availableImports = services.flatMap(_.imports).distinctBy(_.namespace)
+    println("all names: " + allNames.sorted.mkString(", "))
+    println("Needed imports: " + allNamespaces.toList.sorted.mkString(", "))
+    println("available imports: " + availableImports.map(_.namespace).sorted.mkString(", "))
+    availableImports.filter { imp =>
+      allNamespaces.contains(imp.namespace)
+    }
+  }
+
+  private[this] def stripAnnotations(imports: Seq[Import]): Seq[Import] = {
+    imports.map(_.copy(annotations = Nil))
   }
 
   @scala.annotation.tailrec
