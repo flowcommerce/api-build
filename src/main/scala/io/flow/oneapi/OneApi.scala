@@ -419,38 +419,8 @@ case class OneApi(
 
   private[this] def localizeType(parser: TextDatatypeParser, name: String): String = {
     buildType match {
-      case BuildType.Api => parser.toString(parser.parse(name))
-      case BuildType.ApiEvent => toApiImport(parser, name)
+      case BuildType.Api | BuildType.ApiEvent => parser.toString(parser.parse(name))
       case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
-    }
-  }
-
-  private[this] val ApiServiceRx = """^io\.flow\..+\.v0\.(\w+).(\w+)$""".r
-  private[this] val ApiServiceArrayRx = """^\[io\.flow\..+\.v0\.(\w+).(\w+)\]$""".r
-  private[this] val ApiServiceMapRx = """^map\[io\.flow\..+\.v0\.(\w+).(\w+)\]$""".r
-
-  /**
-    * Rewrite imports in api-event to allow imports from api
-    */
-  private[this] def toApiImport(parser: TextDatatypeParser, name: String): String = {
-    val simpleName = parser.toString(parser.parse(name))
-    if (simpleName == name) {
-      name
-    } else {
-      name match {
-        case ApiServiceRx(_, _) | ApiServiceArrayRx(_, _) | ApiServiceMapRx(_, _) => {
-          // TODO: figure out how to import. we have a circular
-          // dependency as api project is built after
-          // api-event. Probably need to move the generate event
-          // union/enum into api-event
-          //
-          // s"io.flow.api.v0.$apiBuilderType.$typeName"
-          name
-        }
-        case _ => {
-          sys.error(s"Failed to map import to API project for type[$name]")
-        }
-      }
     }
   }
 
@@ -477,7 +447,6 @@ case class OneApi(
         // of how the path will be routed.
         ":var"
       } else {
-
         name
       }
     }
