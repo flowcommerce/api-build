@@ -2,6 +2,10 @@ package io.flow.oneapi
 
 import io.apibuilder.spec.v0.models._
 
+/**
+ * Finds all declared types in a service, iterating through all models,
+ * fields, unions, responses, etc.
+ */
 object AllTypeNames {
 
   def find(service: Service): Set[String] = {
