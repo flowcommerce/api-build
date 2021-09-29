@@ -82,22 +82,21 @@ object Main extends App {
             controllers(config.buildType).filter(_.command == config.buildCommand)
           }
 
-          Downloader.withClient(profile) { dl =>
-            val services = config.apis.flatMap { name =>
-              Application.parse(name).flatMap { app =>
-                dl.service(app) match {
-                  case Left(error) => {
-                    globalErrors += s"Failed to download app[${app.label}]: $error"
-                    None
-                  }
-                  case Right(service) => {
-                    Some(service)
-                  }
+          val dl = Downloader(profile)
+          val services = config.apis.flatMap { name =>
+            Application.parse(name).flatMap { app =>
+              dl.service(app) match {
+                case Left(error) => {
+                  globalErrors += s"Failed to download app[${app.label}]: $error"
+                  None
+                }
+                case Right(service) => {
+                  Some(service)
                 }
               }
             }
-            run(config.buildType, dl, selected, services)
           }
+          run(config.buildType, dl, selected, services)
         case None =>
           // error message already printed
       }

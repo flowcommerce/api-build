@@ -1,6 +1,8 @@
 package io.flow.build
 
+import com.ning.http.client.{AsyncHttpClient, AsyncHttpClientConfig}
 import io.apibuilder.spec.v0.models.Service
+
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.Await
 import scala.concurrent.duration.Duration
@@ -10,17 +12,23 @@ import scala.concurrent.duration.Duration
   */
 case class Downloader(config: ApibuilderProfile) {
 
-  private[this] val client = {
-    new io.apibuilder.api.v0.Client(
+  private[this] def withClient[T](f: io.apibuilder.api.v0.Client => T): T = {
+    val client = new io.apibuilder.api.v0.Client(
       baseUrl = config.baseUrl,
       auth = config.token.map { token =>
         io.apibuilder.api.v0.Authorization.Basic(token)
-      }
+      },
+      asyncHttpClient = new AsyncHttpClient(
+        new AsyncHttpClientConfig.Builder()
+          .setExecutorService(java.util.concurrent.Executors.newCachedThreadPool())
+          .build()
+      )
     )
-  }
-
-  def close(): Unit = {
-    client.closeAsyncHttpClient()
+    try {
+      f(client)
+    } finally {
+      client.closeAsyncHttpClient()
+    }
   }
 
   def service(
@@ -30,12 +38,14 @@ case class Downloader(config: ApibuilderProfile) {
   ): Either[String, Service] = {
     Try {
       print(s"${app.label} version:${app.version} Downloading...")
-      val result = Await.result(
-        client.versions.getByApplicationKeyAndVersion(app.organization, app.application, app.version).map { v =>
-          v.service
-        },
-        Duration(45, "seconds")
-      )
+      val result = withClient { client =>
+        Await.result(
+          client.versions.getByApplicationKeyAndVersion(app.organization, app.application, app.version).map { v =>
+            v.service
+          },
+          Duration(45, "seconds")
+        )
+      }
       println(" Done")
       result
     } match {
@@ -57,20 +67,21 @@ case class Downloader(config: ApibuilderProfile) {
   }
 
 }
-
+/*
 object Downloader {
 
-  def withClient[T](
+  def withClient2[T](
     profile: ApibuilderProfile
   ) (
     f: Downloader => T
-  ) = {
+  ): T = {
     val downloader = Downloader(profile)
     try {
       f(downloader)
     } finally {
-      downloader.close()
+      //downloader.close()
     }
   }
 
 }
+*/

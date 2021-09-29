@@ -157,8 +157,8 @@ case class OneApi(
   }
 
   @scala.annotation.tailrec
-  private[this] def mergeResources(resources: Seq[Resource], merged: Seq[Resource] = Nil): ValidatedNec[String, Seq[Resource]] = {
-    resources.toList match {
+  private[this] def mergeResources(remaining: Seq[Resource], merged: Seq[Resource] = Nil): ValidatedNec[String, Seq[Resource]] = {
+    remaining.toList match {
       case Nil => merged.validNec
       case one :: rest => {
         merged.find(_.`type` == one.`type`) match {
