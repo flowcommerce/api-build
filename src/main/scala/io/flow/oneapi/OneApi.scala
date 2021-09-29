@@ -121,7 +121,7 @@ case class OneApi(
     )
 
     val service = baseService.copy(
-      imports = stripAnnotations(buildImports(baseService, services))
+      imports = stripAnnotations(buildImports(baseService, services.flatMap(_.imports)))
     )
 
     buildType match {
@@ -134,21 +134,22 @@ case class OneApi(
    * Filter imports to the namespaces actually referenced in the service and ensure each import namespace
    * is specified exactly once.
    */
-  private[this] def buildImports(baseService: Service, services: Seq[Service]): Seq[Import] = {
+  private[this] def buildImports(baseService: Service, imports: Seq[Import]): Seq[Import] = {
     val parser = TextDatatypeParser(Set.empty)
-    val allNames = baseService.models.map(_.name) ++ baseService.unions.map(_.name) ++ baseService.enums.map(_.name) ++ baseService.interfaces.map(_.name)
-    val allNamespaces = allNames.flatMap(parser.toNamespace).toSet
-    val availableImports = services.flatMap(_.imports).distinctBy(_.namespace)
-
-    println("-"*100)
-    println(" allNames (longest 3): " + allNames.sortBy(_.length).reverse.take(3).sorted.mkString(", "))
-    println("    allNamespaces (5): " + allNamespaces.toList.sorted.take(5).mkString(", "))
-    println("available imports (5): " + availableImports.map(_.namespace).sorted.take(5).mkString(", "))
-    println("-"*100)
-
-    availableImports.filter { imp =>
+    val allTypeNames = AllTypeNames.find(baseService)
+    val allNamespaces = allTypeNames.flatMap(parser.toNamespace)
+    val availableImports = imports.distinctBy(_.namespace)
+    val result = availableImports.filter { imp =>
       allNamespaces.contains(imp.namespace)
     }
+
+    println("-"*100)
+    println(" allTypeNames (longest 3): " + allTypeNames.toList.sortBy(_.length).reverse.take(3).sorted.mkString(", "))
+    println("        allNamespaces (5): " + allNamespaces.toList.sorted.take(5).mkString(", "))
+    println("    available imports (5): " + availableImports.map(_.namespace).sorted.take(5).mkString(", "))
+    println("               result (5): " + result.map(_.namespace).sorted.take(5).mkString(", "))
+    println("-"*100)
+    result
   }
 
   private[this] def stripAnnotations(imports: Seq[Import]): Seq[Import] = {
