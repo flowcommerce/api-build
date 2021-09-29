@@ -82,7 +82,7 @@ case class Downloader(config: ApibuilderProfile) {
 
     println(
       s"Downloading API Builder Service Spec for $orgKey: " +
-      applications.map(_.applicationVersionLabel).sorted.mkString(" ") +
+      applications.map(_.applicationVersionLabel).sorted.mkString(" ")
     )
     Try {
       withClient { client =>

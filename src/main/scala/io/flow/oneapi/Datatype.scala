@@ -32,15 +32,6 @@ case class TextDatatypeParser(localTypes: Set[String]) {
     }
   }
 
-  private[this] def internalParse(value: String): Seq[TextDatatype] = {
-    value match {
-      case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
-      case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
-      case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
-      case _ => Seq(TextDatatype.Singleton(value))
-    }
-  }
-
   def toNamespace(value: String): Option[String] = {
     internalParse(value).lastOption.flatMap {
       case s: TextDatatype.Singleton => {
@@ -56,16 +47,23 @@ case class TextDatatypeParser(localTypes: Set[String]) {
     }
   }
 
+  private[this] def internalParse(value: String): Seq[TextDatatype] = {
+    value match {
+      case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
+      case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
+      case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
+      case _ => Seq(TextDatatype.Singleton(value))
+    }
+  }
+
   def toString(parts: Seq[TextDatatype]): String = {
     parts.toList match {
       case Nil => ""
-      case Singleton(name) :: Nil => name
-
       case one :: rest => {
         one match {
           case List => "[" + toString(rest) + "]"
           case Map => "map[" + toString(rest) + "]"
-          case Singleton(_) => sys.error("Did not expect singleton here")
+          case Singleton(name) => name
         }
         
       }
