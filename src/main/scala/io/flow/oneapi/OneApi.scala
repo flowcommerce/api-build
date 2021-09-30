@@ -1,8 +1,11 @@
 package io.flow.oneapi
 
+import cats.data.Validated.{Invalid, Valid}
+import cats.data.ValidatedNec
+import cats.implicits._
 import io.apibuilder.spec.v0.models._
 import io.flow.build.BuildType
-import play.api.libs.json.{Json, JsString}
+import play.api.libs.json.{JsString, Json}
 
 private[oneapi] case class ContextualValue(context: String, value: String)
 
@@ -14,7 +17,8 @@ case class OneApi(
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
     "timezone" -> "/",
-    "query_builder" -> "/:organization/query/builders",
+    "io.flow.reference.v0.models.timezone" -> "/",
+    "io.flow.common.v0.models.organization" -> "/organizations",
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
 
@@ -51,73 +55,30 @@ case class OneApi(
     val duplicateRecordErrors = validateRecordNames()
 
     (pathErrors ++ duplicateRecordErrors).toList match {
-      case Nil => {
-        Right(buildOneApi())
-      }
-      case errors => {
-        Left(errors)
-      }
+      case Nil => Right(buildOneApi())
+      case errors => Left(errors)
     }
   }
 
   private[this] def buildOneApi(): Service = {
-    val (name, key, ns, imports) = buildType match {
-      case BuildType.Api => {
-        val imports = services.flatMap { _.imports }.filter { i =>
-          !TextDatatype.isNamespaceInFlowApiProject(i.namespace)
-        }
-        ("API", "api", "io.flow", imports)
-      }
-
-      case BuildType.ApiEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API Event", "api-event", "io.flow.event", imports)
-      }
-
-      case BuildType.ApiInternal => {
-        val imports = services.flatMap { _.imports }
-        ("API Internal", "api-internal", "io.flow.internal", imports)
-      }
-
-      case BuildType.ApiInternalEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API Internal Event", "api-internal-event", "io.flow.internal.event", imports)
-      }
-
-      case BuildType.ApiMisc => {
-        val imports = services.flatMap { _.imports }
-        ("API misc", "api-misc", "io.flow.misc", imports)
-      }
-
-      case BuildType.ApiMiscEvent => {
-        val imports = services.flatMap { _.imports }
-        ("API misc Event", "api-misc-event", "io.flow.misc.event", imports)
-      }
-
-      case BuildType.ApiPartner => {
-        val imports = services.flatMap { _.imports }
-        ("API Partner", "api-partner", "io.flow.partner", imports)
-      }
-    }
-
-    val parser = TextDatatypeParser()
-    val localTypes: Seq[String] = services.flatMap { s =>
+    val localTypes: Set[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
-    }
+    }.toSet
+    println(s"localTypes (5)" + localTypes.toList.sortBy(_.length).reverse.take(5).mkString(" "))
+    val parser = TextDatatypeParser(localTypes)
 
-    //Annotations are not namespaced, they're global. For convenience, we'll collect them from all imports and add them
-    //to the root service
-    val allAnnotations = services.flatMap { _.imports.flatMap(_.annotations) }.distinct
-    val importsWithNoAnnotations = imports.map(_.copy(annotations = Nil))
+    // Annotations are not namespaced, they're global. For convenience, we'll collect them from
+    // all imports and add them to the root service
+    val allAnnotations = services.flatMap { _.imports.flatMap(_.annotations) }.distinctBy(_.name)
 
-    val service = Service(
+    val baseService = Service(
       apidoc = canonical.apidoc,
-      name = name,
+      name = buildType.name,
       organization = canonical.organization,
       application = Application(
-        key = key
+        key = buildType.key
       ),
-      namespace = s"${ns}.v" + majorVersion(canonical.version),
+      namespace = s"${buildType.namespace}.v" + majorVersion(canonical.version),
       version = canonical.version,
       baseUrl = Some(
         canonical.baseUrl.getOrElse {
@@ -127,7 +88,7 @@ case class OneApi(
       description = canonical.description,
       info = canonical.info,
       headers = Nil,
-      imports = importsWithNoAnnotations,
+      imports = Nil,
       attributes = Nil,
 
       enums = services.flatMap { s =>
@@ -152,8 +113,15 @@ case class OneApi(
             map(normalizeName(parser, localTypes, s, _)).
             map(localize(parser, s, _))
         }
-      ).sortBy { resourceSortKey },
+      ) match {
+        case Invalid(errors) => sys.error(errors.toList.mkString("\n"))
+        case Valid(r) => r.toList.sortBy { resourceSortKey }
+      },
       annotations = allAnnotations
+    )
+
+    val service = baseService.copy(
+      imports = stripAnnotations(buildImports(baseService, services.flatMap(_.imports)))
     )
 
     buildType match {
@@ -162,14 +130,37 @@ case class OneApi(
     }
   }
 
+  /**
+   * Filter imports to the namespaces actually referenced in the service and ensure each import namespace
+   * is specified exactly once.
+   */
+  private[this] def buildImports(baseService: Service, imports: Seq[Import]): Seq[Import] = {
+    val parser = TextDatatypeParser(Set.empty)
+    val allTypeNames = AllTypeNames.find(baseService)
+    val allNamespaces = allTypeNames.flatMap(parser.toNamespace)
+    val availableImports = imports.distinctBy(_.namespace)
+    availableImports.filter { imp =>
+      allNamespaces.contains(imp.namespace)
+    }
+  }
+
+  private[this] def stripAnnotations(imports: Seq[Import]): Seq[Import] = {
+    imports.map(_.copy(annotations = Nil))
+  }
+
   @scala.annotation.tailrec
-  private[this] def mergeResources(resources: Seq[Resource], merged: Seq[Resource] = Nil): Seq[Resource] = {
-    resources.toList match {
-      case Nil => merged
+  private[this] def mergeResources(remaining: Seq[Resource], merged: Seq[Resource] = Nil): ValidatedNec[String, Seq[Resource]] = {
+    remaining.toList match {
+      case Nil => merged.validNec
       case one :: rest => {
         merged.find(_.`type` == one.`type`) match {
           case None => mergeResources(rest, merged ++ Seq(one))
-          case Some(r) => mergeResources(rest, merged.filter(_.`type` != one.`type`) ++ Seq(merge(r, one)))
+          case Some(r) => {
+            merge(r, one) match {
+              case Invalid(errors) => errors.toList.mkString("\n").invalidNec
+              case Valid(result) => mergeResources(rest, merged.filter(_.`type` != one.`type`) ++ Seq(result))
+            }
+          }
         }
       }
     }
@@ -183,11 +174,11 @@ case class OneApi(
     }
   }
 
-  private[this] def normalizeName(parser: TextDatatypeParser, localTypes: Seq[String], service: Service, resource: Resource): Resource = {
+  private[this] def normalizeName(parser: TextDatatypeParser, localTypes: Set[String], service: Service, resource: Resource): Resource = {
     val qualifiedName = withNamespace(service, resource.`type`)
 
     val finalType = if (localTypes.contains(qualifiedName)) {
-      parser.toString(parser.parse(qualifiedName))
+      parser.toTypeLabel(parser.parse(qualifiedName))
     } else {
       qualifiedName
     }
@@ -203,8 +194,11 @@ case class OneApi(
       case None => service.models.find(_.name == name) match {
         case Some(_) => Some("models")
         case None => service.unions.find(_.name == name) match {
-          case None => None
           case Some(_) => Some("unions")
+          case None => service.interfaces.find(_.name == name) match {
+            case Some(_) => Some("interfaces")
+            case None => None
+          }
         }
       }
     }
@@ -215,7 +209,7 @@ case class OneApi(
     *   - Takes fields from the first resource if both provide (e.g. description)
     *   - If paths are different, raises an error
     */
-  private[this] def merge(a: Resource, b: Resource): Resource = {
+  private[this] def merge(a: Resource, b: Resource): ValidatedNec[String, Resource] = {
     assert(a.`type` == b.`type`)
 
     // Ideally the resource paths are the same; if not we have to
@@ -223,30 +217,33 @@ case class OneApi(
     // influence method names in the code generators and thus
     // important to get right.
     val allPaths = Seq(a.path, b.path).flatten.distinct
-    val path: Option[String] = allPaths.toList match {
-      case Nil => None
-      case one :: Nil => Some(one)
+    val attributeNames = a.attributes.map(_.name)
+
+    val path: ValidatedNec[String, Option[String]] = allPaths.toList match {
+      case Nil => None.validNec
+      case one :: Nil => Some(one).validNec
       case multiple => {
         MergeResourcePathsHack.get(a.`type`) match {
           case Some(defaultPath) => {
             if (allPaths.contains(defaultPath)) {
-              Some(defaultPath)
+              Some(defaultPath).validNec
             } else if (defaultPath == "/") {
-              Some(defaultPath)
+              Some(defaultPath).validNec
             } else {
-              sys.error(s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]")
+              s"Error while merging resources of type[${a.`type`}]: Default path $defaultPath is not specified on either resource[${allPaths}]".invalidNec
             }
           }
           case None => {
             val (internal, public) = multiple.partition(p => p.startsWith("/internal"))
             public match {
-              case Nil => internal.headOption
-              case one :: Nil => Some(one)
+              case Nil => internal.headOption.validNec
+              case one :: Nil => Some(one).validNec
               case multiplePublic => {
-                sys.error(s"Cannot merge resources of type[${a.`type`}] with more than one non internal path:\n" +
+                (
+                  s"Cannot merge resources of type[${a.`type`}] with more than one non internal path:\n" +
                   multiplePublic.sorted.mkString("  - ", "\n  - ", "\n") +
                   "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack to add an explicit path for this resource"
-                )
+                ).invalidNec
               }
             }
           }
@@ -254,17 +251,17 @@ case class OneApi(
       }
     }
 
-    val attributeNames = a.attributes.map(_.name)
-
-    a.copy(
-      path = path,
-      description = a.description match {
-        case Some(desc) => Some(desc)
-        case None => b.description
-      },
-      operations = a.operations ++ b.operations,
-      attributes = a.attributes ++ b.attributes.filter(attr => !attributeNames.contains(attr.name))
-    )
+    path.map { p =>
+      a.copy(
+        path = p,
+        description = a.description match {
+          case Some(desc) => Some(desc)
+          case None => b.description
+        },
+        operations = a.operations ++ b.operations,
+        attributes = a.attributes ++ b.attributes.filter(attr => !attributeNames.contains(attr.name))
+      )
+    }
   }
 
   /**
@@ -414,38 +411,8 @@ case class OneApi(
 
   private[this] def localizeType(parser: TextDatatypeParser, name: String): String = {
     buildType match {
-      case BuildType.Api => parser.toString(parser.parse(name))
-      case BuildType.ApiEvent => toApiImport(parser, name)
+      case BuildType.Api | BuildType.ApiEvent => parser.toTypeLabel(parser.parse(name))
       case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
-    }
-  }
-
-  private[this] val ApiServiceRx = """^io\.flow\..+\.v0\.(\w+).(\w+)$""".r
-  private[this] val ApiServiceArrayRx = """^\[io\.flow\..+\.v0\.(\w+).(\w+)\]$""".r
-  private[this] val ApiServiceMapRx = """^map\[io\.flow\..+\.v0\.(\w+).(\w+)\]$""".r
-
-  /**
-    * Rewrite imports in api-event to allow imports from api
-    */
-  private[this] def toApiImport(parser: TextDatatypeParser, name: String): String = {
-    val simpleName = parser.toString(parser.parse(name))
-    if (simpleName == name) {
-      name
-    } else {
-      name match {
-        case ApiServiceRx(_, _) | ApiServiceArrayRx(_, _) | ApiServiceMapRx(_, _) => {
-          // TODO: figure out how to import. we have a circular
-          // dependency as api project is built after
-          // api-event. Probably need to move the generate event
-          // union/enum into api-event
-          //
-          // s"io.flow.api.v0.$apiBuilderType.$typeName"
-          name
-        }
-        case _ => {
-          sys.error(s"Failed to map import to API project for type[$name]")
-        }
-      }
     }
   }
 
@@ -472,7 +439,6 @@ case class OneApi(
         // of how the path will be routed.
         ":var"
       } else {
-
         name
       }
     }

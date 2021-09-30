@@ -5,15 +5,28 @@ case class Application(
   application: String,
   version: String
 ) {
-  val label = version match {
-    case Application.Latest => s"$organization/$application"
-    case _ => s"$organization/$application:$version"
+  val isLatest: Boolean = version == Application.Latest
+
+  val applicationVersionLabel: String = if (isLatest) {
+    application
+  } else {
+    s"$application:$version"
   }
+
+  val label: String = s"$organization/$applicationVersionLabel"
 }
 
 object Application {
 
   val Latest = "latest"
+
+  def latest(organization: String, application: String): Application = {
+    Application(
+      organization = organization,
+      application = application,
+      version = Latest
+    )
+  }
 
   def parse(value: String): Option[Application] = {
     value.split("/").map(_.trim).toList match {

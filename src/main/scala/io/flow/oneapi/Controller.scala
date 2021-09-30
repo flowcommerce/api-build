@@ -1,5 +1,6 @@
 package io.flow.oneapi
 
+import cats.data.Validated.{Invalid, Valid}
 import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildType, Downloader}
 
@@ -24,9 +25,9 @@ case class Controller() extends io.flow.build.Controller {
       }
     ) match {
       case None => Nil
-      case Some(name) => downloader.service(Application("flow", name, "latest")) match {
-        case Left(errors) => sys.error(s"Failed to download API Builder application flow/$name: $errors")
-        case Right(service) => Seq(service)
+      case Some(applicationKey) => downloader.downloadService(Application.latest("flow", applicationKey)) match {
+        case Invalid(errors) => sys.error(s"Failed to download API Builder application flow/$applicationKey: $errors")
+        case Valid(service) => Seq(service)
       }
     }
 

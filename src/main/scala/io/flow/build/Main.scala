@@ -13,7 +13,7 @@ object Main extends App {
     val all = scala.collection.mutable.ListBuffer[Controller]()
     all.append(lint.Controller())
     all.append(stream.Controller())
-    if (buildType.oneapi) {
+    if (buildType.oneApi) {
       all.append(oneapi.Controller())
     }
     if (buildType.proxy) {
@@ -82,21 +82,18 @@ object Main extends App {
             controllers(config.buildType).filter(_.command == config.buildCommand)
           }
 
-          Downloader.withClient(profile) { dl =>
-            val services = config.apis.flatMap { name =>
-              Application.parse(name).flatMap { app =>
-                dl.service(app) match {
-                  case Left(error) => {
-                    globalErrors += s"Failed to download app[${app.label}]: $error"
-                    None
-                  }
-                  case Right(service) => {
-                    Some(service)
-                  }
-                }
-              }
+          val allApplications: Seq[Application] = config.apis.flatMap { name =>
+            Application.parse(name)
+          }
+
+          val dl = Downloader(profile)
+          Downloader(profile).downloadServices(allApplications) match {
+            case Left(errors) => {
+              println(s"Errors downloading services:")
+              errors.foreach { e => println(s" - $e")}
+              System.exit(errors.length)
             }
-            run(config.buildType, dl, selected, services)
+            case Right(services) => run(config.buildType, dl, selected, services)
           }
         case None =>
           // error message already printed
