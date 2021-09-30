@@ -20,13 +20,13 @@ object TextDatatype {
   * Parses a text datatype, removing specific namespaces as those
   * names are expected to be local.
   */
-case class TextDatatypeParser(localTypes: Set[String]) {
+object TextDatatypeParser {
   import TextDatatype._
 
-  def parse(value: String): Seq[TextDatatype] = {
+  def parse(localTypes: Set[String], value: String): Seq[TextDatatype] = {
     internalParse(value).map {
       case s: TextDatatype.Singleton => TextDatatype.Singleton(
-        maybeStripNamespace(s.name)
+        maybeStripNamespace(localTypes, s.name)
       )
       case other => other
     }
@@ -49,8 +49,8 @@ case class TextDatatypeParser(localTypes: Set[String]) {
 
   private[this] def internalParse(value: String): Seq[TextDatatype] = {
     value match {
-      case ListRx(t) => Seq(TextDatatype.List) ++ parse(t)
-      case MapRx(t) => Seq(TextDatatype.Map) ++ parse(t)
+      case ListRx(t) => Seq(TextDatatype.List) ++ internalParse(t)
+      case MapRx(t) => Seq(TextDatatype.Map) ++ internalParse(t)
       case MapDefaultRx() => Seq(TextDatatype.Map, TextDatatype.Singleton("string"))
       case _ => Seq(TextDatatype.Singleton(value))
     }
@@ -69,7 +69,7 @@ case class TextDatatypeParser(localTypes: Set[String]) {
     }
   }
 
-  def maybeStripNamespace(value: String): String = {
+  def maybeStripNamespace(localTypes: Set[String], value: String): String = {
     if (localTypes.contains(value)) {
       value.split("\\.").last
     } else {

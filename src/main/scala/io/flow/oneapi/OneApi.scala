@@ -22,12 +22,6 @@ case class OneApi(
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
 
-  private[this] val DefaultFieldDescriptions = Map(
-    "id" -> "Globally unique identifier",
-    "number" -> "Client's unique identifier for this object",
-    "organization" -> "Refers to your organization's account identifier"
-  )
-
   private[this] val DefaultParameterDescriptions = Map(
     "id" -> "Filter by one or more IDs of this resource",
     "limit" -> "The maximum number of results to return",
@@ -64,8 +58,7 @@ case class OneApi(
     val localTypes: Set[String] = services.flatMap { s =>
       s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
     }.toSet
-    println(s"localTypes (5)" + localTypes.toList.sortBy(_.length).reverse.take(5).mkString(" "))
-    val parser = TextDatatypeParser(localTypes)
+    val typeRewriter = TypeRewriter(buildType, localTypes)
 
     // Annotations are not namespaced, they're global. For convenience, we'll collect them from
     // all imports and add them to the root service
@@ -96,22 +89,22 @@ case class OneApi(
       }.sortBy { _.name.toLowerCase },
 
       models = services.flatMap { s =>
-        s.models.map(localizeModel(parser, _))
+        s.models.map(typeRewriter.localizeModel)
       }.sortBy { _.name.toLowerCase },
 
       interfaces = services.flatMap { s =>
-        s.interfaces.map(localizeInterface(parser, _))
+        s.interfaces.map(typeRewriter.localizeInterface)
       }.sortBy { _.name.toLowerCase },
 
       unions = services.flatMap { s =>
-        s.unions.map(localizeUnion(parser, _))
+        s.unions.map(typeRewriter.localizeUnion)
       }.sortBy { _.name.toLowerCase },
 
       resources = mergeResources(
         services.flatMap { s =>
           s.resources.
-            map(normalizeName(parser, localTypes, s, _)).
-            map(localize(parser, s, _))
+            map(normalizeName(localTypes, s, _)).
+            map(localize(s, _))
         }
       ) match {
         case Invalid(errors) => sys.error(errors.toList.mkString("\n"))
@@ -172,20 +165,6 @@ case class OneApi(
       case None => name
       case Some(apiBuilderType) => s"${service.namespace}.$apiBuilderType.$name"
     }
-  }
-
-  private[this] def normalizeName(parser: TextDatatypeParser, localTypes: Set[String], service: Service, resource: Resource): Resource = {
-    val qualifiedName = withNamespace(service, resource.`type`)
-
-    val finalType = if (localTypes.contains(qualifiedName)) {
-      parser.toTypeLabel(parser.parse(qualifiedName))
-    } else {
-      qualifiedName
-    }
-
-    resource.copy(
-      `type` = finalType
-    )
   }
 
   private[this] def apiBuilderType(service: Service, name: String): Option[String] = {
@@ -274,40 +253,6 @@ case class OneApi(
     }.toInt
   }
 
-  private[this] def localizeModel(parser: TextDatatypeParser, model: Model): Model = {
-    model.copy(
-      fields = model.fields.map(localizeField(parser, _))
-    )
-  }
-
-  private[this] def localizeInterface(parser: TextDatatypeParser, interface: Interface): Interface = {
-    interface.copy(
-      fields = interface.fields.map(localizeField(parser, _))
-    )
-  }
-
-  private[this] def localizeField(parser: TextDatatypeParser, field: Field): Field = {
-    field.copy(
-      `type` = localizeType(parser, field.`type`),
-      description = field.description match {
-        case Some(d) => Some(d)
-        case None => DefaultFieldDescriptions.get(field.name)
-      }
-    )
-  }
-
-  private[this] def localizeUnion(parser: TextDatatypeParser, union: Union): Union = {
-    union.copy(
-      types = union.types.map(localizeUnionType(parser, _))
-    )
-  }
-
-  private[this] def localizeUnionType(parser: TextDatatypeParser, ut: UnionType): UnionType = {
-    ut.copy(
-      `type` = localizeType(parser, ut.`type`)
-    )
-  }
-
   private[this] def resourceSortKey(resource: Resource): String = {
     val docs = resource.attributes.find(_.name == "docs").getOrElse {
       sys.error("Resource is missing the 'docs' attribute")
@@ -334,7 +279,7 @@ case class OneApi(
     resource.copy(
       `type` = localizeType(parser, resource.`type`),
       operations = resource.operations.
-        map { localizeOperation(parser, _) }.
+        map { localizeOperation }.
         sortBy(OperationSort.key),
       description = resource.description match {
         case Some(d) => Some(d)
@@ -370,9 +315,9 @@ case class OneApi(
 
   private[this] def localizeOperation(parser: TextDatatypeParser, op: Operation): Operation = {
     op.copy(
-      body = op.body.map(localizeBody(parser, _)),
-      parameters = op.parameters.map(localizeParameter(parser, _)),
-      responses = op.responses.map(localizeResponse(parser, _))
+      body = op.body.map(localizeBody),
+      parameters = op.parameters.map(localizeParameter),
+      responses = op.responses.map(localizeResponse)
     )
   }
 
@@ -406,13 +351,6 @@ case class OneApi(
     code match {
       case ResponseCodeInt(c) => c.toString
       case ResponseCodeOption.Default | ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => "*"
-    }
-  }
-
-  private[this] def localizeType(parser: TextDatatypeParser, name: String): String = {
-    buildType match {
-      case BuildType.Api | BuildType.ApiEvent => parser.toTypeLabel(parser.parse(name))
-      case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
     }
   }
 
