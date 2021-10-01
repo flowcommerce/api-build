@@ -32,7 +32,6 @@ case class OneApi(
 
   private[this] val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
 
-  /*
   private[this] val importedServices: List[ApiBuilderService] = downloadCache.downloadServices(
     originalServices.flatMap(_.imports).map { imp =>
       io.flow.build.Application.latest(imp.organization.key, imp.application.key)
@@ -43,10 +42,11 @@ case class OneApi(
     case Left(errors) => sys.error(s"Failed to download imports: ${errors.mkString(", ")}")
     case Right(services) => services.map(ApiBuilderService(_)).toList
   }
-  */
 
   private[this] val services: List[ApiBuilderService] = originalServices.map(ApiBuilderService(_)).toList
+  println(s"Services: ${services.map(_.service.namespace)}")
   private[this] val multiService: MultiService = MultiServiceImpl(services)
+  private[this] val multiServiceWithImports: MultiService = MultiServiceImpl(services ++ importedServices)
 
   def process(): ValidatedNec[String, Service] = {
     (
@@ -334,21 +334,25 @@ case class OneApi(
 
   private[this] def updateResource(service: ApiBuilderService, resource: Resource): Resource = {
     updateDescription(
+      service,
       updateOperations(
         ensureDocsAttribute(service, resource)
       )
     )
   }
 
-  private[this] def updateDescription(resource: Resource): Resource = {
+  private[this] def updateDescription(service: ApiBuilderService, resource: Resource): Resource = {
     resource.copy(
       description = resource.description.orElse {
-        multiService.findType(resource.`type`).flatMap {
-          case _: ScalarType => None
-          case t: ApiBuilderType.Enum => t.enum.description
-          case t: ApiBuilderType.Interface => t.interface.description
-          case t: ApiBuilderType.Model => t.model.description
-          case t: ApiBuilderType.Union => t.union.description
+        multiServiceWithImports.findType(service.namespace, resource.`type`) match {
+          case None => None
+          case Some(t) => t match {
+            case _: ScalarType => None
+            case t: ApiBuilderType.Enum => t.enum.description
+            case t: ApiBuilderType.Interface => t.interface.description
+            case t: ApiBuilderType.Model => t.model.description
+            case t: ApiBuilderType.Union => t.union.description
+          }
         }
       }
     )
