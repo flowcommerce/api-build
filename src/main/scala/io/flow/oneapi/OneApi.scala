@@ -48,13 +48,32 @@ case class OneApi(
   ) ++ allImports
 
   println(s"new namespace: $namespace")
+  private[this] val namespacesToFlatten: Set[String] = originalServices.map(_.namespace).toSet
   private[this] val multiService: MultiService = TypeRewriter {
     case t: ScalarType => t
     case t: ApiBuilderType => {
-      println(s" Type: ${t.qualified}")
-      t
+      if (namespacesToFlatten.contains(t.namespace)) {
+        flattenName(t)
+      } else {
+        t
+      }
     }
   }.rewrite(MultiServiceImpl(services))
+
+  def flattenName(typ: ApiBuilderType): ApiBuilderType = {
+    def replaceNamespace(service: ApiBuilderService) = {
+      service.copy(
+        service = service.service.copy(namespace = namespace)
+      )
+    }
+
+    typ match {
+      case t: ApiBuilderType.Enum => t.copy(service = replaceNamespace(t.service))
+      case t: ApiBuilderType.Interface => t.copy(service = replaceNamespace(t.service))
+      case t: ApiBuilderType.Model => t.copy(service = replaceNamespace(t.service))
+      case t: ApiBuilderType.Union => t.copy(service = replaceNamespace(t.service))
+    }
+  }
 
   def process(): ValidatedNec[String, Service] = {
     (
