@@ -33,7 +33,7 @@ lazy val root = project
     scalacOptions ++= allScalacOptions,
     libraryDependencies ++= Seq(
       "io.flow" %% "lib-util" % "0.1.84",
-      "io.apibuilder" %% "apibuilder-validation" % "0.4.28",
+      "io.apibuilder" %% "apibuilder-validation" % "0.4.29",
       "com.typesafe.play" %% "play-json" % "2.9.2",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.scalatest" %% "scalatest" % "3.2.10" % Test,
