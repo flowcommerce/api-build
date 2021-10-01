@@ -22,7 +22,6 @@ case class OneApi(
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
 
-
   private[this] val canonical: ApiBuilderService = ApiBuilderService(originalServices.find(_.name == "common").getOrElse {
     originalServices.headOption.getOrElse {
       sys.error("Must have at least one service")
@@ -71,8 +70,8 @@ case class OneApi(
       attributes = Nil,
 
       enums = multiService.allEnums.map(_.`enum`).sortBy { _.name.toLowerCase },
-      models = multiService.allModels.map(_.model).sortBy(_.name.toLowerCase ),
-      interfaces = multiService.allInterfaces.map(_.interface).sortBy(_.name.toLowerCase ),
+      models = multiService.allModels.map(updateModel).map(_.model).sortBy(_.name.toLowerCase ),
+      interfaces = multiService.allInterfaces.map(updateInterface).map(_.interface).sortBy(_.name.toLowerCase ),
       unions = multiService.allUnions.map(_.union).sortBy(_.name.toLowerCase ),
 
       resources = mergeResources(
@@ -225,7 +224,7 @@ case class OneApi(
       }
     }
 
-    dups(allPaths, "path")
+    dups("path", allPaths)
   }
 
   private[this] def normalizePath(method: Method, path: String): String = {
@@ -244,36 +243,21 @@ case class OneApi(
   }
 
   private[this] def validateRecordNames(): ValidatedNec[String, Unit] = {
-    val names: Seq[ContextualValue] = services.flatMap { s =>
-      s.models.map { m =>
+    dups(
+      "record",
+      multiService.allTypes.map { s =>
         ContextualValue(
-          context = s"${s.name}:${m.name}",
-          value = m.name
+          context = s.qualified,
+          value = s.name
         )
       }
-    } ++ services.flatMap { s =>
-      s.unions.map { u =>
-        ContextualValue(
-          context = s"${s.name}:${u.name}",
-          value = u.name
-        )
-      }
-    } ++ services.flatMap { s =>
-      s.enums.map { e =>
-        ContextualValue(
-          context = s"${s.name}:${e.name}",
-          value = e.name
-        )
-      }
-    }
-
-    dups(names, "record")
+    )
   }
 
   /**
     * Returns an error message if there are duplicate values
     */
-  private[oneapi] def dups(values: Seq[ContextualValue], label: String): ValidatedNec[String, Unit] = {
+  private[oneapi] def dups(label: String, values: Seq[ContextualValue]): ValidatedNec[String, Unit] = {
     values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
       val dupValues = values.filter { v => dup == v.value.toLowerCase }
       assert(dupValues.size >= 2, s"Could not find duplicates for value[$dup]")
@@ -383,4 +367,27 @@ case class OneApi(
     )
   )
 
+  private[this] def updateInterface(interface: ApiBuilderType.Interface): ApiBuilderType.Interface = {
+    interface.copy(
+      interface = interface.interface.copy(
+        fields = interface.interface.fields.map(updateField)
+      )
+    )
+  }
+
+  private[this] def updateModel(model: ApiBuilderType.Model): ApiBuilderType.Model = {
+    model.copy(
+      model = model.model.copy(
+        fields = model.model.fields.map(updateField)
+      )
+    )
+  }
+
+  private[this] def updateField(field: Field): Field = {
+    field.copy(
+      description = field.description.orElse {
+        Defaults.FieldDescriptions.get(field.name)
+      }
+    )
+  }
 }
