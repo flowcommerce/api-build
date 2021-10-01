@@ -3,7 +3,9 @@ package io.flow.oneapi
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.ValidatedNec
 import cats.implicits._
+import io.apibuilder.rewriter.TypeRewriter
 import io.apibuilder.spec.v0.models._
+import io.apibuilder.validation.{ApiBuilderService, MultiService, MultiServiceImpl}
 import io.flow.build.BuildType
 import play.api.libs.json.{JsString, Json}
 
@@ -11,8 +13,10 @@ private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(
   buildType: BuildType,
-  services: Seq[Service]
+  originalServices: Seq[Service]
 ) {
+  private[this] val services: List[ApiBuilderService] = originalServices.map(ApiBuilderService(_)).toList
+  private[this] val multiService: MultiService = MultiServiceImpl(services)
 
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
@@ -22,30 +26,8 @@ case class OneApi(
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
 
-  private[this] val DefaultFieldDescriptions = Map(
-    "id" -> "Globally unique identifier",
-    "number" -> "Client's unique identifier for this object",
-    "organization" -> "Refers to your organization's account identifier"
-  )
-
-  private[this] val DefaultParameterDescriptions = Map(
-    "id" -> "Filter by one or more IDs of this resource",
-    "limit" -> "The maximum number of results to return",
-    "offset" -> "The number of results to skip before returning results",
-    "organization" -> "Refers to your organization's account identifier"
-  )
-
-  private[this] val DefaultResponseDescriptions = Map(
-    "200" -> "Successful response",
-    "201" -> "Operation succeeded and the resource was created",
-    "204" -> "Operation succeeded. No content is returned",
-    "401" -> "Authorization failed",
-    "404" -> "Resource was not found",
-    "422" -> "One or more errors were found with the data sent in the request. The body of the response contains specific details on what data failed validation."
-  )
-
-  private[this] val canonical = services.find(_.name == "common").getOrElse {
-    services.headOption.getOrElse {
+  private[this] val canonical: ApiBuilderService = multiService.services().find(_.name == "common").getOrElse {
+    multiService.services().headOption.getOrElse {
       sys.error("Must have at least one service")
     }
   }
@@ -61,67 +43,53 @@ case class OneApi(
   }
 
   private[this] def buildOneApi(): Service = {
-    val localTypes: Set[String] = services.flatMap { s =>
-      s.enums.map(e => withNamespace(s, e.name)) ++ s.models.map(m => withNamespace(s, m.name)) ++ s.unions.map(u => withNamespace(s, u.name))
-    }.toSet
-    println(s"localTypes (5)" + localTypes.toList.sortBy(_.length).reverse.take(5).mkString(" "))
-    val parser = TextDatatypeParser(localTypes)
-
     // Annotations are not namespaced, they're global. For convenience, we'll collect them from
     // all imports and add them to the root service
-    val allAnnotations = services.flatMap { _.imports.flatMap(_.annotations) }.distinctBy(_.name)
+    val allAnnotations = services.flatMap { _.service.imports.flatMap(_.annotations) }.distinctBy(_.name)
+
+    val flattenedService = TypeRewriter { t =>
+      t
+    }.rewrite(multiService)
 
     val baseService = Service(
-      apidoc = canonical.apidoc,
+      apidoc = canonical.service.apidoc,
       name = buildType.name,
-      organization = canonical.organization,
+      organization = canonical.service.organization,
       application = Application(
         key = buildType.key
       ),
-      namespace = s"${buildType.namespace}.v" + majorVersion(canonical.version),
-      version = canonical.version,
+      namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version),
+      version = canonical.service.version,
       baseUrl = Some(
-        canonical.baseUrl.getOrElse {
+        canonical.service.baseUrl.getOrElse {
           "https://api.flow.io"
         }
       ),
-      description = canonical.description,
-      info = canonical.info,
+      description = canonical.service.description,
+      info = canonical.service.info,
       headers = Nil,
       imports = Nil,
       attributes = Nil,
 
-      enums = services.flatMap { s =>
-        s.enums
-      }.sortBy { _.name.toLowerCase },
-
-      models = services.flatMap { s =>
-        s.models.map(localizeModel(parser, _))
-      }.sortBy { _.name.toLowerCase },
-
-      interfaces = services.flatMap { s =>
-        s.interfaces.map(localizeInterface(parser, _))
-      }.sortBy { _.name.toLowerCase },
-
-      unions = services.flatMap { s =>
-        s.unions.map(localizeUnion(parser, _))
-      }.sortBy { _.name.toLowerCase },
+      enums = flattenedService.allEnums.map(_.`enum`).sortBy { _.name.toLowerCase },
+      models = flattenedService.allModels.map(_.model).sortBy(_.name.toLowerCase ),
+      interfaces = flattenedService.allInterfaces.map(_.interface).sortBy(_.name.toLowerCase ),
+      unions = flattenedService.allUnions.map(_.union).sortBy(_.name.toLowerCase ),
 
       resources = mergeResources(
         services.flatMap { s =>
-          s.resources.
-            map(normalizeName(parser, localTypes, s, _)).
-            map(localize(parser, s, _))
+          s.service.resources
         }
       ) match {
         case Invalid(errors) => sys.error(errors.toList.mkString("\n"))
         case Valid(r) => r.toList.sortBy { resourceSortKey }
       },
+
       annotations = allAnnotations
     )
 
     val service = baseService.copy(
-      imports = stripAnnotations(buildImports(baseService, services.flatMap(_.imports)))
+      imports = stripAnnotations(buildImports(baseService, services.flatMap(_.service.imports)))
     )
 
     buildType match {
@@ -135,7 +103,6 @@ case class OneApi(
    * is specified exactly once.
    */
   private[this] def buildImports(baseService: Service, imports: Seq[Import]): Seq[Import] = {
-    val parser = TextDatatypeParser(Set.empty)
     val allTypeNames = AllTypeNames.find(baseService)
     val allNamespaces = allTypeNames.flatMap(parser.toNamespace)
     val availableImports = imports.distinctBy(_.namespace)
@@ -160,44 +127,6 @@ case class OneApi(
               case Invalid(errors) => errors.toList.mkString("\n").invalidNec
               case Valid(result) => mergeResources(rest, merged.filter(_.`type` != one.`type`) ++ Seq(result))
             }
-          }
-        }
-      }
-    }
-  }
-
-
-  private[this] def withNamespace(service: Service, name: String): String = {
-    apiBuilderType(service, name) match {
-      case None => name
-      case Some(apiBuilderType) => s"${service.namespace}.$apiBuilderType.$name"
-    }
-  }
-
-  private[this] def normalizeName(parser: TextDatatypeParser, localTypes: Set[String], service: Service, resource: Resource): Resource = {
-    val qualifiedName = withNamespace(service, resource.`type`)
-
-    val finalType = if (localTypes.contains(qualifiedName)) {
-      parser.toTypeLabel(parser.parse(qualifiedName))
-    } else {
-      qualifiedName
-    }
-
-    resource.copy(
-      `type` = finalType
-    )
-  }
-
-  private[this] def apiBuilderType(service: Service, name: String): Option[String] = {
-    service.enums.find(_.name == name) match {
-      case Some(_) => Some("enums")
-      case None => service.models.find(_.name == name) match {
-        case Some(_) => Some("models")
-        case None => service.unions.find(_.name == name) match {
-          case Some(_) => Some("unions")
-          case None => service.interfaces.find(_.name == name) match {
-            case Some(_) => Some("interfaces")
-            case None => None
           }
         }
       }
@@ -274,40 +203,6 @@ case class OneApi(
     }.toInt
   }
 
-  private[this] def localizeModel(parser: TextDatatypeParser, model: Model): Model = {
-    model.copy(
-      fields = model.fields.map(localizeField(parser, _))
-    )
-  }
-
-  private[this] def localizeInterface(parser: TextDatatypeParser, interface: Interface): Interface = {
-    interface.copy(
-      fields = interface.fields.map(localizeField(parser, _))
-    )
-  }
-
-  private[this] def localizeField(parser: TextDatatypeParser, field: Field): Field = {
-    field.copy(
-      `type` = localizeType(parser, field.`type`),
-      description = field.description match {
-        case Some(d) => Some(d)
-        case None => DefaultFieldDescriptions.get(field.name)
-      }
-    )
-  }
-
-  private[this] def localizeUnion(parser: TextDatatypeParser, union: Union): Union = {
-    union.copy(
-      types = union.types.map(localizeUnionType(parser, _))
-    )
-  }
-
-  private[this] def localizeUnionType(parser: TextDatatypeParser, ut: UnionType): UnionType = {
-    ut.copy(
-      `type` = localizeType(parser, ut.`type`)
-    )
-  }
-
   private[this] def resourceSortKey(resource: Resource): String = {
     val docs = resource.attributes.find(_.name == "docs").getOrElse {
       sys.error("Resource is missing the 'docs' attribute")
@@ -318,30 +213,6 @@ case class OneApi(
       10000 + Module.moduleSortIndex(moduleName),
       resource.`type`.toLowerCase
     ).mkString(":")
-  }
-
-  private[this] def localize(parser: TextDatatypeParser, service: Service, resource: Resource): Resource = {
-    val additionalAttributes = resource.attributes.find(_.name == "docs") match {
-      case None => {
-        val module = Module.findByServiceName(service.name.toLowerCase).getOrElse {
-          Module.General
-        }
-        Seq(docsAttribute(module))
-      }
-      case Some(_) => Nil
-    }
-
-    resource.copy(
-      `type` = localizeType(parser, resource.`type`),
-      operations = resource.operations.
-        map { localizeOperation(parser, _) }.
-        sortBy(OperationSort.key),
-      description = resource.description match {
-        case Some(d) => Some(d)
-        case None => recordDescription(service, resource.`type`)
-      },
-      attributes = resource.attributes ++ additionalAttributes
-    )
   }
 
   /**
@@ -368,40 +239,6 @@ case class OneApi(
     }
   }
 
-  private[this] def localizeOperation(parser: TextDatatypeParser, op: Operation): Operation = {
-    op.copy(
-      body = op.body.map(localizeBody(parser, _)),
-      parameters = op.parameters.map(localizeParameter(parser, _)),
-      responses = op.responses.map(localizeResponse(parser, _))
-    )
-  }
-
-  private[this] def localizeBody(parser: TextDatatypeParser, body: Body): Body = {
-    body.copy(
-      `type` = localizeType(parser, body.`type`)
-    )
-  }
-
-  private[this] def localizeParameter(parser: TextDatatypeParser, param: Parameter): Parameter = {
-    param.copy(
-      `type` = localizeType(parser, param.`type`),
-      description = param.description match {
-        case Some(d) => Some(d)
-        case None => DefaultParameterDescriptions.get(param.name)
-      }
-    )
-  }
-
-  private[this] def localizeResponse(parser: TextDatatypeParser, response: Response): Response = {
-    response.copy(
-      `type` = localizeType(parser, response.`type`),
-      description = response.description match {
-        case Some(d) => Some(d)
-        case None => DefaultResponseDescriptions.get(responseCodeToString(response.code))
-      }
-    )
-  }
-
   private[this] def responseCodeToString(code: ResponseCode): String = {
     code match {
       case ResponseCodeInt(c) => c.toString
@@ -409,16 +246,9 @@ case class OneApi(
     }
   }
 
-  private[this] def localizeType(parser: TextDatatypeParser, name: String): String = {
-    buildType match {
-      case BuildType.Api | BuildType.ApiEvent => parser.toTypeLabel(parser.parse(name))
-      case BuildType.ApiInternal | BuildType.ApiInternalEvent | BuildType.ApiPartner | BuildType.ApiMisc | BuildType.ApiMiscEvent => name
-    }
-  }
-
   private[this] def validatePaths(): Seq[String] = {
     val allPaths: Seq[ContextualValue] = services.flatMap { s =>
-      s.resources.flatMap { r =>
+      s.service.resources.flatMap { r =>
         r.operations.map { op =>
           ContextualValue(
             context = s"${s.name}:resource[${r.`type`}] ${op.method} ${op.path}",
