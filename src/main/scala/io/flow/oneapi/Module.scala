@@ -1,23 +1,32 @@
 package io.flow.oneapi
 
-case class Module(name: String, serviceNames: Seq[String])
+case class Module(name: String, serviceNames: Set[String]) {
+  assert(
+    name.toLowerCase() == name,
+    "Module name must be in lower case"
+  )
+  assert(
+    serviceNames.forall { n => n.toLowerCase() == n },
+    "All service names must be in lower case"
+  )
+}
 
 object Module {
 
-  val General = Module("general", Seq("common", "feed", "healthcheck", "link", "organization", "search", "session", "token", "user"))
-  val Webhook = Module("webhook", Seq("webhook"))
+  val General: Module = Module("general", Set("common", "feed", "healthcheck", "link", "organization", "search", "session", "token", "user"))
+  val Webhook: Module = Module("webhook", Set("webhook"))
 
   val All = Seq(
-    Module("localization", Seq("catalog", "experience")),
-    Module("pricing", Seq("currency")),
-    Module("landed cost", Seq("harmonization")),
-    Module("payment", Seq("payment")),
-    Module("logistics", Seq("fulfillment", "inventory", "label", "ratecard", "return", "tracking")),
+    Module("localization", Set("catalog", "experience")),
+    Module("pricing", Set("currency")),
+    Module("landed cost", Set("harmonization")),
+    Module("payment", Set("payment")),
+    Module("logistics", Set("fulfillment", "inventory", "label", "ratecard", "return", "tracking")),
     Webhook,
-    Module("customer service", Nil),
-    Module("geolocation", Seq("location")),
-    Module("reference", Seq("reference")),
-    Module("partner", Seq("partner")),
+    Module("customer service", Set.empty),
+    Module("geolocation", Set("location")),
+    Module("reference", Set("reference")),
+    Module("partner", Set("partner")),
     General
   )
 
@@ -30,12 +39,9 @@ object Module {
   }
 
   def moduleSortIndex(name: String): Int = {
-    val module = findByModuleName(name).getOrElse {
-      sys.error(s"Invalid module[$name]")
+    findByModuleName(name) match {
+      case Some(module) => All.indexOf(module)
+      case None => Int.MaxValue
     }
-
-    val i = All.indexOf(module)
-    assert(i >= 0, s"Could not find module: $module")
-    i
   }
 }
