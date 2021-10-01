@@ -3,7 +3,6 @@ package io.flow.oneapi
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.ValidatedNec
 import cats.implicits._
-import io.apibuilder.rewriter.TypeRewriter
 import io.apibuilder.spec.v0.models._
 import io.apibuilder.validation._
 import io.flow.build.{BuildType, DownloadCache}
@@ -23,7 +22,7 @@ case class OneApi(
     "io.flow.common.v0.models.organization" -> "/organizations",
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
-  private[this] val originalServices: Seq[Service] = originalServicesHack.filterNot(_.application.key == "api-event")
+  private[this] val originalServices: Seq[Service] = originalServicesHack //.filterNot(_.application.key == "api-event")
 
   private[this] val canonical: ApiBuilderService = ApiBuilderService(originalServices.find(_.name == "common").getOrElse {
     originalServices.headOption.getOrElse {
@@ -33,6 +32,7 @@ case class OneApi(
 
   private[this] val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
 
+  /*
   private[this] val importedServices: List[ApiBuilderService] = downloadCache.downloadServices(
     originalServices.flatMap(_.imports).map { imp =>
       io.flow.build.Application.latest(imp.organization.key, imp.application.key)
@@ -43,38 +43,10 @@ case class OneApi(
     case Left(errors) => sys.error(s"Failed to download imports: ${errors.mkString(", ")}")
     case Right(services) => services.map(ApiBuilderService(_)).toList
   }
-  println(s"Imports: ${importedServices.map(_.name)}")
+  */
 
-  private[this] val services: List[ApiBuilderService] = (
-    originalServices.map(ApiBuilderService(_)).toList
-  )
-
-  private[this] val namespacesToFlatten: Set[String] = originalServices.map(_.namespace).toSet
-  private[this] val multiService: MultiService = TypeRewriter {
-    case t: ScalarType => t
-    case t: ApiBuilderType => {
-      if (namespacesToFlatten.contains(t.namespace)) {
-        flattenName(t)
-      } else {
-        t
-      }
-    }
-  }.rewrite(MultiServiceImpl(services.map(replaceNamespace) ++ importedServices))
-
-  private[this] def replaceNamespace(service: ApiBuilderService): ApiBuilderService = {
-    service.copy(
-      service = service.service.copy(namespace = namespace)
-    )
-  }
-
-  def flattenName(typ: ApiBuilderType): ApiBuilderType = {
-    typ match {
-      case t: ApiBuilderType.Enum => t.copy(service = replaceNamespace(t.service))
-      case t: ApiBuilderType.Interface => t.copy(service = replaceNamespace(t.service))
-      case t: ApiBuilderType.Model => t.copy(service = replaceNamespace(t.service))
-      case t: ApiBuilderType.Union => t.copy(service = replaceNamespace(t.service))
-    }
-  }
+  private[this] val services: List[ApiBuilderService] = originalServices.map(ApiBuilderService(_)).toList
+  private[this] val multiService: MultiService = MultiServiceImpl(services)
 
   def process(): ValidatedNec[String, Service] = {
     (
@@ -86,8 +58,6 @@ case class OneApi(
   }
 
   private[this] def buildOneApi(): Service = {
-    val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
-
     // Annotations are not namespaced, they're global. For convenience, we'll collect them from
     // all imports and add them to the root service
     val allAnnotations = services.flatMap { _.service.imports.flatMap(_.annotations) }.distinctBy(_.name)
@@ -129,7 +99,7 @@ case class OneApi(
       annotations = allAnnotations
     )
 
-    val service = baseService.copy(
+    val service = FlattenTypeNames(flattenedServices = services).rewrite(baseService).copy(
       imports = stripAnnotations(
         buildImports(baseService, originalServices.flatMap(_.imports))
       )
@@ -306,7 +276,7 @@ case class OneApi(
     values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
       val dupValues = values.filter { v => dup == v.value.toLowerCase }
       assert(dupValues.size >= 2, s"Could not find duplicates for value[$dup]")
-      (s"Duplicate $label[$dup] in: " + dupValues.map(_.context).sorted.mkString(", ")).invalidNec
+      s"Duplicate $label[$dup] in: " + dupValues.map(_.context).sorted.mkString(", ")
     }.toList match {
       case Nil => ().validNec
       case errors => errors.mkString(", ").invalidNec
