@@ -3,7 +3,6 @@ package io.flow.oneapi
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.ValidatedNec
 import cats.implicits._
-import io.apibuilder.rewriter.TypeRewriter
 import io.apibuilder.spec.v0.models._
 import io.apibuilder.validation.{ApiBuilderService, MultiService, MultiServiceImpl}
 import io.flow.build.BuildType
@@ -15,9 +14,6 @@ case class OneApi(
   buildType: BuildType,
   originalServices: Seq[Service]
 ) {
-  private[this] val services: List[ApiBuilderService] = originalServices.map(ApiBuilderService(_)).toList
-  private[this] val multiService: MultiService = MultiServiceImpl(services)
-
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
     "timezone" -> "/",
@@ -26,11 +22,17 @@ case class OneApi(
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
 
-  private[this] val canonical: ApiBuilderService = multiService.services().find(_.name == "common").getOrElse {
-    multiService.services().headOption.getOrElse {
+
+  private[this] val canonical: ApiBuilderService = ApiBuilderService(originalServices.find(_.name == "common").getOrElse {
+    originalServices.headOption.getOrElse {
       sys.error("Must have at least one service")
     }
-  }
+  })
+  private[this] val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
+  private[this] val services: List[ApiBuilderService] = originalServices.map { s =>
+    ApiBuilderService(s.copy(namespace = namespace))
+  }.toList
+  private[this] val multiService: MultiService = MultiServiceImpl(services)
 
   def process(): ValidatedNec[String, Service] = {
     (
@@ -42,13 +44,11 @@ case class OneApi(
   }
 
   private[this] def buildOneApi(): Service = {
+    val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
+
     // Annotations are not namespaced, they're global. For convenience, we'll collect them from
     // all imports and add them to the root service
     val allAnnotations = services.flatMap { _.service.imports.flatMap(_.annotations) }.distinctBy(_.name)
-
-    val flattenedService = TypeRewriter { t =>
-      t
-    }.rewrite(multiService)
 
     val baseService = Service(
       apidoc = canonical.service.apidoc,
@@ -57,7 +57,7 @@ case class OneApi(
       application = Application(
         key = buildType.key
       ),
-      namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version),
+      namespace = namespace,
       version = canonical.service.version,
       baseUrl = Some(
         canonical.service.baseUrl.getOrElse {
@@ -70,10 +70,10 @@ case class OneApi(
       imports = Nil,
       attributes = Nil,
 
-      enums = flattenedService.allEnums.map(_.`enum`).sortBy { _.name.toLowerCase },
-      models = flattenedService.allModels.map(_.model).sortBy(_.name.toLowerCase ),
-      interfaces = flattenedService.allInterfaces.map(_.interface).sortBy(_.name.toLowerCase ),
-      unions = flattenedService.allUnions.map(_.union).sortBy(_.name.toLowerCase ),
+      enums = multiService.allEnums.map(_.`enum`).sortBy { _.name.toLowerCase },
+      models = multiService.allModels.map(_.model).sortBy(_.name.toLowerCase ),
+      interfaces = multiService.allInterfaces.map(_.interface).sortBy(_.name.toLowerCase ),
+      unions = multiService.allUnions.map(_.union).sortBy(_.name.toLowerCase ),
 
       resources = mergeResources(
         services.flatMap { s =>
