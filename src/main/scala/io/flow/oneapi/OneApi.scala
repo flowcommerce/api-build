@@ -13,7 +13,7 @@ private[oneapi] case class ContextualValue(context: String, value: String)
 case class OneApi(
   buildType: BuildType,
   downloadCache: DownloadCache,
-  originalServicesHack: Seq[Service]
+  originalServices: Seq[Service]
 ) {
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
@@ -22,7 +22,6 @@ case class OneApi(
     "io.flow.common.v0.models.organization" -> "/organizations",
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
-  private[this] val originalServices: Seq[Service] = originalServicesHack //.filterNot(_.application.key == "api-event")
 
   private[this] val canonical: ApiBuilderService = ApiBuilderService(originalServices.find(_.name == "common").getOrElse {
     originalServices.headOption.getOrElse {
