@@ -1,7 +1,7 @@
 package io.flow.lint
 
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{BuildType, Downloader}
+import io.flow.build.{BuildType, DownloadCache}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -10,7 +10,7 @@ case class Controller() extends io.flow.build.Controller {
 
   def run(
     buildType: BuildType,
-    downloader: Downloader,
+    downloadCache: DownloadCache,
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext

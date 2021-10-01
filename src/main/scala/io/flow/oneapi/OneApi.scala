@@ -3,16 +3,18 @@ package io.flow.oneapi
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.ValidatedNec
 import cats.implicits._
+import io.apibuilder.rewriter.TypeRewriter
 import io.apibuilder.spec.v0.models._
-import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService, MultiServiceImpl, ScalarType}
-import io.flow.build.BuildType
+import io.apibuilder.validation._
+import io.flow.build.{BuildType, DownloadCache}
 import play.api.libs.json.{JsString, Json}
 
 private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(
   buildType: BuildType,
-  originalServices: Seq[Service]
+  downloadCache: DownloadCache,
+  originalServicesHack: Seq[Service]
 ) {
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
@@ -21,17 +23,38 @@ case class OneApi(
     "io.flow.common.v0.models.organization" -> "/organizations",
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
+  private[this] val originalServices: Seq[Service] = originalServicesHack.filterNot(_.application.key == "api-event")
 
   private[this] val canonical: ApiBuilderService = ApiBuilderService(originalServices.find(_.name == "common").getOrElse {
     originalServices.headOption.getOrElse {
       sys.error("Must have at least one service")
     }
   })
+
   private[this] val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
-  private[this] val services: List[ApiBuilderService] = originalServices.map { s =>
-    ApiBuilderService(s.copy(namespace = namespace))
-  }.toList
-  private[this] val multiService: MultiService = MultiServiceImpl(services)
+
+  private[this] val allImports: List[ApiBuilderService] = downloadCache.downloadServices(
+    originalServices.flatMap(_.imports).map { imp =>
+      io.flow.build.Application.latest(imp.organization.key, imp.application.key)
+    }.distinct
+  ) match {
+    case Left(errors) => sys.error(s"Failed to download imports: ${errors.mkString(", ")}")
+    case Right(services) => services.map(ApiBuilderService(_)).toList
+  }
+  println(s"Imports: ${allImports.map(_.name)}")
+
+  private[this] val services: List[ApiBuilderService] = (
+    originalServices.map(ApiBuilderService(_)).toList
+  ) ++ allImports
+
+  println(s"new namespace: $namespace")
+  private[this] val multiService: MultiService = TypeRewriter {
+    case t: ScalarType => t
+    case t: ApiBuilderType => {
+      println(s" Type: ${t.qualified}")
+      t
+    }
+  }.rewrite(MultiServiceImpl(services))
 
   def process(): ValidatedNec[String, Service] = {
     (

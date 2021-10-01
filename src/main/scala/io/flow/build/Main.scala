@@ -1,13 +1,13 @@
 package io.flow.build
 
 import io.apibuilder.spec.v0.models.Service
-import io.flow.{oneapi, lint, proxy, stream}
+import io.flow.{lint, oneapi, proxy, stream}
 
 object Main extends App {
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  private[this] var globalErrors = scala.collection.mutable.ListBuffer[String]()
+  private[this] val globalErrors = scala.collection.mutable.ListBuffer[String]()
 
   private[this] def controllers(buildType: BuildType): Seq[Controller] = {
     val all = scala.collection.mutable.ListBuffer[Controller]()
@@ -86,7 +86,7 @@ object Main extends App {
             Application.parse(name)
           }
 
-          val dl = Downloader(profile)
+          val dl = DownloadCache(Downloader(profile))
           Downloader(profile).downloadServices(allApplications) match {
             case Left(errors) => {
               println(s"Errors downloading services:")
@@ -101,7 +101,7 @@ object Main extends App {
     }
   }
 
-  private[this] def run(buildType: BuildType, downloader: Downloader, controllers: Seq[Controller], services: Seq[Service]): Unit = {
+  private[this] def run(buildType: BuildType, downloadCache: DownloadCache, controllers: Seq[Controller], services: Seq[Service]): Unit = {
     val errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (globalErrors.nonEmpty) {
       errors += ("config" -> globalErrors.toSeq)
@@ -112,7 +112,7 @@ object Main extends App {
       println(s"${controller.name} Starting")
       println("==================================================")
 
-      controller.run(buildType, downloader, services)
+      controller.run(buildType, downloadCache, services)
       controller.errors().foreach {
         case (key, errs) => {
           errors.get(key) match {
