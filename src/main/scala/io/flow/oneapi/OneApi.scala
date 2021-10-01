@@ -146,13 +146,15 @@ case class OneApi(
    * is specified exactly once.
    */
   private[this] def buildImports(baseService: Service, imports: Seq[Import]): Seq[Import] = {
-    val allNamespaces = ApiBuilderService(baseService).allTypes.map(_.namespace).toSet
+    val allNamespaces = AllTypeNames.findNamespaces(baseService)
     val availableImports = imports.distinctBy(_.namespace)
     println(s"allNam: $allNamespaces")
     println(s"availableImports: ${availableImports.map(_.namespace)}")
-    availableImports.filter { imp =>
+    val i = availableImports.filter { imp =>
       allNamespaces.contains(imp.namespace)
     }
+    println(s"imports: $i")
+    i
   }
 
   private[this] def stripAnnotations(imports: Seq[Import]): Seq[Import] = {
