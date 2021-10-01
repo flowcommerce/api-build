@@ -4,7 +4,7 @@ import cats.data.Validated.{Invalid, Valid}
 import cats.data.ValidatedNec
 import cats.implicits._
 import io.apibuilder.spec.v0.models._
-import io.apibuilder.validation.{ApiBuilderService, MultiService, MultiServiceImpl}
+import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService, MultiServiceImpl, ScalarType}
 import io.flow.build.BuildType
 import play.api.libs.json.{JsString, Json}
 
@@ -77,7 +77,7 @@ case class OneApi(
 
       resources = mergeResources(
         services.flatMap { s =>
-          s.service.resources
+          s.service.resources.map { r => updateResource(s, r) }
         }
       ) match {
         case Invalid(errors) => sys.error(errors.toList.mkString("\n"))
@@ -330,6 +330,49 @@ case class OneApi(
       }.distinct,
       deprecation = None,
       attributes = Seq(docsAttribute(Module.Webhook))
+    )
+  }
+
+  private[this] def updateResource(service: ApiBuilderService, resource: Resource): Resource = {
+    updateDescription(
+      sortOperations(
+        ensureDocsAttribute(service, resource)
+      )
+    )
+  }
+
+  private[this] def ensureDocsAttribute(service: ApiBuilderService, resource: Resource): Resource = {
+    val additionalAttributes = resource.attributes.find(_.name == "docs") match {
+      case None => {
+        Seq(docsAttribute(
+          Module.findByServiceName(service.name).getOrElse {
+            Module.General
+          }
+        ))
+      }
+      case Some(_) => Nil
+    }
+    resource.copy(
+      attributes = resource.attributes ++ additionalAttributes
+    )
+  }
+  private[this] def sortOperations(resource: Resource): Resource = {
+    resource.copy(
+      operations = resource.operations.sortBy(OperationSort.key)
+    )
+  }
+
+  private[this] def updateDescription(resource: Resource): Resource = {
+    resource.copy(
+      description = resource.description.orElse {
+        multiService.findType(resource.`type`).flatMap {
+          case _: ScalarType => None
+          case t: ApiBuilderType.Enum => t.enum.description
+          case t: ApiBuilderType.Interface => t.interface.description
+          case t: ApiBuilderType.Model => t.model.description
+          case t: ApiBuilderType.Union => t.union.description
+        }
+      }
     )
   }
 
