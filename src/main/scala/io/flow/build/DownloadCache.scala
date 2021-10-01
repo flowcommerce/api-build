@@ -13,16 +13,17 @@ case class DownloadCache(downloader: Downloader)(
   def downloadServices(
     applications: Seq[Application]
   ): Either[Seq[String], Seq[Service]] = {
-    val (cached, remaining) = applications.partition(cache.isDefinedAt)
-    val services = cached.map { a =>
-      cache.getOrElse(a, sys.error("Invalid cache entry for application"))
-    }
+    def cacheKey(a: Application) = Application.latest(a.organization, a.application)
+
+    val (cached, remaining) = applications.partition { a => cache.isDefinedAt(cacheKey(a)) }
+
     downloader.downloadServices(remaining).map { rest =>
       rest.foreach { s =>
-        println("Adding service to cache: "+ Application.latest(s.organization.key, s.application.key))
         cache.put(Application.latest(s.organization.key, s.application.key), s)
       }
-      services ++ rest
+      cached.map { a =>
+        cache.getOrElse(cacheKey(a), sys.error("Invalid cache entry for application"))
+      } ++ rest
     }
   }
 

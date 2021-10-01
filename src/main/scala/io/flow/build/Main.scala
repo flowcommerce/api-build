@@ -87,7 +87,7 @@ object Main extends App {
           }
 
           val dl = DownloadCache(Downloader(profile))
-          Downloader(profile).downloadServices(allApplications) match {
+          dl.downloadServices(allApplications) match {
             case Left(errors) => {
               println(s"Errors downloading services:")
               errors.foreach { e => println(s" - $e")}

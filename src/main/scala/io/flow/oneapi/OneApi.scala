@@ -334,7 +334,7 @@ case class OneApi(
 
   private[this] def updateResource(service: ApiBuilderService, resource: Resource): Resource = {
     updateDescription(
-      sortOperations(
+      updateOperations(
         ensureDocsAttribute(service, resource)
       )
     )
@@ -352,6 +352,44 @@ case class OneApi(
         }
       }
     )
+  }
+
+  private[this] def updateOperations(resource: Resource): Resource = {
+    sortOperations(
+      resource.copy(
+        operations = resource.operations.map(updateOperation),
+      )
+    )
+  }
+
+  private[this] def updateOperation(op: Operation): Operation = {
+    op.copy(
+      parameters = op.parameters.map(updateParameter),
+      responses = op.responses.map(updateResponse)
+    )
+  }
+
+  private[this] def updateParameter(param: Parameter): Parameter = {
+    param.copy(
+      description = param.description.orElse {
+        Defaults.ParameterDescriptions.get(param.name)
+      }
+    )
+  }
+
+  private[this] def updateResponse(response: Response): Response = {
+    response.copy(
+      description = response.description.orElse {
+        Defaults.ResponseDescriptions.get(responseCodeToString(response.code))
+      }
+    )
+  }
+
+  private[this] def responseCodeToString(code: ResponseCode): String = {
+    code match {
+      case ResponseCodeInt(c) => c.toString
+      case ResponseCodeOption.Default | ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => "*"
+    }
   }
 
   private[this] def sortOperations(resource: Resource): Resource = {
