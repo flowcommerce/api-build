@@ -325,27 +325,6 @@ case class OneApi(
     )
   }
 
-  private[this] def ensureDocsAttribute(service: ApiBuilderService, resource: Resource): Resource = {
-    val additionalAttributes = resource.attributes.find(_.name == "docs") match {
-      case None => {
-        Seq(docsAttribute(
-          Module.findByServiceName(service.name).getOrElse {
-            Module.General
-          }
-        ))
-      }
-      case Some(_) => Nil
-    }
-    resource.copy(
-      attributes = resource.attributes ++ additionalAttributes
-    )
-  }
-  private[this] def sortOperations(resource: Resource): Resource = {
-    resource.copy(
-      operations = resource.operations.sortBy(OperationSort.key)
-    )
-  }
-
   private[this] def updateDescription(resource: Resource): Resource = {
     resource.copy(
       description = resource.description.orElse {
@@ -357,6 +336,27 @@ case class OneApi(
           case t: ApiBuilderType.Union => t.union.description
         }
       }
+    )
+  }
+
+  private[this] def sortOperations(resource: Resource): Resource = {
+    resource.copy(
+      operations = resource.operations.sortBy(OperationSort.key)
+    )
+  }
+
+  private[this] def ensureDocsAttribute(service: ApiBuilderService, resource: Resource): Resource = {
+    resource.copy(
+      attributes = resource.attributes ++ (resource.attributes.find(_.name == "docs") match {
+        case None => {
+          Seq(docsAttribute(
+            Module.findByServiceName(service.name).getOrElse {
+              Module.General
+            }
+          ))
+        }
+        case Some(_) => Nil
+      })
     )
   }
 
