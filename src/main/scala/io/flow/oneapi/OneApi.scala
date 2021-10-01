@@ -33,21 +33,22 @@ case class OneApi(
 
   private[this] val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
 
-  private[this] val allImports: List[ApiBuilderService] = downloadCache.downloadServices(
+  private[this] val importedServices: List[ApiBuilderService] = downloadCache.downloadServices(
     originalServices.flatMap(_.imports).map { imp =>
       io.flow.build.Application.latest(imp.organization.key, imp.application.key)
-    }.distinct
+    }.distinct.filterNot { a =>
+      originalServices.exists { s => s.organization.key == a.organization && s.application.key == a.application }
+    }
   ) match {
     case Left(errors) => sys.error(s"Failed to download imports: ${errors.mkString(", ")}")
     case Right(services) => services.map(ApiBuilderService(_)).toList
   }
-  println(s"Imports: ${allImports.map(_.name)}")
+  println(s"Imports: ${importedServices.map(_.name)}")
 
   private[this] val services: List[ApiBuilderService] = (
     originalServices.map(ApiBuilderService(_)).toList
-  ) ++ allImports
+  )
 
-  println(s"new namespace: $namespace")
   private[this] val namespacesToFlatten: Set[String] = originalServices.map(_.namespace).toSet
   private[this] val multiService: MultiService = TypeRewriter {
     case t: ScalarType => t
@@ -58,15 +59,15 @@ case class OneApi(
         t
       }
     }
-  }.rewrite(MultiServiceImpl(services))
+  }.rewrite(MultiServiceImpl(services.map(replaceNamespace) ++ importedServices))
+
+  private[this] def replaceNamespace(service: ApiBuilderService): ApiBuilderService = {
+    service.copy(
+      service = service.service.copy(namespace = namespace)
+    )
+  }
 
   def flattenName(typ: ApiBuilderType): ApiBuilderType = {
-    def replaceNamespace(service: ApiBuilderService) = {
-      service.copy(
-        service = service.service.copy(namespace = namespace)
-      )
-    }
-
     typ match {
       case t: ApiBuilderType.Enum => t.copy(service = replaceNamespace(t.service))
       case t: ApiBuilderType.Interface => t.copy(service = replaceNamespace(t.service))
@@ -129,7 +130,9 @@ case class OneApi(
     )
 
     val service = baseService.copy(
-      imports = stripAnnotations(buildImports(baseService, services.flatMap(_.service.imports)))
+      imports = stripAnnotations(
+        buildImports(baseService, originalServices.flatMap(_.imports))
+      )
     )
 
     buildType match {
@@ -145,6 +148,8 @@ case class OneApi(
   private[this] def buildImports(baseService: Service, imports: Seq[Import]): Seq[Import] = {
     val allNamespaces = ApiBuilderService(baseService).allTypes.map(_.namespace).toSet
     val availableImports = imports.distinctBy(_.namespace)
+    println(s"allNam: $allNamespaces")
+    println(s"availableImports: ${availableImports.map(_.namespace)}")
     availableImports.filter { imp =>
       allNamespaces.contains(imp.namespace)
     }
