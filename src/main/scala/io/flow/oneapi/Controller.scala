@@ -34,12 +34,12 @@ case class Controller() extends io.flow.build.Controller {
     val all = services ++ eventService
     println("Building single API from: " + all.map(_.name).mkString(", "))
     OneApi(buildType, all).process() match {
-      case Left(errs) => {
-        println(s"Errors from building single API:\n - ${errs.mkString("\n")}")
-        errs.foreach(addError)
+      case Invalid(errs) => {
+        println(s"Errors from building single API:\n - ${errs.toNonEmptyList.toList.mkString("\n")}")
+        errs.toNonEmptyList.toList.foreach(addError)
       }
 
-      case Right(service) => {
+      case Valid(service) => {
         import io.apibuilder.spec.v0.models.json._
         import play.api.libs.json._
 

@@ -32,13 +32,12 @@ case class OneApi(
     }
   }
 
-  def process(): Either[Seq[String], Service] = {
-    val pathErrors = validatePaths()
-    val duplicateRecordErrors = validateRecordNames()
-
-    (pathErrors ++ duplicateRecordErrors).toList match {
-      case Nil => Right(buildOneApi())
-      case errors => Left(errors)
+  def process(): ValidatedNec[String, Service] = {
+    (
+      validatePaths(),
+      validateRecordNames()
+    ).mapN { case (_, _) =>
+      buildOneApi()
     }
   }
 
@@ -103,8 +102,7 @@ case class OneApi(
    * is specified exactly once.
    */
   private[this] def buildImports(baseService: Service, imports: Seq[Import]): Seq[Import] = {
-    val allTypeNames = AllTypeNames.find(baseService)
-    val allNamespaces = allTypeNames.flatMap(parser.toNamespace)
+    val allNamespaces = ApiBuilderService(baseService).allTypes.map(_.namespace).toSet
     val availableImports = imports.distinctBy(_.namespace)
     availableImports.filter { imp =>
       allNamespaces.contains(imp.namespace)
@@ -215,38 +213,7 @@ case class OneApi(
     ).mkString(":")
   }
 
-  /**
-    * If this type refers to a valid enum, model, or union, returns
-    * the description associated with that record (if there is
-    * one). Initial use case was to populate the resource description,
-    * when empty, with the description from the model associated with
-    * the resource.
-    */
-  private[this] def recordDescription(service: Service, typ: String): Option[String] = {
-    service.enums.find(_.name == typ) match {
-      case Some(e) => e.description
-      case None => {
-        service.models.find(_.name == typ) match {
-          case Some(m) => m.description
-          case None => {
-            service.unions.find(_.name == typ) match {
-              case Some(u) => u.description
-              case None => None
-            }
-          }
-        }
-      }
-    }
-  }
-
-  private[this] def responseCodeToString(code: ResponseCode): String = {
-    code match {
-      case ResponseCodeInt(c) => c.toString
-      case ResponseCodeOption.Default | ResponseCodeOption.UNDEFINED(_) | ResponseCodeUndefinedType(_) => "*"
-    }
-  }
-
-  private[this] def validatePaths(): Seq[String] = {
+  private[this] def validatePaths(): ValidatedNec[String, Unit] = {
     val allPaths: Seq[ContextualValue] = services.flatMap { s =>
       s.service.resources.flatMap { r =>
         r.operations.map { op =>
@@ -276,7 +243,7 @@ case class OneApi(
     method.toString + " " + pathParts.mkString("/")
   }
 
-  private[this] def validateRecordNames(): Seq[String] = {
+  private[this] def validateRecordNames(): ValidatedNec[String, Unit] = {
     val names: Seq[ContextualValue] = services.flatMap { s =>
       s.models.map { m =>
         ContextualValue(
@@ -306,14 +273,14 @@ case class OneApi(
   /**
     * Returns an error message if there are duplicate values
     */
-  private[oneapi] def dups(values: Seq[ContextualValue], label: String): Seq[String] = {
+  private[oneapi] def dups(values: Seq[ContextualValue], label: String): ValidatedNec[String, Unit] = {
     values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
       val dupValues = values.filter { v => dup == v.value.toLowerCase }
-      assert(
-        dupValues.size >= 2,
-        s"Could not find duplicates for value[$dup]"
-      )
-      s"Duplicate $label[$dup] in: " + dupValues.map(_.context).sorted.mkString(", ")
+      assert(dupValues.size >= 2, s"Could not find duplicates for value[$dup]")
+      (s"Duplicate $label[$dup] in: " + dupValues.map(_.context).sorted.mkString(", ")).invalidNec
+    }.toList match {
+      case Nil => ().validNec
+      case errors => errors.mkString(", ").invalidNec
     }
   }
 
