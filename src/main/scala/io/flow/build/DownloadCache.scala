@@ -17,7 +17,6 @@ case class DownloadCache(downloader: Downloader)(
 
   @tailrec
   final def downloadAllServicesAndImports(services: Seq[Service], index: Int = 0): Seq[Service] = {
-    assert(index < 4)
     val all = services ++ mustDownloadServices(
       services.flatMap(_.imports).map(toApplication)
     )
