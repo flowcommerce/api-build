@@ -91,9 +91,10 @@ case class OneApi(
       }
     )
 
-    val service = FlattenTypeNames(flattenedServices = services).rewrite(baseService).copy(
+    val flattened = FlattenTypeNames(flattenedServices = services).rewrite(baseService)
+    val service = flattened.copy(
       imports = stripAnnotations(
-        buildImports(baseService, originalServices.flatMap(_.imports))
+        buildImports(flattened, originalServices.flatMap(_.imports))
       )
     )
 
