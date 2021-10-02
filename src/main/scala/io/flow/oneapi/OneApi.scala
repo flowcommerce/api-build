@@ -72,7 +72,7 @@ case class OneApi(
       description = canonical.service.description,
       info = Info(
         license = Some(License(name = "MIT", url = Some("http://opensource.org/licenses/MIT"))),
-        contact = Some(Contact(email = Some("tech@flow.io")))
+        contact = Some(Contact(name = Some("Flow Commerce"), email = Some("tech@flow.io")))
       ),
       headers = Nil,
       imports = Nil,
