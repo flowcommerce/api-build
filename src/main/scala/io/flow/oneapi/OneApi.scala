@@ -89,7 +89,7 @@ case class OneApi(
       }
     )
 
-    val flattened = FlattenTypeNames(flattenedServices = services).rewrite(baseService)
+    val flattened = flattenTypes(baseService)
     val service = flattened.copy(
       imports = stripAnnotations(
         buildImports(flattened, originalServices.flatMap(_.imports))
@@ -110,6 +110,14 @@ case class OneApi(
     buildType match {
       case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner | BuildType.ApiMisc => sorted
       case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent => createEventService(sorted)
+    }
+  }
+
+  private[this] def flattenTypes(service: Service): Service = {
+    if (buildType.flattenTypes) {
+      FlattenTypeNames(flattenedServices = services).rewrite(service)
+    } else {
+      service
     }
   }
 
