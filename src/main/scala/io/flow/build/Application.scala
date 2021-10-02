@@ -8,7 +8,7 @@ case class Application(
   val isLatest: Boolean = version == Application.Latest
 
   val applicationVersionLabel: String = if (isLatest) {
-    application
+    s"$application:latest"
   } else {
     s"$application:$version"
   }
