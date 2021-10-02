@@ -124,7 +124,6 @@ case class OneApi(
     availableImports.filter { imp =>
       allNamespaces.contains(imp.namespace)
     }
-    Nil // disable for testing
   }
 
   private[this] def stripAnnotations(imports: Seq[Import]): Seq[Import] = {
