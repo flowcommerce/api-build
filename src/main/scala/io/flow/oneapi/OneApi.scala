@@ -107,9 +107,10 @@ case class OneApi(
       }
     )
 
-    buildType match {
-      case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner | BuildType.ApiMisc => sorted
-      case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent => createEventService(sorted)
+    if (buildType.isEvent) {
+      createEventService(sorted)
+    } else {
+      sorted
     }
   }
 
