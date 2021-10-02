@@ -65,9 +65,7 @@ case class OneApi(
       apidoc = canonical.service.apidoc,
       name = buildType.name,
       organization = canonical.service.organization,
-      application = Application(
-        key = buildType.key
-      ),
+      application = Application(key = buildType.key),
       namespace = namespace,
       version = canonical.service.version,
       baseUrl = Some("https://api.flow.io"),
