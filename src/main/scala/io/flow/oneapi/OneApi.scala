@@ -73,20 +73,18 @@ case class OneApi(
       baseUrl = Some("https://api.flow.io"),
       description = canonical.service.description,
       info = Info(
-        license = Some(License(
-          name = "MIT",
-          url = Some("http://opensource.org/licenses/MIT")
-        )),
+        license = Some(License(name = "MIT", url = Some("http://opensource.org/licenses/MIT"))),
         contact = Some(Contact(email = Some("tech@flow.io")))
       ),
       headers = Nil,
       imports = Nil,
       attributes = Nil,
+      annotations = allAnnotations,
 
-      enums = multiService.allEnums.map(_.`enum`).sortBy { _.name.toLowerCase },
-      models = multiService.allModels.map(updateModel).map(_.model).sortBy(_.name.toLowerCase ),
-      interfaces = multiService.allInterfaces.map(updateInterface).map(_.interface).sortBy(_.name.toLowerCase ),
-      unions = multiService.allUnions.map(_.union).sortBy(_.name.toLowerCase ),
+      enums = multiService.allEnums.map(_.`enum`),
+      models = multiService.allModels.map(updateModel).map(_.model),
+      interfaces = multiService.allInterfaces.map(updateInterface).map(_.interface),
+      unions = multiService.allUnions.map(_.union),
 
       resources = mergeResources(
         services.flatMap { s =>
@@ -94,10 +92,8 @@ case class OneApi(
         }
       ) match {
         case Invalid(errors) => sys.error(errors.toList.mkString("\n"))
-        case Valid(r) => r.toList.sortBy { resourceSortKey }
-      },
-
-      annotations = allAnnotations
+        case Valid(r) => r.toList
+      }
     )
 
     val service = FlattenTypeNames(flattenedServices = services).rewrite(baseService).copy(
@@ -106,9 +102,17 @@ case class OneApi(
       )
     )
 
+    val sorted = service.copy(
+      enums = service.enums.sortBy(_.name.toLowerCase),
+      models = service.models.sortBy(_.name.toLowerCase),
+      interfaces = service.interfaces.sortBy(_.name.toLowerCase),
+      unions = service.unions.sortBy(_.name.toLowerCase),
+      resources = service.resources.sortBy(resourceSortKey)
+    )
+
     buildType match {
-      case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner | BuildType.ApiMisc => service
-      case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent => createEventService(service)
+      case BuildType.Api | BuildType.ApiInternal | BuildType.ApiPartner | BuildType.ApiMisc => sorted
+      case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent => createEventService(sorted)
     }
   }
 
