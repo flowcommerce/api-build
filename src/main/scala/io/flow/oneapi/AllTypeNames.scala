@@ -1,6 +1,10 @@
 package io.flow.oneapi
 
+import apibuilder.ApiBuilderHelperImpl
 import io.apibuilder.spec.v0.models._
+import io.apibuilder.validation.{ApiBuilderService, MultiServiceImpl, TypeName}
+
+import java.util.UUID
 
 /**
  * Finds all declared types in a service, iterating through all models,
@@ -8,13 +12,23 @@ import io.apibuilder.spec.v0.models._
  */
 object AllTypeNames {
 
+  private[this] val defaultNamespace = UUID.randomUUID().toString
+
+  def findNamespaces(service: Service): Set[String] = {
+    find(service).flatMap { t =>
+      Some(TypeName.parse(t, defaultNamespace = defaultNamespace).namespace).filterNot(_ == defaultNamespace)
+    }
+  }
+
   def find(service: Service): Set[String] = {
+    val helper = ApiBuilderHelperImpl(MultiServiceImpl(List(ApiBuilderService(service))))
+
     (
       service.models.flatMap(find) ++
         service.unions.flatMap(find) ++
         service.interfaces.flatMap(find) ++
         service.resources.flatMap(find)
-    ).toSet
+    ).map(helper.baseType(service, _)).toSet
   }
 
   private[this] def find(model: Model): Seq[String] = {

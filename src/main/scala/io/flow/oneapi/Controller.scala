@@ -2,7 +2,7 @@ package io.flow.oneapi
 
 import cats.data.Validated.{Invalid, Valid}
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{Application, BuildType, Downloader}
+import io.flow.build.{Application, BuildType, DownloadCache}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -11,7 +11,7 @@ case class Controller() extends io.flow.build.Controller {
 
   def run(
     buildType: BuildType,
-    downloader: Downloader,
+    downloadCache: DownloadCache,
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
@@ -25,21 +25,23 @@ case class Controller() extends io.flow.build.Controller {
       }
     ) match {
       case None => Nil
-      case Some(applicationKey) => downloader.downloadService(Application.latest("flow", applicationKey)) match {
-        case Invalid(errors) => sys.error(s"Failed to download API Builder application flow/$applicationKey: $errors")
-        case Valid(service) => Seq(service)
+      case Some(applicationKey) => {
+        downloadCache.downloadService(Application.latest("flow", applicationKey)) match {
+          case Left(errors) => sys.error(s"Failed to download API Builder application flow/$applicationKey: $errors")
+          case Right(service) => Seq(service)
+        }
       }
     }
 
     val all = services ++ eventService
     println("Building single API from: " + all.map(_.name).mkString(", "))
-    OneApi(buildType, all).process() match {
-      case Left(errs) => {
-        println(s"Errors from building single API:\n - ${errs.mkString("\n")}")
-        errs.foreach(addError)
+    OneApi(buildType, downloadCache, all).process() match {
+      case Invalid(errs) => {
+        println(s"Errors from building single API:\n - ${errs.toNonEmptyList.toList.mkString("\n")}")
+        errs.toNonEmptyList.toList.foreach(addError)
       }
 
-      case Right(service) => {
+      case Valid(service) => {
         import io.apibuilder.spec.v0.models.json._
         import play.api.libs.json._
 

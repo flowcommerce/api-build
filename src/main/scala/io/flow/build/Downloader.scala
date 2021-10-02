@@ -15,7 +15,7 @@ import scala.util.{Failure, Success, Try}
 /**
   * Utility to download service.json files from API Builder
   */
-case class Downloader(config: ApibuilderProfile) {
+private[build] case class Downloader(config: ApibuilderProfile) {
 
   def downloadServices(
     applications: Seq[Application]
@@ -118,13 +118,6 @@ case class Downloader(config: ApibuilderProfile) {
         }
       }
     }
-  }
-
-
-  def downloadService(app: Application)(
-    implicit ec: scala.concurrent.ExecutionContext
-  ): ValidatedNec[String, Service] = {
-    downloadBatch(app.organization, Seq(app)).map(_.head)
   }
 
 }

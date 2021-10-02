@@ -1,8 +1,7 @@
 package io.flow.proxy
 
-import cats.data.Validated.{Invalid, Valid}
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{Application, BuildType, Downloader}
+import io.flow.build.{Application, BuildType, DownloadCache}
 import io.flow.registry.v0.{Client => RegistryClient}
 import play.api.libs.json.Json
 
@@ -56,7 +55,7 @@ case class Controller() extends io.flow.build.Controller {
 
   def run(
     buildType: BuildType,
-    downloader: Downloader,
+    downloadCache: DownloadCache,
     allServices: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext
@@ -67,9 +66,9 @@ case class Controller() extends io.flow.build.Controller {
 
     val serviceHostResolver = ServiceHostResolver(allServices)
 
-    val version = downloader.downloadService(Application.latest("flow", buildType.key)) match {
-      case Invalid(error) => sys.error(s"Failed to download '$buildType' service from API Builder: $error")
-      case Valid(svc) => svc.version
+    val version = downloadCache.downloadService(Application.latest("flow", buildType.key)) match {
+      case Left(error) => sys.error(s"Failed to download '$buildType' service from API Builder: $error")
+      case Right(svc) => svc.version
     }
 
     println("Building authorization from: " + services.map(_.name).mkString(", "))

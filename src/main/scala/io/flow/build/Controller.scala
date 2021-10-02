@@ -32,7 +32,7 @@ trait Controller {
     */
   def run(
     buildType: BuildType,
-    downloader: Downloader,
+    downloadCache: DownloadCache,
     services: Seq[Service]
   ) (
     implicit ec: scala.concurrent.ExecutionContext

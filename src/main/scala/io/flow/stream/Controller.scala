@@ -1,10 +1,9 @@
 package io.flow.stream
-import cats.data.Validated.{Invalid, Valid}
 
 import scala.annotation.nowarn
 import io.apibuilder.spec.v0.models.{Field, Model, Service, UnionType}
 import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService}
-import io.flow.build.{Application, BuildType, Downloader}
+import io.flow.build.{Application, BuildType, DownloadCache}
 import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
 
 import scala.annotation.tailrec
@@ -21,7 +20,7 @@ case class Controller() extends io.flow.build.Controller {
   override val name = "Stream"
   override val command = "stream"
 
-  override def run(buildType: BuildType, downloader: Downloader, services: Seq[Service])(implicit ec: ExecutionContext): Unit = {
+  override def run(buildType: BuildType, downloadCache: DownloadCache, services: Seq[Service])(implicit ec: ExecutionContext): Unit = {
 
     @tailrec
     def loadImports(services: Seq[Service], cached: Map[String, Service]): Seq[Service] = {
@@ -32,10 +31,10 @@ case class Controller() extends io.flow.build.Controller {
       } else {
         val importedServices = filteredImports.flatMap { imp =>
           cached.get(imp.organization.key + imp.application.key).orElse {
-            downloader.downloadService(Application.latest(imp.organization.key, imp.application.key)) match {
-              case Valid(svc) => Some(svc)
-              case Invalid(errors) =>
-                println(s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}: ${errors.toNonEmptyList.toList.mkString(", ")}")
+            downloadCache.downloadService(Application.latest(imp.organization.key, imp.application.key)) match {
+              case Right(svc) => Some(svc)
+              case Left(errors) =>
+                println(s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}: ${errors.mkString(", ")}")
                 None
             }
           }
@@ -238,7 +237,7 @@ case class Controller() extends io.flow.build.Controller {
       deprecation = None,
       fields = mergedFields.toSeq,
       attributes = Nil,
-      interfaces = Nil,
+      interfaces = Nil
     )
 
     ApiBuilderType.Model(service, model)
