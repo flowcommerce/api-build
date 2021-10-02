@@ -4,9 +4,27 @@ import apibuilder.{ApiBuilderHelper, ApiBuilderHelperImpl}
 import io.apibuilder.spec.v0.models._
 import io.apibuilder.validation._
 
+import java.io.{File, FileWriter}
+
 case class FlattenTypeNames(flattenedServices: List[ApiBuilderService]) {
 
+  private[this] val LogFile = {
+    val f = new File("/tmp/debug.log")
+    if (f.exists) {
+      f.delete()
+    }
+    f
+  }
+
   private[this] val flattenedTypes = MultiServiceImpl(flattenedServices).allTypes.map(_.qualified)
+  flattenedServices.foreach { s =>
+    debug(s" - flattened service: ${s.service.organization.key}/${s.service.application.key}")
+  }
+  flattenedTypes.foreach { t =>
+    if (t.indexOf("error") >= 0) {
+      debug(s"Flatteneed Type: ${t}")
+    }
+  }
 
   def rewrite(service: Service): Service = {
     val multiService = MultiServiceImpl(List(ApiBuilderService(service)))
@@ -112,14 +130,43 @@ case class FlattenTypeNames(flattenedServices: List[ApiBuilderService]) {
     )
   }
 
+  private[this] def debug(msg: String): Unit = {
+    val fw = new FileWriter(LogFile, LogFile.exists())
+    try {
+      fw.write(msg + "\n")
+    } finally {
+      fw.close()
+    }
+  }
+
   private[this] def doRewriteType(helper: ApiBuilderHelper, service: ApiBuilderService, typeName: String): String = {
-    helper.resolveType(service, typeName) match {
-      case None => typeName // likely an imported type
+    val baseName = helper.baseType(service.service, typeName)
+    helper.resolveType(service, baseName) match {
+      case None => {
+        val parts = baseName.split("\\.")
+        if (flattenedTypes.contains(baseName)) {
+          val name = addCollections(typeName, parts.last)
+          debug(s"Flattening $typeName to $name [defined in flattenedTypes]")
+          name
+        } else if (parts.length == 1) {
+          debug(s"Keeping name: $typeName as already a local name")
+          typeName
+        } else {
+          debug(s"Keeping name: $typeName as type '$baseName' not found and not in flattenedTypes")
+          typeName
+        }
+      } // likely an imported type
       case Some(typ) => {
         val newType = typ match {
           case t: ScalarType => t.name
-          case t: ApiBuilderType if flattenedTypes.contains(t.qualified) => t.name
-          case t: ApiBuilderType => t.qualified
+          case t: ApiBuilderType if t.namespace == service.namespace => {
+            debug(s"Flattening ${t.qualified} to ${t.name} [namespace matches]")
+            t.name
+          }
+          case t: ApiBuilderType => {
+            debug(s"keeping ${t.qualified}")
+            t.qualified
+          }
         }
         addCollections(typeName, newType)
       }

@@ -72,7 +72,13 @@ case class OneApi(
       version = canonical.service.version,
       baseUrl = Some("https://api.flow.io"),
       description = canonical.service.description,
-      info = Info(),
+      info = Info(
+        license = Some(License(
+          name = "MIT",
+          url = Some("http://opensource.org/licenses/MIT")
+        )),
+        contact = Some(Contact(email = Some("tech@flow.io")))
+      ),
       headers = Nil,
       imports = Nil,
       attributes = Nil,
@@ -256,7 +262,10 @@ case class OneApi(
   private[this] def validateRecordNames(): ValidatedNec[String, Unit] = {
     dups(
       "record",
-      multiService.allTypes.map { s =>
+      multiService.allTypes.filter {
+        case _: ApiBuilderType.Interface => false
+        case _ => true
+      }.map { s =>
         ContextualValue(
           context = s.qualified,
           value = s.name
