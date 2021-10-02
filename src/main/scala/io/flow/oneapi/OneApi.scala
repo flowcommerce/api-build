@@ -43,7 +43,6 @@ case class OneApi(
   }
 
   private[this] val services: List[ApiBuilderService] = originalServices.map(ApiBuilderService(_)).toList
-  println(s"Services: ${services.map(_.service.namespace)}")
   private[this] val multiService: MultiService = MultiServiceImpl(services)
   private[this] val multiServiceWithImports: MultiService = MultiServiceImpl(services ++ importedServices)
 
@@ -89,7 +88,7 @@ case class OneApi(
       }
     )
 
-    val flattened = flattenTypes(baseService)
+    val flattened = FlattenTypeNames(flattenedServices = services).rewrite(baseService)
     val service = flattened.copy(
       imports = stripAnnotations(
         buildImports(flattened, originalServices.flatMap(_.imports))
@@ -111,14 +110,6 @@ case class OneApi(
       createEventService(sorted)
     } else {
       sorted
-    }
-  }
-
-  private[this] def flattenTypes(service: Service): Service = {
-    if (buildType.flattenTypes) {
-      FlattenTypeNames(flattenedServices = services).rewrite(service)
-    } else {
-      service
     }
   }
 

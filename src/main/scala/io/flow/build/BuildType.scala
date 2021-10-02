@@ -6,7 +6,6 @@ sealed trait BuildType {
   def key: String
   def name: String
   def namespace: String
-  def flattenTypes: Boolean
   def isEvent: Boolean
 
   // added for backwards compatibility as early versions of api-build relied on
@@ -24,7 +23,6 @@ object BuildType {
     override def key = "api"
     override def name = "API"
     override def namespace = "io.flow"
-    override def flattenTypes: Boolean = true
     override def isEvent: Boolean = false
   }
   case object ApiEvent extends BuildType {
@@ -33,7 +31,6 @@ object BuildType {
     override def key = "api-event"
     override def name = "API Event"
     override def namespace = "io.flow.event"
-    override def flattenTypes: Boolean = true
     override def isEvent: Boolean = true
   }
   case object ApiInternal extends BuildType {
@@ -42,7 +39,6 @@ object BuildType {
     override def key = "api-internal"
     override def name = "API Internal"
     override def namespace = "io.flow.internal"
-    override def flattenTypes: Boolean = false
     override def isEvent: Boolean = false
   }
   case object ApiInternalEvent extends BuildType {
@@ -51,7 +47,6 @@ object BuildType {
     override def key = "api-internal-event"
     override def name = "API Internal Event"
     override def namespace = "io.flow.internal.event"
-    override def flattenTypes: Boolean = false
     override def isEvent: Boolean = true
   }
   case object ApiMisc extends BuildType {
@@ -60,7 +55,6 @@ object BuildType {
     override def key = "api-misc"
     override def name = "API Misc"
     override def namespace = "io.flow.misc"
-    override def flattenTypes: Boolean = false
     override def isEvent: Boolean = false
   }
   case object ApiMiscEvent extends BuildType {
@@ -69,7 +63,6 @@ object BuildType {
     override def key = "api-misc-event"
     override def name = "API Misc Event"
     override def namespace = "io.flow.misc.event"
-    override def flattenTypes: Boolean = false
     override def isEvent: Boolean = true
   }
   case object ApiPartner extends BuildType {
@@ -78,7 +71,6 @@ object BuildType {
     override def key = "api-partner"
     override def name = "API Partner"
     override def namespace = "io.flow.partner"
-    override def flattenTypes: Boolean = false
     override def isEvent: Boolean = false
   }
 
