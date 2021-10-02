@@ -415,7 +415,7 @@ case class OneApi(
     resource.attributes.find(_.name == "docs") match {
       case Some(_) => resource
       case None => {
-        val module = Module.findByServiceName(service.name.toLowerCase).getOrElse {
+        val module = Module.findByServiceName(service.name).getOrElse {
           Module.General
         }
         resource.copy(

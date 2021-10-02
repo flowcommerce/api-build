@@ -31,11 +31,11 @@ object Module {
   )
 
   def findByServiceName(name: String): Option[Module] = {
-    All.find(_.serviceNames.contains(name.toLowerCase))
+    All.find(_.serviceNames.map(_.toLowerCase).contains(name.toLowerCase))
   }
 
   def findByModuleName(name: String): Option[Module] = {
-    All.find(_.name == name.toLowerCase)
+    All.find(_.name.toLowerCase == name.toLowerCase)
   }
 
   def moduleSortIndex(name: String): Int = {
