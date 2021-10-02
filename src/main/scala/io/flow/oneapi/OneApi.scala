@@ -17,7 +17,7 @@ case class OneApi(
 ) {
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
-    "timezone" -> "/geolocation/timezones",
+    "timezone" -> "/",
     "io.flow.reference.v0.models.timezone" -> "/",
     "io.flow.common.v0.models.organization" -> "/organizations",
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
@@ -86,13 +86,8 @@ case class OneApi(
       interfaces = multiService.allInterfaces.map(updateInterface).map(_.interface),
       unions = multiService.allUnions.map(_.union),
 
-      resources = mergeResources(
-        services.flatMap { s =>
-          s.service.resources.map { r => updateResource(s, r) }
-        }
-      ) match {
-        case Invalid(errors) => sys.error(errors.toList.mkString("\n"))
-        case Valid(r) => r.toList
+      resources = services.flatMap { s =>
+        s.service.resources.map { r => updateResource(s, r) }
       }
     )
 
@@ -107,7 +102,10 @@ case class OneApi(
       models = service.models.sortBy(_.name.toLowerCase),
       interfaces = service.interfaces.sortBy(_.name.toLowerCase),
       unions = service.unions.sortBy(_.name.toLowerCase),
-      resources = service.resources.sortBy(resourceSortKey)
+      resources = mergeResources(service.resources) match {
+        case Invalid(errors) => sys.error("Error merging resources: " + errors.toList.mkString("\n"))
+        case Valid(r) => r.toList.sortBy(resourceSortKey)
+      }
     )
 
     buildType match {
