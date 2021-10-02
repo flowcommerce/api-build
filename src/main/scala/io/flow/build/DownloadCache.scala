@@ -17,7 +17,7 @@ case class DownloadCache(downloader: Downloader)(
 
     val (cached, remaining) = applications.partition { a => cache.isDefinedAt(cacheKey(a)) }
 
-    downloader.downloadServices(remaining).map { rest =>
+    downloader.downloadServices(remaining.distinct).map { rest =>
       rest.foreach { s =>
         cache.put(Application.latest(s.organization.key, s.application.key), s)
       }
