@@ -17,7 +17,7 @@ case class OneApi(
 ) {
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
-    "timezone" -> "/",
+    "timezone" -> "/geolocation/timezones",
     "io.flow.reference.v0.models.timezone" -> "/",
     "io.flow.common.v0.models.organization" -> "/organizations",
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
@@ -223,7 +223,7 @@ case class OneApi(
 
   private[this] def resourceSortKey(resource: Resource): String = {
     val docs = resource.attributes.find(_.name == "docs").getOrElse {
-      sys.error("Resource is missing the 'docs' attribute")
+      sys.error(s"Resource ${resource.`type`} is missing the 'docs' attribute")
     }
     val moduleName = (docs.value \ "module").as[JsString].value
 
@@ -412,18 +412,18 @@ case class OneApi(
   }
 
   private[this] def ensureDocsAttribute(service: ApiBuilderService, resource: Resource): Resource = {
-    resource.copy(
-      attributes = resource.attributes ++ (resource.attributes.find(_.name == "docs") match {
-        case None => {
-          Seq(docsAttribute(
-            Module.findByServiceName(service.name).getOrElse {
-              Module.General
-            }
-          ))
+    resource.attributes.find(_.name == "docs") match {
+      case Some(_) => resource
+      case None => {
+        val module = Module.findByServiceName(service.name.toLowerCase).getOrElse {
+          Module.General
         }
-        case Some(_) => Nil
-      })
-    )
+        resource.copy(
+          attributes = resource.attributes ++ Seq(docsAttribute(module))
+        )
+      }
+    }
+
   }
 
   private[this] def docsAttribute(module: Module): Attribute = Attribute(
