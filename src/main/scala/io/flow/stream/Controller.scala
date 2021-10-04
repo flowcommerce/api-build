@@ -43,17 +43,18 @@ case class Controller() extends io.flow.build.Controller {
       }
     }
 
-    buildType match {
-      case BuildType.ApiEvent | BuildType.ApiInternalEvent | BuildType.ApiMiscEvent =>
-        case class Aggregator(streams: Seq[KinesisStream] = Nil, cache: Map[String, Service] = Map.empty)
-        val result = services.foldLeft(Aggregator()) { case (agg, service) =>
-          val allServices = loadImports(Seq(service), agg.cache)
-          val ms = MultiService(allServices.map(ApiBuilderService.apply).toList)
-          val streams = processService(ms, service)
-          Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s))
-        }
-        saveDescriptor(buildType, StreamDescriptor(result.streams))
-      case BuildType.Api | BuildType.ApiInternal | BuildType.ApiMisc | BuildType.ApiPartner => // do nothing
+    if (buildType.isEvent) {
+      // warm the cache
+      downloadCache.downloadAllServicesAndImports(services)
+
+      case class Aggregator(streams: Seq[KinesisStream] = Nil, cache: Map[String, Service] = Map.empty)
+      val result = services.foldLeft(Aggregator()) { case (agg, service) =>
+        val allServices = loadImports(Seq(service), agg.cache)
+        val ms = MultiService(allServices.map(ApiBuilderService.apply).toList)
+        val streams = processService(ms, service)
+        Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s))
+      }
+      saveDescriptor(buildType, StreamDescriptor(result.streams))
     }
   }
 

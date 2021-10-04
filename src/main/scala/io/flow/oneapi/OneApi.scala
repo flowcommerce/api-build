@@ -31,16 +31,13 @@ case class OneApi(
 
   private[this] val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
 
-  private[this] val importedServices: List[ApiBuilderService] = downloadCache.downloadServices(
+  private[this] val importedServices: List[ApiBuilderService] = downloadCache.mustDownloadServices(
     originalServices.flatMap(_.imports).map { imp =>
       io.flow.build.Application.latest(imp.organization.key, imp.application.key)
     }.distinct.filterNot { a =>
       originalServices.exists { s => s.organization.key == a.organization && s.application.key == a.application }
     }
-  ) match {
-    case Left(errors) => sys.error(s"Failed to download imports: ${errors.mkString(", ")}")
-    case Right(services) => services.map(ApiBuilderService(_)).toList
-  }
+  ).map(ApiBuilderService(_)).toList
 
   private[this] val services: List[ApiBuilderService] = originalServices.map(ApiBuilderService(_)).toList
   private[this] val multiService: MultiService = MultiServiceImpl(services)
