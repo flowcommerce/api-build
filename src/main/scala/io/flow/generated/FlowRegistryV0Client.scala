@@ -5,7 +5,10 @@
  */
 package io.flow.registry.v0.models {
 
-  sealed trait Healthcheck extends _root_.scala.Product with _root_.scala.Serializable
+  sealed trait Healthcheck extends _root_.scala.Product with _root_.scala.Serializable {
+    def healthcheckDiscriminator: HealthcheckDiscriminator
+
+  }
 
   /**
    * Defines the valid discriminator values for the type Healthcheck
@@ -28,12 +31,12 @@ package io.flow.registry.v0.models {
     def fromString(value: String): _root_.scala.Option[HealthcheckDiscriminator] = byName.get(value.toLowerCase)
 
   }
-
   /**
    * @param ports All of the ports assigned to this application
    * @param dependencies A list of the direct dependencies of this application. Guaranteed to be
    *        non-cyclical over the set of all applications.
    */
+
   final case class Application(
     id: String,
     ports: Seq[io.flow.registry.v0.models.Port],
@@ -47,6 +50,7 @@ package io.flow.registry.v0.models {
    *        service's default port number.
    * @param dependency The application IDs on which this application is dependent
    */
+
   final case class ApplicationForm(
     id: String,
     service: String,
@@ -72,10 +76,13 @@ package io.flow.registry.v0.models {
   /**
    * @param port The port on which clients access this service.
    */
+
   final case class Http(
     host: String,
     port: Long
-  ) extends Healthcheck
+  ) extends Healthcheck {
+    override val healthcheckDiscriminator: HealthcheckDiscriminator = HealthcheckDiscriminator.Http
+  }
 
   /**
    * @param external The port on which clients access this service. If running in a container, this
@@ -83,6 +90,7 @@ package io.flow.registry.v0.models {
    * @param internal The port on which this service is running internally. If running in a container,
    *        this is the port inside the container.
    */
+
   final case class Port(
     service: io.flow.registry.v0.models.ServiceReference,
     external: Long,
@@ -93,12 +101,15 @@ package io.flow.registry.v0.models {
    * @param dbname The database name.
    * @param port The port on which clients access this database.
    */
+
   final case class Postgresql(
     dbname: String,
     host: String,
     port: Long,
     user: String
-  ) extends Healthcheck
+  ) extends Healthcheck {
+    override val healthcheckDiscriminator: HealthcheckDiscriminator = HealthcheckDiscriminator.Postgresql
+  }
 
   /**
    * A service is used to identify what type of software is actually running. We use
@@ -107,6 +118,7 @@ package io.flow.registry.v0.models {
    * from
    * https://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.txt
    */
+
   final case class Service(
     id: String,
     defaultPort: Long
@@ -140,9 +152,12 @@ package io.flow.registry.v0.models {
    * @param description Information about the type that we received that is undefined in this version of
    *        the client.
    */
+
   final case class HealthcheckUndefinedType(
     description: String
-  ) extends Healthcheck
+  ) extends Healthcheck {
+    override val healthcheckDiscriminator: HealthcheckDiscriminator = HealthcheckDiscriminator.UNDEFINED(description)
+  }
 
 }
 
@@ -157,32 +172,26 @@ package io.flow.registry.v0.models {
     import io.flow.error.v0.models.json._
     import io.flow.registry.v0.models.json._
 
-    private[v0] implicit val jsonReadsUUID = __.read[String].map { str =>
+    private[v0] implicit val jsonReadsUUID: play.api.libs.json.Reads[_root_.java.util.UUID] = __.read[String].map { str =>
       _root_.java.util.UUID.fromString(str)
     }
 
-    private[v0] implicit val jsonWritesUUID = new Writes[_root_.java.util.UUID] {
-      def writes(x: _root_.java.util.UUID) = JsString(x.toString)
-    }
+    private[v0] implicit val jsonWritesUUID: play.api.libs.json.Writes[_root_.java.util.UUID] = (x: _root_.java.util.UUID) => play.api.libs.json.JsString(x.toString)
 
-    private[v0] implicit val jsonReadsJodaDateTime = __.read[String].map { str =>
+    private[v0] implicit val jsonReadsJodaDateTime: play.api.libs.json.Reads[_root_.org.joda.time.DateTime] = __.read[String].map { str =>
       _root_.org.joda.time.format.ISODateTimeFormat.dateTimeParser.parseDateTime(str)
     }
 
-    private[v0] implicit val jsonWritesJodaDateTime = new Writes[_root_.org.joda.time.DateTime] {
-      def writes(x: _root_.org.joda.time.DateTime) = {
-        JsString(_root_.org.joda.time.format.ISODateTimeFormat.dateTime.print(x))
-      }
+    private[v0] implicit val jsonWritesJodaDateTime: play.api.libs.json.Writes[_root_.org.joda.time.DateTime] = (x: _root_.org.joda.time.DateTime) => {
+      play.api.libs.json.JsString(_root_.org.joda.time.format.ISODateTimeFormat.dateTime.print(x))
     }
 
-    private[v0] implicit val jsonReadsJodaLocalDate = __.read[String].map { str =>
+    private[v0] implicit val jsonReadsJodaLocalDate: play.api.libs.json.Reads[_root_.org.joda.time.LocalDate] = __.read[String].map { str =>
       _root_.org.joda.time.format.ISODateTimeFormat.dateTimeParser.parseLocalDate(str)
     }
 
-    private[v0] implicit val jsonWritesJodaLocalDate = new Writes[_root_.org.joda.time.LocalDate] {
-      def writes(x: _root_.org.joda.time.LocalDate) = {
-        JsString(_root_.org.joda.time.format.ISODateTimeFormat.date.print(x))
-      }
+    private[v0] implicit val jsonWritesJodaLocalDate: play.api.libs.json.Writes[_root_.org.joda.time.LocalDate] = (x: _root_.org.joda.time.LocalDate) => {
+      play.api.libs.json.JsString(_root_.org.joda.time.format.ISODateTimeFormat.date.print(x))
     }
 
     implicit def jsonReadsRegistryApplication: play.api.libs.json.Reads[Application] = {
@@ -202,10 +211,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryApplication: play.api.libs.json.Writes[Application] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.Application] {
-        def writes(obj: io.flow.registry.v0.models.Application) = {
-          jsObjectApplication(obj)
-        }
+      (obj: io.flow.registry.v0.models.Application) => {
+        jsObjectApplication(obj)
       }
     }
 
@@ -238,10 +245,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryApplicationForm: play.api.libs.json.Writes[ApplicationForm] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.ApplicationForm] {
-        def writes(obj: io.flow.registry.v0.models.ApplicationForm) = {
-          jsObjectApplicationForm(obj)
-        }
+      (obj: io.flow.registry.v0.models.ApplicationForm) => {
+        jsObjectApplicationForm(obj)
       }
     }
 
@@ -274,10 +279,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryApplicationPutForm: play.api.libs.json.Writes[ApplicationPutForm] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.ApplicationPutForm] {
-        def writes(obj: io.flow.registry.v0.models.ApplicationPutForm) = {
-          jsObjectApplicationPutForm(obj)
-        }
+      (obj: io.flow.registry.v0.models.ApplicationPutForm) => {
+        jsObjectApplicationPutForm(obj)
       }
     }
 
@@ -300,10 +303,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryApplicationVersion: play.api.libs.json.Writes[ApplicationVersion] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.ApplicationVersion] {
-        def writes(obj: io.flow.registry.v0.models.ApplicationVersion) = {
-          jsObjectApplicationVersion(obj)
-        }
+      (obj: io.flow.registry.v0.models.ApplicationVersion) => {
+        jsObjectApplicationVersion(obj)
       }
     }
 
@@ -322,10 +323,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryHttp: play.api.libs.json.Writes[Http] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.Http] {
-        def writes(obj: io.flow.registry.v0.models.Http) = {
-          jsObjectHttp(obj)
-        }
+      (obj: io.flow.registry.v0.models.Http) => {
+        jsObjectHttp(obj)
       }
     }
 
@@ -346,10 +345,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryPort: play.api.libs.json.Writes[Port] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.Port] {
-        def writes(obj: io.flow.registry.v0.models.Port) = {
-          jsObjectPort(obj)
-        }
+      (obj: io.flow.registry.v0.models.Port) => {
+        jsObjectPort(obj)
       }
     }
 
@@ -372,10 +369,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryPostgresql: play.api.libs.json.Writes[Postgresql] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.Postgresql] {
-        def writes(obj: io.flow.registry.v0.models.Postgresql) = {
-          jsObjectPostgresql(obj)
-        }
+      (obj: io.flow.registry.v0.models.Postgresql) => {
+        jsObjectPostgresql(obj)
       }
     }
 
@@ -394,10 +389,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryService: play.api.libs.json.Writes[Service] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.Service] {
-        def writes(obj: io.flow.registry.v0.models.Service) = {
-          jsObjectService(obj)
-        }
+      (obj: io.flow.registry.v0.models.Service) => {
+        jsObjectService(obj)
       }
     }
 
@@ -416,10 +409,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryServiceForm: play.api.libs.json.Writes[ServiceForm] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.ServiceForm] {
-        def writes(obj: io.flow.registry.v0.models.ServiceForm) = {
-          jsObjectServiceForm(obj)
-        }
+      (obj: io.flow.registry.v0.models.ServiceForm) => {
+        jsObjectServiceForm(obj)
       }
     }
 
@@ -434,10 +425,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryServicePutForm: play.api.libs.json.Writes[ServicePutForm] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.ServicePutForm] {
-        def writes(obj: io.flow.registry.v0.models.ServicePutForm) = {
-          jsObjectServicePutForm(obj)
-        }
+      (obj: io.flow.registry.v0.models.ServicePutForm) => {
+        jsObjectServicePutForm(obj)
       }
     }
 
@@ -452,10 +441,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryServiceReference: play.api.libs.json.Writes[ServiceReference] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.ServiceReference] {
-        def writes(obj: io.flow.registry.v0.models.ServiceReference) = {
-          jsObjectServiceReference(obj)
-        }
+      (obj: io.flow.registry.v0.models.ServiceReference) => {
+        jsObjectServiceReference(obj)
       }
     }
 
@@ -478,20 +465,22 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryServiceVersion: play.api.libs.json.Writes[ServiceVersion] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.ServiceVersion] {
-        def writes(obj: io.flow.registry.v0.models.ServiceVersion) = {
-          jsObjectServiceVersion(obj)
-        }
+      (obj: io.flow.registry.v0.models.ServiceVersion) => {
+        jsObjectServiceVersion(obj)
       }
     }
 
-    implicit def jsonReadsRegistryHealthcheck: play.api.libs.json.Reads[Healthcheck] = new play.api.libs.json.Reads[Healthcheck] {
-      def reads(js: play.api.libs.json.JsValue): play.api.libs.json.JsResult[Healthcheck] = {
-        (js \ "discriminator").asOpt[String].getOrElse { sys.error("Union[Healthcheck] requires a discriminator named 'discriminator' - this field was not found in the Json Value") } match {
+    implicit def jsonReadsRegistryHealthcheck: play.api.libs.json.Reads[Healthcheck] = (js: play.api.libs.json.JsValue) => {
+      def readDiscriminator(discriminator: String) = {
+        discriminator match {
           case "http" => js.validate[io.flow.registry.v0.models.Http]
           case "postgresql" => js.validate[io.flow.registry.v0.models.Postgresql]
           case other => play.api.libs.json.JsSuccess(io.flow.registry.v0.models.HealthcheckUndefinedType(other))
         }
+      }
+      (js \ "discriminator").validate[String] match {
+        case e: play.api.libs.json.JsError => e
+        case s: play.api.libs.json.JsSuccess[String] => readDiscriminator(s.value)
       }
     }
 
@@ -506,10 +495,8 @@ package io.flow.registry.v0.models {
     }
 
     implicit def jsonWritesRegistryHealthcheck: play.api.libs.json.Writes[Healthcheck] = {
-      new play.api.libs.json.Writes[io.flow.registry.v0.models.Healthcheck] {
-        def writes(obj: io.flow.registry.v0.models.Healthcheck) = {
-          jsObjectHealthcheck(obj)
-        }
+      (obj: io.flow.registry.v0.models.Healthcheck) => {
+        jsObjectHealthcheck(obj)
       }
     }
   }
