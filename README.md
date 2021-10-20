@@ -19,15 +19,15 @@ Main features:
 ## Examples:
 
 ```
-  java -jar ~/api-build.jar lint flow/common flow/user
-  java -jar ~/api-build.jar oneapi flow/common flow/user
-  java -jar ~/api-build.jar build flow/common flow/user
+  java -jar ~/api-build.jar api lint flow/common flow/user
+  java -jar ~/api-build.jar api oneapi flow/common flow/user
+  java -jar ~/api-build.jar api build flow/common flow/user
 ```
 
 Or run the full build:
 
 ```
-  java -jar ~/api-build.jar all flow/common flow/user
+  java -jar ~/api-build.jar api all flow/common flow/user
 ```
 
 ## running locally
@@ -51,17 +51,17 @@ We are using the sbt assembly plugin to build
 
 ## Running from the command line:
 
-    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar lint flow/common flow/user
-    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar oneapi flow/common flow/user
-    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar all flow/common flow/user
+    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar api lint flow/common flow/user
+    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar api oneapi flow/common flow/user
+    java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar api all flow/common flow/user
 
 To specify a specific API Builder Profile:
 
-    APIBUILDER_PROFILE=xxx java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar all flow/common flow/user
+    APIBUILDER_PROFILE=xxx java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar api all flow/common flow/user
 
 Or to specify a specific APIBUILDER URL and/or Token:
 
-    APIBUILDER_TOKEN=yyy APIBUILDER_API_BASE_URL=http://app.apibuilder.io java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar all flow/user
+    APIBUILDER_TOKEN=yyy APIBUILDER_API_BASE_URL=http://app.apibuilder.io java -jar /web/api-build/target/scala-2.11/api-build_2.11-0.0.1-one-jar.jar api all flow/user
 
 The default behavior is to use the default apibuilder profile.
 
