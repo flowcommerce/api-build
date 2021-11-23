@@ -76,6 +76,7 @@ case object StandardResponse extends Linter with Helpers {
       case Some(expected) => {
         expected.filter(code => !actualCodes.contains(code)) match {
           case Nil => Nil
+          case missing if missing == Seq(200) && actualCodes.contains(302) => Nil // Treat 302 as success
           case missing => Seq(error(resource, operation, s"Missing response codes: " + missing.mkString(", ")))
         }
       }

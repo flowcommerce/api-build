@@ -249,5 +249,17 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
       )
     ) should be(Nil)
   }
-  
+
+  it("redirects (302) do not require 200 response code") {
+    linter.validate(
+      buildService(
+        "/organizations/:id",
+        Method.Get,
+        Seq(
+          Response(ResponseCodeInt(302), "unit"),
+          Response(ResponseCodeInt(401), "unit"),
+        )
+      )
+    ) shouldBe Nil
+  }
 }
