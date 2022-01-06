@@ -10,7 +10,6 @@ import io.apibuilder.spec.v0.models.{Field, Model, Operation, Parameter, Resourc
 case object BadNames extends Linter with Helpers {
 
   private[this] val Data: Map[String, String] = Map(
-    "country_of_origin" -> "origin",
     "ip_address" -> "ip",
     "postal_code" -> "postal"
   )

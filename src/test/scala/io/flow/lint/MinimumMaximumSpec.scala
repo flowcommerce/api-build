@@ -106,11 +106,10 @@ class MinimumMaximumSpec extends AnyFunSpec with Matchers {
     linter.validate(buildServiceWithModel()) should be(Nil)
   }
 
-  it("Model w/ invalid min/max") {
-    linter.validate(buildServiceWithModel(minimum = Some(-1), maximum = Some(-1))) should be(
+  it("Model w/ maximum larger than minimum") {
+    linter.validate(buildServiceWithModel(minimum = Some(2), maximum = Some(-2))) should be(
       Seq(
-        "Model user Field[email]: Minimum must be >= 0 and not -1",
-        "Model user Field[email]: Maximum, if specified, must be > 0 and not -1"
+        "Model user Field[email]: Maximum, if specified with minimum, must be >= 2 and not -2"
       )
     )
   }

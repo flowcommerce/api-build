@@ -47,10 +47,6 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
   }
 
   it("model fields") {
-    linter.validate(buildModel("country_of_origin")) should be(
-      Seq("Model user Field[country_of_origin]: Name must be 'origin'")
-    )
-
     linter.validate(buildModel("ip_address")) should be(
       Seq("Model user Field[ip_address]: Name must be 'ip'")
     )
@@ -62,10 +58,6 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
 
 
   it("resource parameter names") {
-    linter.validate(buildResource("country_of_origin")) should be(
-      Seq("Resource users GET /users Parameter country_of_origin: Name must be 'origin'")
-    )
-
     linter.validate(buildResource("ip_address")) should be(
       Seq("Resource users GET /users Parameter ip_address: Name must be 'ip'")
     )

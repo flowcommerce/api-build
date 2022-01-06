@@ -32,26 +32,22 @@ case object MinimumMaximum extends Linter with Helpers {
     val minErrors = field.minimum match {
       case None => Nil
       case Some(min) => {
-        if (min < 0) {
-          Seq(error(model, field, s"Minimum must be >= 0 and not $min"))
-        } else {
-          field.default match {
-            case None => Nil
-            case Some(default) => {
-              Try(
-                default.toLong
-              ) match {
-                case Success(d) => {
-                  if (d < min) {
-                    Seq(error(model, field, s"Default must be >= minimum[$min] and not $default"))
-                  } else {
-                    Nil
-                  }
-                }
-                case Failure(_) => {
-                  // Not a number - nothing to validate
+        field.default match {
+          case None => Nil
+          case Some(default) => {
+            Try(
+              default.toLong
+            ) match {
+              case Success(d) => {
+                if (d < min) {
+                  Seq(error(model, field, s"Default must be >= minimum[$min] and not $default"))
+                } else {
                   Nil
                 }
+              }
+              case Failure(_) => {
+                // Not a number - nothing to validate
+                Nil
               }
             }
           }
@@ -84,10 +80,15 @@ case object MinimumMaximum extends Linter with Helpers {
           }
 
         case _ =>
-          if (max > 0) {
-            Nil
-          } else {
-            Seq(error(model, field, s"Maximum, if specified, must be > 0 and not $max"))
+          field.minimum match {
+            case Some(min) => {
+              if (max >= min) {
+                Nil
+              } else {
+                Seq(error(model, field, s"Maximum, if specified with minimum, must be >= $min and not $max"))
+              }
+            }
+            case None => Nil
           }
       }
     }
