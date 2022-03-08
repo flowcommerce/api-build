@@ -27,6 +27,7 @@ object Module {
     Module("geolocation", Set("location")),
     Module("reference", Set("reference")),
     Module("partner", Set("partner")),
+    Module("calculator", Set("calculator")),
     General
   )
 
