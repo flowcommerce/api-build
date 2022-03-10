@@ -32,7 +32,7 @@ lazy val root = project
   .settings(
     scalacOptions ++= allScalacOptions,
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.1.93",
+      "io.flow" %% "lib-util" % "0.1.94",
       "io.apibuilder" %% "apibuilder-validation" % "0.4.32",
       "com.typesafe.play" %% "play-json" % "2.9.2",
       "com.ning" % "async-http-client" % "1.9.40",
