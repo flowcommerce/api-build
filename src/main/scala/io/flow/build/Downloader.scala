@@ -98,7 +98,7 @@ private[build] case class Downloader(config: ApibuilderProfile) {
               }
             )
           ),
-          FiniteDuration(45, SECONDS)
+          FiniteDuration(120, SECONDS)
         )
       }
     } match {
