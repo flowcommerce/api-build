@@ -6,9 +6,9 @@ import io.flow.lint.Linter
 /**
   *  Ensures that attributes we no longer support are not specified
   */
-case object NoDeprecatedAttributes extends Linter with Helpers {
+case object NoDeprecatedAttributes extends Linter {
 
-  private[this] val Deprecated = List("auth")
+  private[this] val Deprecated = Set("auth")
 
   override def validate(service: Service): Seq[String] = {
     val all: Seq[Attribute] = service.headers.flatMap(_.attributes) ++
@@ -21,6 +21,7 @@ case object NoDeprecatedAttributes extends Linter with Helpers {
       service.resources.flatMap(_.operations).flatMap(_.parameters).flatMap(_.attributes.getOrElse(Nil)) ++
       service.resources.flatMap(_.operations).flatMap(_.responses).flatMap(_.attributes.getOrElse(Nil))
 
+    println(s"all: ${all}")
     all.flatMap(validateAttribute).distinct
   }
 

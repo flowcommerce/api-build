@@ -87,7 +87,7 @@ object Services {
 
   def buildAttribute(
     name: String,
-    value: JsObject
+    value: JsObject = Json.obj()
   ): Attribute = {
     Attribute(
       name = name,
