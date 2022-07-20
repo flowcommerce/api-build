@@ -41,6 +41,7 @@ object Lint {
           linters.MappingModels,
           linters.MinimumMaximum,
           linters.ModelsWithOrganizationField,
+          linters.NoDeprecatedAttributes,
           linters.PathsDoNotHaveTrailingSlash,
           linters.ProxyQueryParameters,
           linters.PublishedEventModels,
@@ -56,9 +57,14 @@ object Lint {
   }
 
   def fromFile(buildType: BuildType, path: String): Seq[String] = {
-    val contents = scala.io.Source.fromFile(path).getLines().mkString("\n")
-    val service = Json.parse(contents).as[Service]
-    Lint(buildType).validate(service)
+    val source = scala.io.Source.fromFile(path)
+    try {
+      val contents = source.getLines().mkString("\n")
+      val service = Json.parse(contents).as[Service]
+      Lint(buildType).validate(service)
+    } finally {
+      source.close()
+    }
   }
 
 }
