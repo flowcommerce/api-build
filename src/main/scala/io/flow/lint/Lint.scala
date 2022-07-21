@@ -25,6 +25,7 @@ object Lint {
 
       case _ => {
         Seq(
+          linters.AllAttributesAreWellKnown,
           linters.BadNames,
           linters.CommonFieldTypes,
           linters.CommonParameterTypes,
@@ -41,7 +42,6 @@ object Lint {
           linters.MappingModels,
           linters.MinimumMaximum,
           linters.ModelsWithOrganizationField,
-          linters.NoDeprecatedAttributes,
           linters.PathsDoNotHaveTrailingSlash,
           linters.ProxyQueryParameters,
           linters.PublishedEventModels,
