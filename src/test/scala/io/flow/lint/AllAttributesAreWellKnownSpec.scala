@@ -34,7 +34,9 @@ class AllAttributesAreWellKnownSpec extends AnyFunSpec with Matchers {
     def test(name: String) = linter.validate(build(Seq(name)))
 
     test("api-build") shouldBe Nil
+    test("graphql") shouldBe Nil
     test("linter") shouldBe Nil
+    test("non-crud") shouldBe Nil
     test("sort") shouldBe Nil
   }
 

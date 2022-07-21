@@ -10,7 +10,9 @@ case object AllAttributesAreWellKnown extends Linter {
 
   private[this] val KnownAttributeNames = Set(
     "api-build",
+    "graphql",
     "linter",
+    "non-crud",
     "sort"
   )
 
