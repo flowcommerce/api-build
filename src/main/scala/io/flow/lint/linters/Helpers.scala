@@ -132,7 +132,7 @@ trait Helpers {
     s"Header ${header.name}: $error"
   }
 
-  def error(enum: Enum, enumValue: EnumValue, error: String): String = {
+  def error(`enum`: Enum, enumValue: EnumValue, error: String): String = {
     s"Enum ${enum.name} value ${enumValue.name}: $error"
   }
 
