@@ -221,7 +221,7 @@ case class OneApi(
     val moduleName = (docs.value \ "module").as[JsString].value
 
     Seq(
-      10000 + Module.moduleSortIndex(moduleName),
+      (10000 + Module.moduleSortIndex(moduleName)).toString,
       resource.`type`.toLowerCase
     ).mkString(":")
   }
