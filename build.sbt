@@ -2,7 +2,7 @@ name := "api-build"
 
 organization := "io.flow"
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.10"
 
 lazy val allScalacOptions = Seq(
   "-feature",
