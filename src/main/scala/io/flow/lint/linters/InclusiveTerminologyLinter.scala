@@ -44,11 +44,11 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
     validateName(header.name)  { m => error(header, m) }
   }
 
-  def validateEnum(enum: Enum): Seq[String] = {
+  def validateEnum(`enum`: Enum): Seq[String] = {
     validateName(enum.name) { m => error(enum, m) } ++ enum.values.flatMap { validateEnumValue(enum, _) }
   }
 
-  def validateEnumValue(enum: Enum, enumValue: EnumValue): Seq[String] = {
+  def validateEnumValue(`enum`: Enum, enumValue: EnumValue): Seq[String] = {
     validateName(enumValue.name) { m => error(enum, enumValue, m) } ++ (enumValue.value match {
       case None => Nil
       case Some(v) => validateName(v) { m => error(enum, enumValue, s"value: $m") }

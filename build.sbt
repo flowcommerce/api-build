@@ -2,7 +2,7 @@ name := "api-build"
 
 organization := "io.flow"
 
-ThisBuild / scalaVersion := "2.13.6"
+ThisBuild / scalaVersion := "2.13.10"
 
 lazy val allScalacOptions = Seq(
   "-feature",
@@ -32,11 +32,11 @@ lazy val root = project
   .settings(
     scalacOptions ++= allScalacOptions,
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.2.3",
+      "io.flow" %% "lib-util" % "0.2.4",
       "io.apibuilder" %% "apibuilder-validation" % "0.4.33",
       "com.typesafe.play" %% "play-json" % "2.9.3",
       "com.ning" % "async-http-client" % "1.9.40",
-      "org.scalatest" %% "scalatest" % "3.2.13" % Test,
+      "org.scalatest" %% "scalatest" % "3.2.14" % Test,
       "com.github.scopt" %% "scopt" % "4.1.0",
     )
   )

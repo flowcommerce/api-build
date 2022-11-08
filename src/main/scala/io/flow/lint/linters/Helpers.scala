@@ -124,7 +124,7 @@ trait Helpers {
     service.resources.filter( _.plural != "healthchecks")
   }
 
-  def error(enum: Enum, error: String): String = {
+  def error(`enum`: Enum, error: String): String = {
     s"Enum ${enum.name}: $error"
   }
 
@@ -132,7 +132,7 @@ trait Helpers {
     s"Header ${header.name}: $error"
   }
 
-  def error(enum: Enum, enumValue: EnumValue, error: String): String = {
+  def error(`enum`: Enum, enumValue: EnumValue, error: String): String = {
     s"Enum ${enum.name} value ${enumValue.name}: $error"
   }
 
