@@ -121,7 +121,7 @@ trait Helpers {
   }
 
   def nonHealthcheckResources(service: Service): Seq[Resource] = {
-    service.resources.filter( _.plural.endsWith("healthchecks"))
+    service.resources.filter(!_.plural.endsWith("healthchecks"))
   }
 
   def error(`enum`: Enum, error: String): String = {
