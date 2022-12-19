@@ -4,6 +4,9 @@ organization := "io.flow"
 
 ThisBuild / scalaVersion := "2.13.10"
 
+enablePlugins(GitVersioning)
+git.useGitDescribe := true
+
 lazy val allScalacOptions = Seq(
   "-feature",
   "-Xfatal-warnings",
@@ -58,5 +61,4 @@ publishTo := {
     Some("Artifactory Realm" at s"$host/libs-release-local")
   }
 }
-version := "0.3.8"
 
