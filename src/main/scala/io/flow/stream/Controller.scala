@@ -133,28 +133,34 @@ case class Controller() extends io.flow.build.Controller {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
     apiBuilderModel.name match {
       case UnionMemberRx(typeName, eventType, _) if eventType == "upserted" =>
-        val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
+        val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName)).toSeq
         if (payloadField.isEmpty) {
           // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: field not found")
         }
-        val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
+        val payloadTypes = payloadField.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
         if (payloadTypes.isEmpty) {
           // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: payload type not found")
         }
         for {
           pt <- payloadTypes
-          fld <- payloadField.toSeq
+          fld <- payloadField
+          _ <- findIdField(pt)
         } yield {
           EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, discriminator)
         }
       case UnionMemberRx(typeName, eventType, _) if eventType == "deleted" =>
-        val idField = apiBuilderModel.model.fields.find(f => f.name == "id" && f.`type` == "string")
+        val eventIdField = findIdField(apiBuilderModel)
         val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
         val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
-        if (payloadTypes.isEmpty && idField.isDefined) {
+        if (payloadTypes.isEmpty && eventIdField.isDefined) {
           Seq(EventType.Deleted(apiBuilderModel.name, typeName, None, discriminator))
         } else if (payloadTypes.nonEmpty) {
-          payloadTypes.map { pt => EventType.Deleted(apiBuilderModel.name, typeName, Some(pt.model), discriminator) }
+          for {
+            pt <- payloadTypes
+            _ <- findIdField(pt)
+          } yield {
+            EventType.Deleted(apiBuilderModel.name, typeName, Some(pt.model), discriminator)
+          }
         } else {
           // println(s"Skipping non v2 deleted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
           Nil
@@ -163,6 +169,16 @@ case class Controller() extends io.flow.build.Controller {
         // println(s"Skipping misnamed union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
         Nil
     }
+  }
+
+  private def findIdField(model: ApiBuilderType.Model): Option[Field] = {
+    def findFieldWithName(name: String) = model.model.fields.find(f => f.name == name && f.`type` == "string")
+    findFieldWithName("id")
+      .orElse(
+        findFieldWithName("key")
+      ).orElse(
+        findFieldWithName("number")
+      )
   }
 
   private def extractPayloadModels(model: ApiBuilderType.Model, typeField: Field, multiService: MultiService): Option[ApiBuilderType.Model] = {
