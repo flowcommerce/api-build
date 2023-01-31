@@ -1,7 +1,7 @@
 package io.flow.lint.linters
 
 import io.flow.lint.Linter
-import io.apibuilder.spec.v0.models.{Field, Model, Operation, Parameter, Resource, Service}
+import io.apibuilder.spec.v0.models.{Attribute, Field, Model, Operation, Parameter, Resource, Service}
 
 /**
   *  We have decided to call the same things consistently. This linter
@@ -15,7 +15,10 @@ case object BadNames extends Linter with Helpers {
   )
 
   override def validate(service: Service): Seq[String] = {
-    service.models.flatMap(validateModel) ++ service.resources.flatMap(validateResource)
+    service.models
+      .filterNot(m => ignoreFilter(m.attributes))
+      .flatMap(validateModel) ++
+      service.resources.flatMap(validateResource)
   }
 
   def validateModel(model: Model): Seq[String] = {
@@ -30,7 +33,9 @@ case object BadNames extends Linter with Helpers {
   }
 
   def validateResource(resource: Resource): Seq[String] = {
-    resource.operations.flatMap(validateOperation(resource, _))
+    resource.operations
+      .filterNot(o => ignoreFilter(o.attributes))
+      .flatMap(validateOperation(resource, _))
   }
 
   def validateOperation(resource: Resource, operation: Operation): Seq[String] = {
@@ -42,6 +47,10 @@ case object BadNames extends Linter with Helpers {
       case None => Nil
       case Some(replacement) => Seq(error(resource, operation, param, s"Name must be '$replacement'"))
     }
+  }
+
+  def ignoreFilter(attributes: Seq[Attribute]): Boolean = {
+    ignored(attributes, "bad_names")
   }
 
 }
