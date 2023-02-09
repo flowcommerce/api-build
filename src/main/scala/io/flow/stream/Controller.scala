@@ -144,22 +144,22 @@ case class Controller() extends io.flow.build.Controller {
         for {
           pt <- payloadTypes
           fld <- payloadField
-          _ <- findIdField(pt)
+          idField <- findIdField(pt)
         } yield {
-          EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, discriminator)
+          EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
         }
       case UnionMemberRx(typeName, eventType, _) if eventType == "deleted" =>
         val eventIdField = findIdField(apiBuilderModel)
         val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
         val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
         if (payloadTypes.isEmpty && eventIdField.isDefined) {
-          Seq(EventType.Deleted(apiBuilderModel.name, typeName, None, discriminator))
+          Seq(EventType.Deleted(apiBuilderModel.name, typeName, None, eventIdField.get, discriminator))
         } else if (payloadTypes.nonEmpty) {
           for {
             pt <- payloadTypes
-            _ <- findIdField(pt)
+            idField <- findIdField(pt)
           } yield {
-            EventType.Deleted(apiBuilderModel.name, typeName, Some(pt.model), discriminator)
+            EventType.Deleted(apiBuilderModel.name, typeName, Some(pt.model), idField, discriminator)
           }
         } else {
           // println(s"Skipping non v2 deleted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
@@ -263,7 +263,9 @@ case class Controller() extends io.flow.build.Controller {
   private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
     upserted match {
       case head :: tail =>
-        deleted.find(_.typeName == head.typeName).fold {
+        val candidates = deleted.filter(d => d.typeName == head.typeName && d.idField.name == head.idField.name)
+        val candidate = candidates.find(_.payloadType.isDefined).orElse(candidates.headOption)
+        candidate.fold {
           println(s"Skipping unpaired v2 upserted member ${head.eventName}")
           pairUpEvents(tail, deleted)
         }{ d =>
