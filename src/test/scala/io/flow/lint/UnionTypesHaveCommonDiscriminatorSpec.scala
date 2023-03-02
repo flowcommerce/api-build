@@ -28,13 +28,13 @@ class UnionTypesHaveCommonDiscriminatorSpec extends AnyFunSpec with Matchers {
 
   it("with no discriminator") {
     linter.validate(buildService("expandable_user", None)) should be (
-      Seq("Union expandable_user: Must have a discriminator with value one of ('discriminator', 'type')")
+      Seq("Union expandable_user: Must have a discriminator with value one of ('discriminator', 'type', 'code')")
     )
   }
 
   it("with invalid discriminator") {
     linter.validate(buildService("expandable_user", Some("foo"))) should be (
-      Seq("Union expandable_user: Discriminator must have value one of ('discriminator', 'type') and not 'foo'")
+      Seq("Union expandable_user: Discriminator must have value one of ('discriminator', 'type', 'code') and not 'foo'")
     )
   }
 
