@@ -26,8 +26,9 @@ case object EventStructure extends Linter with EventHelpers {
   private[this] def validate(event: EventInstance): ValidatedNec[String, Unit] = {
     (
       validateMatchingDeleteEvents(event),
-      validateDeleteEventsHaveId(event.deleted)
-    ).mapN { case (_, _) => () }
+      validateDeleteEventsHaveId(event.deleted),
+      validateNoAdditionalFields(event)
+    ).mapN { case (_, _, _) => () }
   }
 
   private[this] def validateMatchingDeleteEvents(event: EventInstance): ValidatedNec[String, Unit] = {
@@ -58,5 +59,47 @@ case object EventStructure extends Linter with EventHelpers {
     } else {
       s"Model '${model.name}' Field '${field.name}' must have type 'string' and not '${field.`type`}'".invalidNec
     }
+  }
+
+  private[this] def validateNoAdditionalFields(event: EventInstance): ValidatedNec[String, Unit] = {
+    (
+      validateNoAdditionalFieldsUpserted(event.upserted),
+      validateNoAdditionalFieldsDeleted(event.deleted)
+    ).mapN { case (_, _) => () }
+  }
+
+  private[this] def validateNoAdditionalFieldsUpserted(models: Seq[UpsertedEventModel]): ValidatedNec[String, Unit] = {
+    models.map { m =>
+      validateNoAdditionalFields(m, Seq(m.prefix))
+    }.sequence.map(_ => ())
+  }
+
+  private[this] def validateNoAdditionalFieldsDeleted(models: Seq[DeletedEventModel]): ValidatedNec[String, Unit] = {
+    models.map { m =>
+      validateNoAdditionalFields(m, Seq("id"))
+    }.sequence.map(_ => ())
+  }
+
+  private[this] def validateNoAdditionalFields(m: EventModel, acceptableFinalFieldNames: Seq[String]): ValidatedNec[String, Unit] = {
+    m.model.fields.zipWithIndex.map { case (field, i) =>
+      i match {
+        case 0 => validateFieldName(m, field, Seq("event_id"))
+        case 1 => validateFieldName(m, field, Seq("timestamp"))
+        case 2 => validateFieldName(m, field, acceptableFinalFieldNames ++ Seq("organization", "channel", "partner"))
+        case 3 => validateFieldName(m, field, acceptableFinalFieldNames)
+        case _ => error(m.model, "Cannot have more than 4 fields").invalidNec
+      }
+    }.sequence.map(_ => ())
+  }
+
+  private[this] def validateFieldName(model: EventModel, field: Field, allowed: Seq[String]): ValidatedNec[String, Unit] = {
+    if (allowed.contains(field.name)) {
+      ().validNec
+    } else {
+      invalidFieldError(model, field, allowed).invalidNec
+    }
+  }
+  private[this] def invalidFieldError(model: EventModel, field: Field, allowed: Seq[String]): String = {
+    error(model.model, field, s"Invalid name '${field.name}'. Must be one of: " + allowed.mkString(", "))
   }
 }
