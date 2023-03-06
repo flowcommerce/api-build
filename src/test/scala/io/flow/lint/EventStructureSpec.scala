@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers
 
 class EventStructureSpec extends AnyFunSpec with Matchers {
 
-  private[this] val linter = linters.EventUpsertedModels
+  private[this] val linter = linters.EventStructure
   private[this] val userModel = Services.buildModel(
     "user",
     fields = Seq(
@@ -15,7 +15,24 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
 
   it("upserted events have matching deleted events") {
     val service = Services.Base.copy(
-      models = Seq(userModel),
+      models = Seq(userModel) ++ Seq(
+        Services.buildModel(
+          "user_upserted",
+          fields = Seq(
+            Services.buildField("event_id"),
+            Services.buildField("timestamp", `type` = "date-time-iso8601"),
+            Services.buildField("user", `type` = "user")
+          )
+        ),
+        Services.buildModel(
+          "user_deleted",
+          fields = Seq(
+            Services.buildField("event_id"),
+            Services.buildField("timestamp", `type` = "date-time-iso8601"),
+            Services.buildField("id", `type` = "string")
+          )
+        )
+      ),
       unions = Seq(
         Services.buildUnion("user_event", types = Seq(
           Services.buildUnionType("user_upserted"),

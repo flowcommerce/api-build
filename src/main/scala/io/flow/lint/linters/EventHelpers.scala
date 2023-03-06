@@ -9,9 +9,9 @@ object EventType {
 }
 object EventModel {
   def apply(model: Model): EventModel = {
-    if (model.name.matches("_upserted")) {
+    if (model.name.contains("_upserted")) {
       EventModel(model, EventType.Upserted)
-    } else if (model.name.matches("_upserted")) {
+    } else if (model.name.contains("_deleted")) {
       EventModel(model, EventType.Deleted)
     } else {
       sys.error(s"Cannot determine event type from model named '${model.name}'")
@@ -31,12 +31,6 @@ case class EventInstance(
 
 trait EventHelpers extends Helpers {
 
-  private[this] val RegexpTrailingVersion = """\_v\d+$""".r
-
-  private[this] val Suffixes = List(
-    "upserted", "deleted"
-  )
-
   def findAllEvents(service: Service): Seq[EventInstance] = {
     service.unions.filter(isEvent).map { union =>
       EventInstance(
@@ -52,9 +46,6 @@ trait EventHelpers extends Helpers {
     }
   }
 
-  private[this] def isEvent(union: Union): Boolean = {
-    val trimmed = RegexpTrailingVersion.replaceAllIn(union.name, "")
-    Suffixes.exists { s => trimmed.endsWith(s"_$s") }
-  }
+  private[this] def isEvent(union: Union): Boolean = union.name.endsWith("_event")
 
 }
