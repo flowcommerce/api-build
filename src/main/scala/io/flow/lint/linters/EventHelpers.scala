@@ -3,16 +3,16 @@ package io.flow.lint.linters
 import io.apibuilder.spec.v0.models.{Model, Service, Union}
 
 object EventModel {
-  def apply(model: Model): EventModel = {
+  def fromModel(model: Model): Option[EventModel] = {
     val i = model.name.indexOf("_upserted")
     if (i > 0) {
-      UpsertedEventModel(model, model.name.substring(0, i))
+      Some(UpsertedEventModel(model, model.name.substring(0, i)))
     } else {
       val i = model.name.indexOf("_deleted")
       if (i > 0) {
-        DeletedEventModel(model, model.name.substring(0, i))
+        Some(DeletedEventModel(model, model.name.substring(0, i)))
       } else {
-        sys.error(s"Cannot determine event type from model named '${model.name}'")
+        None
       }
     }
   }
@@ -40,8 +40,8 @@ trait EventHelpers extends Helpers {
     service.unions.filter(isEvent).map { union =>
       EventInstance(
         union = union,
-        models = union.types.map { t =>
-          EventModel(
+        models = union.types.flatMap { t =>
+          EventModel.fromModel(
             service.models.find(_.name == t.`type`).getOrElse {
               sys.error(s"Union '${union.name}': Failed to find model named ${t.`type`}")
             }

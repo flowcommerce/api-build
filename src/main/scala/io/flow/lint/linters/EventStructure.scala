@@ -71,7 +71,7 @@ case object EventStructure extends Linter with EventHelpers {
 
   private[this] def validateNoAdditionalFieldsUpserted(models: Seq[UpsertedEventModel]): ValidatedNec[String, Unit] = {
     models.map { m =>
-      validateNoAdditionalFields(m, Seq(m.prefix))
+      validateNoAdditionalFields(m, Seq(m.prefix) ++ m.prefix.split("_").toList)
     }.sequence.map(_ => ())
   }
 
@@ -101,7 +101,11 @@ case object EventStructure extends Linter with EventHelpers {
     }
   }
   private[this] def invalidFieldError(model: EventModel, field: Field, allowed: Seq[String]): String = {
-    error(model.model, field, s"Invalid name '${field.name}'. Must be one of: " + allowed.mkString(", "))
+    val msg = allowed.toList match {
+      case one :: Nil => s"Must be '$one'"
+      case _ => "Must be one of: " + allowed.mkString(", ")
+    }
+    error(model.model, field, s"Invalid name '${field.name}'. $msg")
   }
 
   private[this] def validateUpsertedModelsHaveId(service: Service, models: Seq[UpsertedEventModel]): ValidatedNec[String, Unit] = {
