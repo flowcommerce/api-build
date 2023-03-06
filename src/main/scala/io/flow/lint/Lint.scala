@@ -33,7 +33,7 @@ object Lint {
           linters.DuplicateMethodAndPath,
           linters.ErrorModelsV1,
           linters.ErrorModelsV2,
-          linters.EventModels,
+          linters.EventUpsertedModels,
           linters.ExpandableUnionsAreConsistent,
           linters.Get,
           linters.GetByIdIsExpandable,

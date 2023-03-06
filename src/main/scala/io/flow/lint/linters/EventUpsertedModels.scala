@@ -10,7 +10,7 @@ import io.apibuilder.spec.v0.models.{Model, Service}
   *   b. if 'organization', next
   *   c. if 'number', next
   */
-case object EventModels extends Linter with Helpers {
+case object EventUpsertedModels extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
     service.models.

@@ -4,9 +4,9 @@ import io.apibuilder.spec.v0.models._
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class EventModelsSpec extends AnyFunSpec with Matchers {
+class EventStructureSpec extends AnyFunSpec with Matchers {
 
-  private[this] val linter = linters.EventModels
+  private[this] val linter = linters.EventUpsertedModels
   private[this] val userModel = Services.buildModel(
     "user",
     fields = Seq(
@@ -27,7 +27,11 @@ class EventModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(service) shouldBe Nil
   }
 
-  it("deleted_events must have an 'id' string field") {
+  it("upserted events have matching deleted events spanning version numbers") {
+    //"user_upserted_v4" and "user_deleted_v1"
+  }
+
+    it("deleted_events must have an 'id' string field") {
   }
 
   it("events have no additional fields") {
