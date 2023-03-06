@@ -91,7 +91,19 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
     )
   }
 
-  it("events have no additional fields") {
+  it("upserted events have no additional fields") {
+    def setup(fields: Seq[Field]) = {
+      linter.validate(
+        userServiceWithModels(Seq(
+          buildEventModel("user_upserted", fields),
+          buildEventModel("user_deleted", Seq(Services.buildField("id")))
+        ))
+      )
+    }
+
+    val userField = Services.buildField("user", `type` = "user")
+
+    setup(Seq(userField)) shouldBe Nil
   }
 
   it("associated model must have an id field") {
