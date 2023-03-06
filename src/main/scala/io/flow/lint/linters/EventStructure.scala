@@ -42,10 +42,7 @@ case object EventStructure extends Linter with EventHelpers {
 
   private[this] def validateMatchingDeleteEvent(upserted: UpsertedEventModel, candidates: Seq[DeletedEventModel]): ValidatedNec[String, Unit] = {
     candidates.find(_.prefix == upserted.prefix) match {
-      case None => {
-        captureErrorOnModel(upserted.model)
-        s"Missing delete event for '${upserted.model.name}'".invalidNec
-      }
+      case None => s"Missing delete event for '${upserted.model.name}'".invalidNec
       case Some(_) => ().validNec
     }
   }
@@ -53,10 +50,7 @@ case object EventStructure extends Linter with EventHelpers {
   private[this] def validateDeleteEventsHaveId(models: Seq[DeletedEventModel]): ValidatedNec[String, Unit] = {
     models.map { m =>
       m.model.fields.find(_.name == "id") match {
-        case None => {
-          captureErrorOnModel(m.model)
-          s"Deleted event '${m.model.name}' is missing a field named 'id'".invalidNec
-        }
+        case None => s"Deleted event '${m.model.name}' is missing a field named 'id'".invalidNec
         case Some(f) => validateIdField(m.model, f)
       }
     }.sequence.map(_ => ())
@@ -66,7 +60,6 @@ case object EventStructure extends Linter with EventHelpers {
     if (field.`type` == "string") {
       ().validNec
     } else {
-      captureErrorOnModel(model)
       s"Model '${model.name}' Field '${field.name}' must have type 'string' and not '${field.`type`}'".invalidNec
     }
   }
@@ -97,10 +90,7 @@ case object EventStructure extends Linter with EventHelpers {
         case 1 => validateFieldName(m, field, Seq("timestamp"))
         case 2 => validateFieldName(m, field, acceptableFinalFieldNames ++ Seq("organization", "channel", "partner"))
         case 3 => validateFieldName(m, field, acceptableFinalFieldNames)
-        case _ => {
-          captureErrorOnModel(m.model)
-          error(m.model, "Cannot have more than 4 fields").invalidNec
-        }
+        case _ => error(m.model, "Cannot have more than 4 fields").invalidNec
       }
     }.sequence.map(_ => ())
   }
@@ -109,7 +99,6 @@ case object EventStructure extends Linter with EventHelpers {
     if (allowed.contains(field.name)) {
       ().validNec
     } else {
-      captureErrorOnModel(model.model)
       invalidFieldError(model, field, allowed).invalidNec
     }
   }
@@ -132,10 +121,6 @@ case object EventStructure extends Linter with EventHelpers {
         }
       }
     }.sequence.map(_ => ())
-  }
-
-  def captureErrorOnModel(model: Model): Unit = {
-    //Path("/tmp/models.txt").createFile().appendAll(s"${model.name}\n")
   }
 
   private[this] def filterLegacyModels(event: EventInstance): EventInstance = {
