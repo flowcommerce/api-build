@@ -35,9 +35,9 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
     )
   }
 
-  private[this] val validUserEventModels = Seq(
-    buildEventModel("user_upserted", Seq(Services.buildField("user", "user"))),
-    buildEventModel("user_deleted", Seq(Services.buildField("id", "string"))),
+  private[this] def validUserEventModels(upsertedName: String = "user_upserted", deletedName: String = "user_deleted") = Seq(
+    buildEventModel(upsertedName, Seq(Services.buildField("user", "user"))),
+    buildEventModel(deletedName, Seq(Services.buildField("id", "string"))),
   )
 
   it("upserted events have matching deleted events") {
@@ -125,23 +125,39 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
   }
 
   it("associated model must have an id field") {
-    val service = Services.Base.copy(
-      unions = Seq(userEventUnion),
-      models = validUserEventModels ++ Seq(
-        Services.buildModel(
-          "user",
-          fields = Seq(
-            Services.buildField("other")
+    linter.validate(
+      Services.Base.copy(
+        unions = Seq(userEventUnion),
+        models = validUserEventModels() ++ Seq(
+          Services.buildModel(
+            "user",
+            fields = Seq(
+              Services.buildField("other")
+            )
           )
         )
       )
-    )
-    linter.validate(service) shouldBe Seq(
+    ) shouldBe Seq(
       "Model 'user' is missing a field named 'id' - this is required as part of the upserted event 'user_upserted'"
     )
   }
 
   it("upserted events have matching deleted events spanning version numbers") {
-    //"user_upserted_v4" and "user_deleted_v1"
+    def setup(deletedName: String) = {
+      linter.validate(
+        Services.Base.copy(
+          unions = Seq(Services.buildUnion("user_event", types = Seq(
+            Services.buildUnionType("user_upserted_v4"),
+            Services.buildUnionType(deletedName),
+          ))),
+          models = validUserEventModels("user_upserted_v4", deletedName) ++ Seq(userModel)
+        )
+      )
+    }
+
+    setup("user_deleted_v2") shouldBe Nil
+    setup("foo_deleted") shouldBe Seq(
+      "Missing delete event for 'user_upserted_v4'"
+    )
   }
 }
