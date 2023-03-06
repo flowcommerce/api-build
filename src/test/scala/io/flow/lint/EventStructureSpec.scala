@@ -1,5 +1,6 @@
 package io.flow.lint
 
+import io.apibuilder.spec.v0.models.{Field, Model}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -12,26 +13,25 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
       Services.buildField("id")
     )
   )
+  private[this] def buildEventModel(name: String, fields: Seq[Field]): Model = {
+    Services.buildModel(
+      name,
+      fields = Seq(
+        Services.buildField("event_id"),
+        Services.buildField("timestamp", `type` = "date-time-iso8601"),
+      ) ++ fields
+    )
+  }
 
   it("upserted events have matching deleted events") {
     val service = Services.Base.copy(
       models = Seq(userModel) ++ Seq(
-        Services.buildModel(
-          "user_upserted",
-          fields = Seq(
-            Services.buildField("event_id"),
-            Services.buildField("timestamp", `type` = "date-time-iso8601"),
-            Services.buildField("user", `type` = "user")
-          )
-        ),
-        Services.buildModel(
-          "user_deleted",
-          fields = Seq(
-            Services.buildField("event_id"),
-            Services.buildField("timestamp", `type` = "date-time-iso8601"),
-            Services.buildField("id", `type` = "string")
-          )
-        )
+        buildEventModel("user_upserted", Seq(
+          Services.buildField("user", `type` = "user")
+        )),
+        buildEventModel("user_deleted", Seq(
+          Services.buildField("id", `type` = "string")
+        ))
       ),
       unions = Seq(
         Services.buildUnion("user_event", types = Seq(
