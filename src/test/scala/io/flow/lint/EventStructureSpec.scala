@@ -1,6 +1,6 @@
 package io.flow.lint
 
-import io.apibuilder.spec.v0.models.{Field, Model, Union, UnionType}
+import io.apibuilder.spec.v0.models.{Field, Model, Service, Union, UnionType}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
@@ -17,6 +17,13 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
     Services.buildUnionType("user_upserted"),
     Services.buildUnionType("user_deleted"),
   ))
+
+  private[this] def userServiceWithModels(models: Seq[Model]): Service = {
+    Services.Base.copy(
+      unions = Seq(userEventUnion),
+      models = Seq(userModel) ++ models
+    )
+  }
 
   private[this] def buildEventModel(name: String, fields: Seq[Field]): Model = {
     Services.buildModel(
@@ -66,15 +73,12 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
   it("deleted_events must have an 'id' string field") {
     def setup(field: Field) = {
       linter.validate(
-        Services.Base.copy(
-          unions = Seq(userEventUnion),
-          models = Seq(userModel) ++ Seq(
-            buildEventModel("user_upserted", Seq(
-              Services.buildField("user", `type` = "user")
-            )),
-            buildEventModel("user_deleted", Seq(field))
-          )
-        )
+        userServiceWithModels(Seq(
+          buildEventModel("user_upserted", Seq(
+            Services.buildField("user", `type` = "user")
+          )),
+          buildEventModel("user_deleted", Seq(field))
+        ))
       )
     }
 
