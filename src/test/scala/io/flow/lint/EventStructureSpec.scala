@@ -79,7 +79,12 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
     }
 
     setup(Services.buildField("id", `type` = "string")) shouldBe Nil
-    setup(Services.buildField("user", `type` = "user")) shouldBe Seq("TODO")
+    setup(Services.buildField("user", `type` = "user")) shouldBe Seq(
+      "Deleted event 'user_deleted' is missing a field named 'id'"
+    )
+    setup(Services.buildField("id", `type` = "object")) shouldBe Seq(
+      "Model 'user_deleted' Field 'id' must have type 'string' and not 'object'"
+    )
   }
 
   it("events have no additional fields") {

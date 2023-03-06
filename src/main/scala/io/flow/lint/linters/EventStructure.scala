@@ -3,7 +3,7 @@ package io.flow.lint.linters
 import cats.data.Validated.{Invalid, Valid}
 import cats.data.ValidatedNec
 import cats.implicits._
-import io.apibuilder.spec.v0.models.Service
+import io.apibuilder.spec.v0.models.{Field, Model, Service}
 import io.flow.lint.Linter
 
 /**
@@ -24,8 +24,10 @@ case object EventStructure extends Linter with EventHelpers {
   }
 
   private[this] def validate(event: EventInstance): ValidatedNec[String, Unit] = {
-    println(s"EVENT: ${event.union.name} / ${event.models.map(_.model.name)}")
-    validateMatchingDeleteEvents(event)
+    (
+      validateMatchingDeleteEvents(event),
+      validateDeleteEventsHaveId(event.deleted)
+    ).mapN { case (_, _) => () }
   }
 
   private[this] def validateMatchingDeleteEvents(event: EventInstance): ValidatedNec[String, Unit] = {
@@ -38,6 +40,23 @@ case object EventStructure extends Linter with EventHelpers {
     candidates.find(_.prefix == upserted.prefix) match {
       case None => s"Missing delete event for '${upserted.model.name}'".invalidNec
       case Some(_) => ().validNec
+    }
+  }
+
+  private[this] def validateDeleteEventsHaveId(models: Seq[DeletedEventModel]): ValidatedNec[String, Unit] = {
+    models.map { m =>
+      m.model.fields.find(_.name == "id") match {
+        case None => s"Deleted event '${m.model.name}' is missing a field named 'id'".invalidNec
+        case Some(f) => validateIdField(m.model, f)
+      }
+    }.sequence.map(_ => ())
+  }
+
+  private[this] def validateIdField(model: Model, field: Field): ValidatedNec[String, Unit] = {
+    if (field.`type` == "string") {
+      ().validNec
+    } else {
+      s"Model '${model.name}' Field '${field.name}' must have type 'string' and not '${field.`type`}'".invalidNec
     }
   }
 }
