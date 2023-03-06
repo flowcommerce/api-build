@@ -116,7 +116,7 @@ case object EventStructure extends Linter with EventHelpers {
   private[this] def invalidFieldError(model: EventModel, field: Field, allowed: Seq[String]): String = {
     val msg = allowed.distinct.toList match {
       case one :: Nil => s"Must be '$one'"
-      case _ => "Must be one of: " + allowed.mkString(", ")
+      case all => "Must be one of: " + all.mkString(", ")
     }
     error(model.model, field, s"Invalid name '${field.name}'. $msg")
   }
