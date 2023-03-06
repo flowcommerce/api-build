@@ -155,7 +155,7 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
       )
     }
 
-    setup("user_deleted_v2") shouldBe Nil
+    setup("user_deleted_v4") shouldBe Nil
     setup("foo_deleted") shouldBe Seq(
       "Missing delete event for 'user_upserted_v4'"
     )
