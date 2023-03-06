@@ -35,6 +35,11 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
     )
   }
 
+  private[this] val validUserEventModels = Seq(
+    buildEventModel("user_upserted", Seq(Services.buildField("user", "user"))),
+    buildEventModel("user_deleted", Seq(Services.buildField("id", "string"))),
+  )
+
   it("upserted events have matching deleted events") {
     def setup(deleteModel: Option[Model], deleteUnionType: Option[UnionType]) = {
       linter.validate(
@@ -64,10 +69,6 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
     ), deleteUnionType = Some(
       Services.buildUnionType("user_deleted")
     )) shouldBe Nil
-  }
-
-  it("upserted events have matching deleted events spanning version numbers") {
-    //"user_upserted_v4" and "user_deleted_v1"
   }
 
   it("deleted_events must have an 'id' string field") {
@@ -124,5 +125,23 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
   }
 
   it("associated model must have an id field") {
+    val service = Services.Base.copy(
+      unions = Seq(userEventUnion),
+      models = validUserEventModels ++ Seq(
+        Services.buildModel(
+          "user",
+          fields = Seq(
+            Services.buildField("other")
+          )
+        )
+      )
+    )
+    linter.validate(service) shouldBe Seq(
+      "Model 'user' is missing a field named 'id' - this is required as part of the upserted event 'user_upserted'"
+    )
+  }
+
+  it("upserted events have matching deleted events spanning version numbers") {
+    //"user_upserted_v4" and "user_deleted_v1"
   }
 }

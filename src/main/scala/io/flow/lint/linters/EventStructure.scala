@@ -17,18 +17,19 @@ import io.flow.lint.Linter
 case object EventStructure extends Linter with EventHelpers {
 
   override def validate(service: Service): Seq[String] = {
-    findAllEvents(service).map(validate).sequence match {
+    findAllEvents(service).map { e =>validate(service, e) }.sequence match {
       case Invalid(e) => e.toList.distinct
       case Valid(_) => Nil
     }
   }
 
-  private[this] def validate(event: EventInstance): ValidatedNec[String, Unit] = {
+  private[this] def validate(service: Service, event: EventInstance): ValidatedNec[String, Unit] = {
     (
       validateMatchingDeleteEvents(event),
       validateDeleteEventsHaveId(event.deleted),
-      validateNoAdditionalFields(event)
-    ).mapN { case (_, _, _) => () }
+      validateNoAdditionalFields(event),
+      validateUpsertedModelsHaveId(service, event.upserted)
+    ).mapN { case (_, _, _, _) => () }
   }
 
   private[this] def validateMatchingDeleteEvents(event: EventInstance): ValidatedNec[String, Unit] = {
@@ -101,5 +102,18 @@ case object EventStructure extends Linter with EventHelpers {
   }
   private[this] def invalidFieldError(model: EventModel, field: Field, allowed: Seq[String]): String = {
     error(model.model, field, s"Invalid name '${field.name}'. Must be one of: " + allowed.mkString(", "))
+  }
+
+  private[this] def validateUpsertedModelsHaveId(service: Service, models: Seq[UpsertedEventModel]): ValidatedNec[String, Unit] = {
+    models.flatMap { m =>
+      m.model.fields.lastOption.map(_.`type`).flatMap { t =>
+        service.models.find(_.name == t)
+      }.map { underlyingModel =>
+        underlyingModel.fields.find(_.name == "id") match {
+          case None => s"Model '${underlyingModel.name}' is missing a field named 'id' - this is required as part of the upserted event '${m.model.name}'".invalidNec
+          case Some(f) => validateIdField(underlyingModel, f)
+        }
+      }
+    }.sequence.map(_ => ())
   }
 }
