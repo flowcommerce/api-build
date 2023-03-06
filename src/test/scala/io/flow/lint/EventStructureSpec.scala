@@ -28,19 +28,15 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
       models = Seq(userModel) ++ Seq(
         buildEventModel("user_upserted", Seq(
           Services.buildField("user", `type` = "user")
-        )),
-        buildEventModel("user_deleted", Seq(
-          Services.buildField("id", `type` = "string")
         ))
       ),
       unions = Seq(
         Services.buildUnion("user_event", types = Seq(
-          Services.buildUnionType("user_upserted"),
-          Services.buildUnionType("user_deleted")
+          Services.buildUnionType("user_upserted")
         ))
       )
     )
-    linter.validate(service) shouldBe Nil
+    linter.validate(service) shouldBe Seq("Missing delete event for 'user_upserted'")
   }
 
   it("upserted events have matching deleted events spanning version numbers") {

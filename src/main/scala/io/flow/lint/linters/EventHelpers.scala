@@ -2,32 +2,37 @@ package io.flow.lint.linters
 
 import io.apibuilder.spec.v0.models.{Model, Service, Union}
 
-sealed trait EventType
-object EventType {
-  case object Deleted extends EventType
-  case object Upserted extends EventType
-}
 object EventModel {
   def apply(model: Model): EventModel = {
-    if (model.name.contains("_upserted")) {
-      EventModel(model, EventType.Upserted)
-    } else if (model.name.contains("_deleted")) {
-      EventModel(model, EventType.Deleted)
+    val i = model.name.indexOf("_upserted")
+    if (i > 0) {
+      UpsertedEventModel(model, model.name.substring(0, i))
     } else {
-      sys.error(s"Cannot determine event type from model named '${model.name}'")
+      val i = model.name.indexOf("_deleted")
+      if (i > 0) {
+        UpsertedEventModel(model, model.name.substring(0, i))
+      } else {
+        sys.error(s"Cannot determine event type from model named '${model.name}'")
+      }
     }
   }
 }
 
-case class EventModel(
-                     model: Model,
-                     eventType: EventType
-                      )
+sealed trait EventModel {
+  def model: Model
+  // eg. for user_upserted -> 'user'
+  def prefix: String
+}
+case class UpsertedEventModel(model: Model, prefix: String) extends EventModel
+case class DeletedEventModel(model: Model, prefix: String) extends EventModel
 
 case class EventInstance(
   union: Union,
   models: Seq[EventModel]
-)
+) {
+  val upserted: Seq[UpsertedEventModel] = models.collect { case m: UpsertedEventModel => m }
+  val deleted: Seq[DeletedEventModel] = models.collect { case m: DeletedEventModel => m }
+}
 
 trait EventHelpers extends Helpers {
 
