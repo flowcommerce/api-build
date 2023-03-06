@@ -10,13 +10,13 @@ import io.apibuilder.spec.v0.models.{Model, Service}
   *   b. if 'organization', next
   *   c. if 'number', next
   */
-case object EventModels extends Linter with Helpers {
+case object EventUpsertedModels extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
     service.models.
       filter(m => !ignored(m.attributes, "event_model")).
       filter(isEvent).
-      flatMap(validateModel)
+      flatMap(validateOrganizationModel)
   }
 
   private[this] val Suffixes = List(
@@ -27,7 +27,7 @@ case object EventModels extends Linter with Helpers {
     Suffixes.exists { s => model.name.endsWith(s"_$s") }
   }
 
-  private[this] def validateModel(model: Model): Seq[String] = {
+  private[this] def validateOrganizationModel(model: Model): Seq[String] = {
     validateFieldNames(model) ++ validateFieldTypes(
       model,
       Map(
