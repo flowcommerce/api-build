@@ -4,7 +4,7 @@ import io.apibuilder.spec.v0.models.{Field, Model, Service}
 import io.flow.lint.Linter
 import io.flow.stream.EventUnionTypeMatcher
 
-sealed trait EventModel {
+sealed trait UpsertedDeletedEventModel {
   // eg. user_upserted
   def eventName: String
 
@@ -14,12 +14,12 @@ sealed trait EventModel {
   def supportsId: Boolean
 }
 
-object EventModel {
-  case class Upserted(eventName: String, baseName: String) extends EventModel {
+object UpsertedDeletedEventModel {
+  case class Upserted(eventName: String, baseName: String) extends UpsertedDeletedEventModel {
     override val supportsId: Boolean = false
   }
 
-  case class Deleted(eventName: String, baseName: String) extends EventModel {
+  case class Deleted(eventName: String, baseName: String) extends UpsertedDeletedEventModel {
     override val supportsId: Boolean = true
   }
 }
@@ -40,21 +40,21 @@ case object UpsertedDeletedEventModels extends Linter with Helpers {
     }
   }
 
-  private[this] def parse(name: String): Option[EventModel] = {
+  private[this] def parse(name: String): Option[UpsertedDeletedEventModel] = {
     val i = name.indexOf("_upserted")
     if (i > 0) {
-      Some(EventModel.Upserted(name, name.take(i)))
+      Some(UpsertedDeletedEventModel.Upserted(name, name.take(i)))
     } else {
       val j = name.indexOf("_deleted")
       if (j > 0) {
-        Some(EventModel.Deleted(name, name.take(j)))
+        Some(UpsertedDeletedEventModel.Deleted(name, name.take(j)))
       } else {
         None
       }
     }
   }
 
-  private[this] def validateModel(model: Model, typ: EventModel): Seq[String] = {
+  private[this] def validateModel(model: Model, typ: UpsertedDeletedEventModel): Seq[String] = {
     lazy val idField = model.fields.find(_.name == "id")
 
     if (model.fields.exists { f =>

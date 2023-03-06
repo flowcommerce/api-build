@@ -24,6 +24,7 @@ case object EventStructure extends Linter with EventHelpers {
   }
 
   private[this] def validate(event: EventInstance): ValidatedNec[String, Unit] = {
+    println(s"EVENT: ${event.union.name}")
     ().validNec
   }
   
