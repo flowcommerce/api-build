@@ -10,7 +10,6 @@ case class Lint(
 ) {
 
   def validate(service: Service): Seq[String] = {
-    println(s"VALIDATING SERVICE ${service.name}")
     Lint.forBuildType(buildType).flatMap(_.validate(service))
   }
 
