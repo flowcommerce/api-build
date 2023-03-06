@@ -300,6 +300,7 @@ case object EventStructure extends Linter with EventHelpers {
     "order_identifier_deleted_v2",
     "order_identifier_upserted",
     "order_identifier_upserted_v2",
+    "order_identifier_upserted_v3",
     "order_replacement_deleted",
     "order_replacement_upserted",
     "order_upserted",
