@@ -18,7 +18,7 @@ case object EventStructure extends Linter with EventHelpers {
 
   override def validate(service: Service): Seq[String] = {
     findAllEvents(service).map(validate).sequence match {
-      case Invalid(e) => e.toList
+      case Invalid(e) => e.toList.distinct
       case Valid(_) => Nil
     }
   }

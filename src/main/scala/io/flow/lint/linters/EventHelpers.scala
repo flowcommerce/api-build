@@ -10,7 +10,7 @@ object EventModel {
     } else {
       val i = model.name.indexOf("_deleted")
       if (i > 0) {
-        UpsertedEventModel(model, model.name.substring(0, i))
+        DeletedEventModel(model, model.name.substring(0, i))
       } else {
         sys.error(s"Cannot determine event type from model named '${model.name}'")
       }
