@@ -176,6 +176,8 @@ case object EventStructure extends Linter with EventHelpers {
     "catalog_item_upserted",
     "catalog_item_upserted_v2",
     "catalog_upserted",
+    "catalog_settings_upserted",
+    "catalog_settings_deleted",
     "center_deleted",
     "center_upserted",
     "channel_order_acceptance_deleted",
