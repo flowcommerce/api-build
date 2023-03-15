@@ -86,7 +86,7 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
     setup(Services.buildField("id", `type` = "string")) shouldBe Nil
     setup(Services.buildField("user", `type` = "user")) shouldBe Seq(
       "Deleted event 'user_deleted' is missing a field named 'id'",
-      "Model user_deleted Field[user]: Invalid name 'user'. Must be one of: id, organization, channel, partner"
+      "Model user_deleted Field[user]: Invalid name 'user'. Must be one of: id, organization, channel, channel_id, partner"
     )
     setup(Services.buildField("id", `type` = "object")) shouldBe Seq(
       "Model 'user_deleted' Field 'id' must have type 'string' and not 'object'"
@@ -115,7 +115,7 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
     setup(Seq(
       Services.buildField("foo", `type` = "string"),
       userField
-    )) shouldBe Seq("Model user_upserted Field[foo]: Invalid name 'foo'. Must be one of: user, organization, channel, partner")
+    )) shouldBe Seq("Model user_upserted Field[foo]: Invalid name 'foo'. Must be one of: user, organization, channel, channel_id, partner")
 
     setup(Seq(
       Services.buildField("organization", `type` = "string"),

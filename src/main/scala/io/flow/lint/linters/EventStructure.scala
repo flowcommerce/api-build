@@ -88,7 +88,7 @@ case object EventStructure extends Linter with EventHelpers {
       i match {
         case 0 => validateFieldName(m, field, Seq("event_id"))
         case 1 => validateFieldName(m, field, Seq("timestamp"))
-        case 2 => validateFieldName(m, field, acceptableFinalFieldNames ++ Seq("organization", "channel", "partner"))
+        case 2 => validateFieldName(m, field, acceptableFinalFieldNames ++ Seq("organization", "channel", "channel_id", "partner"))
         case 3 => validateFieldName(m, field, acceptableFinalFieldNames)
         case _ => error(m.model, "Cannot have more than 4 fields").invalidNec
       }
