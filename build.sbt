@@ -35,11 +35,11 @@ lazy val root = project
   .settings(
     scalacOptions ++= allScalacOptions,
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.2.20",
+      "io.flow" %% "lib-util" % "0.2.22",
       "io.apibuilder" %% "apibuilder-validation" % "0.4.33",
       "com.typesafe.play" %% "play-json" % "2.9.4",
       "com.ning" % "async-http-client" % "1.9.40",
-      "org.typelevel" %% "cats-core" % "2.9.0",
+      "org.typelevel" %% "cats-core" % "2.10.0",
       "org.typelevel" %% "cats-effect" % "2.3.3",
       "org.scalatest" %% "scalatest" % "3.2.16" % Test,
       "com.github.scopt" %% "scopt" % "4.1.0",
