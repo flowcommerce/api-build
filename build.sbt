@@ -3,7 +3,7 @@ name := "api-build"
 organization := "io.flow"
 
 ThisBuild / scalaVersion := "2.13.10"
-
+ThisBuild / javacOptions ++= Seq("-source", "17", "-target", "17")
 enablePlugins(GitVersioning)
 git.useGitDescribe := true
 
@@ -33,7 +33,7 @@ assembly / assemblyMergeStrategy := {
 lazy val root = project
   .in(file("."))
   .settings(
-    scalacOptions ++= allScalacOptions,
+    scalacOptions ++= allScalacOptions ++ Seq("-release", "17"),
     libraryDependencies ++= Seq(
       "io.flow" %% "lib-util" % "0.2.24",
       "io.apibuilder" %% "apibuilder-validation" % "0.4.33",
@@ -47,7 +47,10 @@ lazy val root = project
   )
 
 resolvers += "Artifactory" at "https://flow.jfrog.io/flow/libs-release/"
-
+Test / javaOptions ++= Seq(
+  "--add-exports=java.base/sun.security.x509=ALL-UNNAMED",
+  "--add-opens=java.base/sun.security.ssl=ALL-UNNAMED"
+)
 credentials += Credentials(
   "Artifactory Realm",
   "flow.jfrog.io",
