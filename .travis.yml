@@ -2,7 +2,7 @@ language: scala
 scala:
   - 2.13.10
 jdk:
-  - openjdk13
+  - openjdk17
 cache:
   directories:
     - $HOME/.ivy2/cache
