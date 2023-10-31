@@ -59,6 +59,7 @@ pipeline {
                             sh '''
                                 git config --global credential.helper "store --file=/tmp/git-credentials"
                                 echo "https://$GIT_USERNAME:$GIT_PASSWORD@github.com" > /tmp/git-credentials
+                                git config --global --add safe.directory /home/jenkins/workspace/flowcommerce_api-build_PR-410
                                 go run release.go
                             '''
                         }
