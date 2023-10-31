@@ -63,17 +63,17 @@ pipeline {
 
                                 git clone https://github.com/flowcommerce/aws-s3-public.git aws-s3-public &&
                                 cd aws-s3-public &&
-                                git checkout main &&
-                                git pull origin main &&
-                                dev tag &&
-                                sbt clean assembly &&
-                                cp ./target/scala-2.13/api-build-assembly-*.jar util/api-build/ &&
-                                cp ./target/scala-2.13/api-build-assembly-*.jar util/api-build/api-build.jar &&
-                                git add . &&
-                                git commit -m "Add new version of api-build" &&
-                                git push origin main &&
+                                git checkout main
+                                git pull --rebase
+                                git fetch --tags origin
+                                dev tag
+                                sbt clean assembly
+                                cp ./target/scala-2.13/api-build-assembly-*.jar util/api-build/
+                                cp ./target/scala-2.13/api-build-assembly-*.jar util/api-build/api-build.jar
+                                git add util/api-build/*
+                                git commit -m 'Add new version of api-build' util/api-build
+                                git push origin main
                                 aws s3 sync util s3://io.flow.aws-s3-public/util --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-
                             '''
                         }
                     }
