@@ -29,23 +29,24 @@ pipeline {
             }
         }
 
-        // stage('SBT Test') {
-        //     steps {
-        //         container('play') {
-        //             script {
-        //                 try {
-        //                     sh '''
-        //                         sbt clean compile flowLintLib test doc
-        //                     '''
-        //                 } finally {
-        //                     junit allowEmptyResults: true, testResults: '**/target/test-reports/*.xml'
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        stage('SBT Test') {
+            steps {
+                container('play') {
+                    script {
+                        try {
+                            sh '''
+                                sbt clean compile flowLintLib test doc
+                            '''
+                        } finally {
+                            junit allowEmptyResults: true, testResults: '**/target/test-reports/*.xml'
+                        }
+                    }
+                }
+            }
+        }
 
-        stage('SBT Release') {
+        stage('SBT Publish') {
+            when { branch 'main' }
             steps {
                 container('play') {
                     withCredentials([
