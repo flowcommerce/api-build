@@ -72,8 +72,7 @@ pipeline {
                             '''
                             // Run 'dev tag' in the api-build directory
                             sh '''
-                                chown -R jenkins:jenkins /home/jenkins/workspace
-                                git config --global --add safe.directory /home/jenkins/workspace
+                                git config --global --add safe.directory /home/jenkins/workspace/flowcommerce_api-build_PR-410
                                 git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
                                 git checkout main
                                 dev tag
