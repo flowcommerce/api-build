@@ -59,8 +59,8 @@ pipeline {
                             sh '''
                                 git config --global credential.helper "store --file=/tmp/git-credentials"
                                 echo "https://$GIT_USERNAME:$GIT_PASSWORD@github.com" > /tmp/git-credentials
-                                git config --global --add safe.directory /home/jenkins/workspace/flowcommerce_api-build_PR-410
-
+                                // Configure Git to ignore "dubious ownership" for the workspace directory
+                                git config --global --add safe.directory /home/jenkins/workspace
                                 git clone https://github.com/flowcommerce/aws-s3-public.git aws-s3-public
                             '''
                             sh '''
@@ -73,8 +73,6 @@ pipeline {
                             '''
                             // Run 'dev tag' in the api-build directory
                             sh '''
-                                pwd
-                                ls
                                 git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
                                 git checkout main
                                 dev tag
@@ -84,7 +82,6 @@ pipeline {
                             '''
                             sh '''
                                 cd aws-s3-public
-                                pwd
                                 git add util/api-build/*
                                 git commit -m 'Add new version of api-build' util/api-build
                                 git push origin main
