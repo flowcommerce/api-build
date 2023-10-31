@@ -46,9 +46,6 @@ pipeline {
         // }
 
         stage('SBT Release') {
-            when {
-                branch 'main'
-            }
             steps {
                 container('play') {
                     withCredentials([
