@@ -68,11 +68,14 @@ pipeline {
                                 git checkout main &&
                                 git pull --rebase &&
                                 git fetch --tags origin
+                                ls
                                 pwd
                             '''
                             // Run 'dev tag' in the api-build directory
                             sh '''
                                 pwd
+                                ls
+                                git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
                                 dev tag
                                 sbt clean assembly
                                 cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/
