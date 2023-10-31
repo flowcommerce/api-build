@@ -59,7 +59,6 @@ pipeline {
                             sh '''
                                 git config --global credential.helper "store --file=/tmp/git-credentials"
                                 echo "https://$GIT_USERNAME:$GIT_PASSWORD@github.com" > /tmp/git-credentials
-                                // Configure Git to ignore "dubious ownership" for the workspace directory
                                 git config --global --add safe.directory /home/jenkins/workspace
                                 git clone https://github.com/flowcommerce/aws-s3-public.git aws-s3-public
                             '''
