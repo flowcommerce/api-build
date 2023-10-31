@@ -76,6 +76,7 @@ pipeline {
                                 pwd
                                 ls
                                 git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+                                git checkout main
                                 dev tag
                                 sbt clean assembly
                                 cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/
