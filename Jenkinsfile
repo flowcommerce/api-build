@@ -72,6 +72,7 @@ pipeline {
                             '''
                             // Run 'dev tag' in the api-build directory
                             sh '''
+                                git config --global --add safe.directory /home/jenkins/workspace
                                 git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
                                 git checkout main
                                 dev tag
