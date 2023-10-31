@@ -61,15 +61,26 @@ pipeline {
                                 echo "https://$GIT_USERNAME:$GIT_PASSWORD@github.com" > /tmp/git-credentials
                                 git config --global --add safe.directory /home/jenkins/workspace/flowcommerce_api-build_PR-410
 
-                                git clone https://github.com/flowcommerce/aws-s3-public.git aws-s3-public &&
-                                cd aws-s3-public &&
-                                git checkout main
-                                git pull --rebase
+                                git clone https://github.com/flowcommerce/aws-s3-public.git aws-s3-public
+                            '''
+                            sh '''
+                                cd aws-s3-public
+                                git checkout main &&
+                                git pull --rebase &&
                                 git fetch --tags origin
+                                pwd
+                            '''
+                            // Run 'dev tag' in the api-build directory
+                            sh '''
+                                pwd
                                 dev tag
                                 sbt clean assembly
-                                cp ./target/scala-2.13/api-build-assembly-*.jar util/api-build/
-                                cp ./target/scala-2.13/api-build-assembly-*.jar util/api-build/api-build.jar
+                                cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/
+                                cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/api-build.jar
+                            '''
+                            sh '''
+                                cd aws-s3-public
+                                pwd
                                 git add util/api-build/*
                                 git commit -m 'Add new version of api-build' util/api-build
                                 git push origin main
