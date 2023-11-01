@@ -13,8 +13,8 @@ case class Controller() extends io.flow.build.Controller {
     buildType: BuildType,
     downloadCache: DownloadCache,
     services: Seq[Service]
-  ) (
-    implicit ec: scala.concurrent.ExecutionContext
+  )(implicit
+    ec: scala.concurrent.ExecutionContext
   ): Unit = {
     val eventService: Seq[Service] = (
       buildType match {

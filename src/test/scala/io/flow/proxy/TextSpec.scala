@@ -11,5 +11,5 @@ class TextSpec extends AnyFunSpec with Matchers {
     Text.stripSuffix("currency-internal", "-internal") should be("currency")
     Text.stripSuffix("currency-internal-foo", "-internal") should be("currency-internal-foo")
   }
-  
+
 }

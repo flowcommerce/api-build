@@ -48,7 +48,9 @@ class ProxyQueryParametersSpec extends AnyFunSpec with Matchers {
       linter.validate(
         buildService(word)
       ) should be(
-        Seq(s"Resource users GET /users Parameter $word: name is reserved for use only in https://github.com/flowvault/proxy")
+        Seq(
+          s"Resource users GET /users Parameter $word: name is reserved for use only in https://github.com/flowvault/proxy"
+        )
       )
     }
   }

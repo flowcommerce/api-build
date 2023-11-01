@@ -4,13 +4,10 @@ import io.apibuilder.spec.v0.models.{Method, Operation, Parameter, ParameterLoca
 import io.flow.lint.Linter
 import io.flow.lint.util.Expansions
 
-/**
-  * Enforces that each resource has a top level GET method where one
-  * of the following is true
-  * 
-  *  a. first param named 'q' with type 'string'
-  *  b. first param named "id" with type "[string]" and
-  *     last three parameters named limit, offset, sort
+/** Enforces that each resource has a top level GET method where one of the following is true
+  *
+  *   a. first param named 'q' with type 'string' b. first param named "id" with type "[string]" and last three
+  *      parameters named limit, offset, sort
   */
 case object Get extends Linter with Helpers {
 
@@ -34,11 +31,11 @@ case object Get extends Linter with Helpers {
   }
 
   def validateResource(service: Service, resource: Resource): Seq[String] = {
-    resource.operations.
-      filter(op => !ignored(op.attributes, "get")).
-      filter(_.method == Method.Get).
-      filter(returnsArray(_)).
-      flatMap { op =>
+    resource.operations
+      .filter(op => !ignored(op.attributes, "get"))
+      .filter(_.method == Method.Get)
+      .filter(returnsArray(_))
+      .flatMap { op =>
         queryParameters(op).headOption.map(_.name) match {
           case Some("q") => {
             Query.validateOperation(service, resource, op)
@@ -53,28 +50,32 @@ case object Get extends Linter with Helpers {
         }
       }
   }
-  
+
   def queryParameters(operation: Operation): Seq[Parameter] = {
     operation.parameters.filter(_.location == ParameterLocation.Query)
   }
 
-
-  /**
-    *  b. first param named "id" with type "[string]" and
-    *     last three parameters named limit, offset, sort
+  /** b. first param named "id" with type "[string]" and last three parameters named limit, offset, sort
     */
   private[this] case class Sublinter(leadingParam: String, trailingParams: Seq[String]) {
 
     def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
-      val modelExpansions = model(service, operation).map { m =>
-        Expansions.fromFieldTypes(m.fields.map(_.`type`))
-      }.getOrElse(Nil)
-
-      val unionExpansions = union(service, operation).map { u =>
-        u.types.flatMap { t => model(service, t.`type`) }.map { m =>
+      val modelExpansions = model(service, operation)
+        .map { m =>
           Expansions.fromFieldTypes(m.fields.map(_.`type`))
-        }.flatten
-      }.getOrElse(Nil)
+        }
+        .getOrElse(Nil)
+
+      val unionExpansions = union(service, operation)
+        .map { u =>
+          u.types
+            .flatMap { t => model(service, t.`type`) }
+            .map { m =>
+              Expansions.fromFieldTypes(m.fields.map(_.`type`))
+            }
+            .flatten
+        }
+        .getOrElse(Nil)
 
       val expansions = (modelExpansions ++ unionExpansions).distinct.sorted
 
@@ -82,7 +83,7 @@ case object Get extends Linter with Helpers {
         /* If operation has attribute with name 'non-crud', no id parameter is required.
          * The resource is most likely manipulating/aggregating data rather than CRUD
          */
-        if(operation.attributes.exists(_.name == "non-crud"))
+        if (operation.attributes.exists(_.name == "non-crud"))
           trailingParams
         else
           Seq(leadingParam) ++ trailingParams
@@ -94,12 +95,13 @@ case object Get extends Linter with Helpers {
 
       val requiredErrors = queryParameters(operation).filter(p => p.required && p.default.isEmpty) match {
         case Nil => Nil
-        case params => params.map { p =>
-          requiredParams.contains(p.name) match {
-            case true => error(resource, operation, s"Parameter[${p.name}] must be optional")
-            case false => error(resource, operation, s"Parameter[${p.name}] must be optional or must have a default")
+        case params =>
+          params.map { p =>
+            requiredParams.contains(p.name) match {
+              case true => error(resource, operation, s"Parameter[${p.name}] must be optional")
+              case false => error(resource, operation, s"Parameter[${p.name}] must be optional or must have a default")
+            }
           }
-        }
       }
 
       val expandErrors: Seq[String] = expansions match {
@@ -109,48 +111,86 @@ case object Get extends Linter with Helpers {
               Nil
             }
             case true => {
-              Seq(error(resource, operation, s"There are no expansions available - should not have a parameter named $ExpandName"))
+              Seq(
+                error(
+                  resource,
+                  operation,
+                  s"There are no expansions available - should not have a parameter named $ExpandName"
+                )
+              )
             }
           }
         }
 
         case _ => {
-          queryParameters(operation).find(_.name == "expand").map( p =>
-            expansions match {
-              case Nil => {
-                Nil
-              }
-
-              case names => {
-                val requiredExample = names.sorted.mkString(", ")
-                val exampleErrors = p.example == Some(requiredExample) match {
-                  case true => Nil
-                  case false => {
-                    p.example match {
-                      case None =>Seq(error(resource, operation, s"parameter[expand] is missing example. It must be $requiredExample"))
-                      case Some(value) => Seq(error(resource, operation, s"parameter[expand] must have example[$requiredExample] and not[$value]"))
-                    }
-                  }
+          queryParameters(operation)
+            .find(_.name == "expand")
+            .map(p =>
+              expansions match {
+                case Nil => {
+                  Nil
                 }
 
-                val maximumErrors = p.maximum == Some(names.size) match {
-                  case true => Nil
-                  case false => {
-                    p.maximum match {
-                      case None => Seq(error(resource, operation, s"parameter[expand] is missing maximum. It must be ${names.size}"))
-                      case value => Seq(error(resource, operation, s"parameter[expand] must have maximum[${names.size}] and not[$value]"))
+                case names => {
+                  val requiredExample = names.sorted.mkString(", ")
+                  val exampleErrors = p.example == Some(requiredExample) match {
+                    case true => Nil
+                    case false => {
+                      p.example match {
+                        case None =>
+                          Seq(
+                            error(
+                              resource,
+                              operation,
+                              s"parameter[expand] is missing example. It must be $requiredExample"
+                            )
+                          )
+                        case Some(value) =>
+                          Seq(
+                            error(
+                              resource,
+                              operation,
+                              s"parameter[expand] must have example[$requiredExample] and not[$value]"
+                            )
+                          )
+                      }
                     }
                   }
-                }
 
-                exampleErrors ++ maximumErrors
+                  val maximumErrors = p.maximum == Some(names.size) match {
+                    case true => Nil
+                    case false => {
+                      p.maximum match {
+                        case None =>
+                          Seq(
+                            error(
+                              resource,
+                              operation,
+                              s"parameter[expand] is missing maximum. It must be ${names.size}"
+                            )
+                          )
+                        case value =>
+                          Seq(
+                            error(
+                              resource,
+                              operation,
+                              s"parameter[expand] must have maximum[${names.size}] and not[$value]"
+                            )
+                          )
+                      }
+                    }
+                  }
+
+                  exampleErrors ++ maximumErrors
+                }
               }
-            }
-          ).getOrElse(Nil)
+            )
+            .getOrElse(Nil)
         }
       }
 
-      val requiredParamNames = queryParameters(operation).map(_.name).filter(name => allRequiredParameters.contains(name))
+      val requiredParamNames =
+        queryParameters(operation).map(_.name).filter(name => allRequiredParameters.contains(name))
       val missingRequiredParams = allRequiredParameters.filter(n => !requiredParamNames.contains(n)) match {
         case Nil => Nil
         case missing => {
@@ -159,7 +199,8 @@ case object Get extends Linter with Helpers {
               case Nil => None
               case names => {
                 val ex = names.sorted.mkString(", ")
-                val template = s"""{ "name": "$ExpandName", "type": "[string]", "minimum": 0, "maximum": ${names.size}, "example": "$ex", "required": false }"""
+                val template =
+                  s"""{ "name": "$ExpandName", "type": "[string]", "minimum": 0, "maximum": ${names.size}, "example": "$ex", "required": false }"""
                 Some(s". Expand template: $template")
               }
             }
@@ -190,9 +231,8 @@ case object Get extends Linter with Helpers {
       expandErrors ++ missingRequiredParams ++ requiredErrors ++ positionErrors
     }
 
-    /**
-      * validate id if present is in first position, and the parameter
-      *  list ends with the specified expectedTail (e.g. limit, offset, sort)
+    /** validate id if present is in first position, and the parameter list ends with the specified expectedTail (e.g.
+      * limit, offset, sort)
       */
     def validateParameterPositions(
       resource: Resource,
@@ -216,7 +256,13 @@ case object Get extends Linter with Helpers {
             Nil
           }
           case false => {
-            Seq(error(resource, operation, s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}"))
+            Seq(
+              error(
+                resource,
+                operation,
+                s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}"
+              )
+            )
           }
         }
       ).flatten

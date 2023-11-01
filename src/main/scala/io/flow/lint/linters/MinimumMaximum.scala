@@ -4,13 +4,10 @@ import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Field, Model, Operation, Parameter, Resource, Service}
 import scala.util.{Failure, Success, Try}
 
-/**
-  *  - validates that any field with a maximum has the maximum set to 100
-  *  - validates that any field with a minimum has the minimum set to 0 or 1
-  *  - if there is a numeric default and a minimum, validates that
-  *    default >= minimum
-  *  - every parameter that is an array should have a maximum of 100
-  *    (except if it is the expand parameter)
+/**   - validates that any field with a maximum has the maximum set to 100
+  *   - validates that any field with a minimum has the minimum set to 0 or 1
+  *   - if there is a numeric default and a minimum, validates that default >= minimum
+  *   - every parameter that is an array should have a maximum of 100 (except if it is the expand parameter)
   */
 case object MinimumMaximum extends Linter with Helpers {
 
@@ -57,45 +54,46 @@ case object MinimumMaximum extends Linter with Helpers {
 
     val maxErrors = field.maximum match {
       case None => Nil
-      case Some(max) =>  field.name match {
-        case c if isCountry(c) =>
-          if (max == CountryMax) {
-            Nil
-          } else {
-            Seq(error(model, field, s"Maximum must be $CountryMax and not $max"))
-          }
-
-        case c if isCurrency(c) =>
-          if (max == CurrencyMax) {
-            Nil
-          } else {
-            Seq(error(model, field, s"Maximum must be $CurrencyMax and not $max"))
-          }
-
-        case c if isLanguage(c) =>
-          if (max == LanguageMax) {
-            Nil
-          } else {
-            Seq(error(model, field, s"Maximum must be $LanguageMax and not $max"))
-          }
-
-        case _ =>
-          field.minimum match {
-            case Some(min) => {
-              if (max >= min) {
-                Nil
-              } else {
-                Seq(error(model, field, s"Maximum, if specified with minimum, must be >= $min and not $max"))
-              }
+      case Some(max) =>
+        field.name match {
+          case c if isCountry(c) =>
+            if (max == CountryMax) {
+              Nil
+            } else {
+              Seq(error(model, field, s"Maximum must be $CountryMax and not $max"))
             }
-            case None => Nil
-          }
-      }
+
+          case c if isCurrency(c) =>
+            if (max == CurrencyMax) {
+              Nil
+            } else {
+              Seq(error(model, field, s"Maximum must be $CurrencyMax and not $max"))
+            }
+
+          case c if isLanguage(c) =>
+            if (max == LanguageMax) {
+              Nil
+            } else {
+              Seq(error(model, field, s"Maximum must be $LanguageMax and not $max"))
+            }
+
+          case _ =>
+            field.minimum match {
+              case Some(min) => {
+                if (max >= min) {
+                  Nil
+                } else {
+                  Seq(error(model, field, s"Maximum, if specified with minimum, must be >= $min and not $max"))
+                }
+              }
+              case None => Nil
+            }
+        }
     }
 
     minErrors ++ maxErrors
   }
-  
+
   def validateResource(service: Service, resource: Resource): Seq[String] = {
     resource.operations.flatMap(validateOperation(service, resource, _))
   }

@@ -3,29 +3,26 @@ package io.flow.lint.linters
 import io.apibuilder.spec.v0.models.{Field, Model, Service}
 import io.flow.lint.Linter
 
-/**
- * Models ending with _errors, validate:
- *   a. contains a field named errors that is an array
- *   b. the type of the array is a model ending in _error
- *
- * Models ending with _error, validate:
- *   a. contains a field named code whose type is an enum
- *   b. contains a field name message whose type is a string
- */
+/** Models ending with _errors, validate:
+  *   a. contains a field named errors that is an array b. the type of the array is a model ending in _error
+  *
+  * Models ending with _error, validate:
+  *   a. contains a field named code whose type is an enum b. contains a field name message whose type is a string
+  */
 case object ErrorModelsV2 extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
     service.models
       .filter { m => !ignored(m.attributes, "error") }
       .flatMap { m =>
-      if (m.name.endsWith("_errors")) {
-        validateWrapper(m)
-      } else if (isErrorModel(m)) {
-        validateModel(service, m)
-      } else {
-        Nil
+        if (m.name.endsWith("_errors")) {
+          validateWrapper(m)
+        } else if (isErrorModel(m)) {
+          validateModel(service, m)
+        } else {
+          Nil
+        }
       }
-    }
   }
 
   private[this] def isErrorModel(m: Model): Boolean = {

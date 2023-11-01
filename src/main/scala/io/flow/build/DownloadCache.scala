@@ -5,15 +5,16 @@ import io.apibuilder.spec.v0.models.{Import, Service}
 import scala.annotation.tailrec
 import scala.collection.concurrent.TrieMap
 
-case class DownloadCache(downloader: Downloader)(
-  implicit ec: scala.concurrent.ExecutionContext
+case class DownloadCache(downloader: Downloader)(implicit
+  ec: scala.concurrent.ExecutionContext
 ) {
 
   private[this] val cache = TrieMap[Application, Service]()
 
   private[this] def cacheKey(a: Application) = Application.latest(a.organization, a.application)
   private[this] def isDefinedAt(application: Application): Boolean = cache.isDefinedAt(cacheKey(application))
-  private[this] def toApplication(imp: Import): Application = Application.latest(imp.organization.key, imp.application.key)
+  private[this] def toApplication(imp: Import): Application =
+    Application.latest(imp.organization.key, imp.application.key)
 
   @tailrec
   final def downloadAllServicesAndImports(services: Seq[Service], index: Int = 0): Seq[Service] = {

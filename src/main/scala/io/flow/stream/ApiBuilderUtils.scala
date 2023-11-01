@@ -17,7 +17,6 @@ object ApiBuilderUtils {
     }
   }
 
-
   def toPackageName(namespace: String, quoteKeywords: Boolean = true): String = {
     namespace.split("\\.").map(s => if (quoteKeywords) quoteNameIfKeyword(s) else s).mkString(".") + ".models"
   }
@@ -61,16 +60,44 @@ object ApiBuilderUtils {
   }
 
   private[this] val ReservedWords = Seq(
-    "case", "catch", "class", "def", "do",
-    "else", "extends", "false", "final",
-    "finally", "for", "forSome", "if",
-    "implicit", "import", "lazy", "match",
-    "new", "null", "object", "override",
-    "package", "private", "protected",
-    "return", "sealed", "super", "this",
-    "throw", "trait", "try", "true",
-    "type", "val", "var", "while",
-    "with", "yield"
+    "case",
+    "catch",
+    "class",
+    "def",
+    "do",
+    "else",
+    "extends",
+    "false",
+    "final",
+    "finally",
+    "for",
+    "forSome",
+    "if",
+    "implicit",
+    "import",
+    "lazy",
+    "match",
+    "new",
+    "null",
+    "object",
+    "override",
+    "package",
+    "private",
+    "protected",
+    "return",
+    "sealed",
+    "super",
+    "this",
+    "throw",
+    "trait",
+    "try",
+    "true",
+    "type",
+    "val",
+    "var",
+    "while",
+    "with",
+    "yield"
   ).toSet
 
   private def quoteNameIfKeyword(name: String): String = {

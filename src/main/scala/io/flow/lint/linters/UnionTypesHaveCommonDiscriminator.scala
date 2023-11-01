@@ -3,9 +3,7 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Service, Union}
 
-/**
-  * Validates that every union type must have a discriminator with
-  * value 'discriminator'
+/** Validates that every union type must have a discriminator with value 'discriminator'
   */
 case object UnionTypesHaveCommonDiscriminator extends Linter with Helpers {
 

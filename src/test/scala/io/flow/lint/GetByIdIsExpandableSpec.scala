@@ -41,7 +41,6 @@ class GetByIdIsExpandableSpec extends AnyFunSpec with Matchers {
     )
   }
 
-
   it("resource that does not return an expansion") {
     linter.validate(buildService(responseType = "[organization]")) should be(Nil)
   }
@@ -55,18 +54,20 @@ class GetByIdIsExpandableSpec extends AnyFunSpec with Matchers {
       Seq("Resource organizations GET /organizations: Missing parameter named expand")
     )
   }
-  
+
   it("resource that returns an expansion with an expand param") {
-    linter.validate(buildService(
-      params = Seq(
-        Parameter(
-          name = "expand",
-          `type` = "[string]",
-          location = ParameterLocation.Query,
-          required = false
+    linter.validate(
+      buildService(
+        params = Seq(
+          Parameter(
+            name = "expand",
+            `type` = "[string]",
+            location = ParameterLocation.Query,
+            required = false
+          )
         )
       )
-    )) should be(Nil)
+    ) should be(Nil)
   }
-  
+
 }

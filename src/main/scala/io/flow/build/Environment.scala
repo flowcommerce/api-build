@@ -4,8 +4,7 @@ import scala.util.{Failure, Success, Try}
 
 case class ApibuilderProfile(name: String, baseUrl: String, token: Option[String] = None)
 
-/**
-  * Parses the API Builder configuration file
+/** Parses the API Builder configuration file
   */
 object ApibuilderConfig {
 
@@ -17,13 +16,11 @@ object ApibuilderConfig {
     token = None
   )
 
-  /**
-    * Loads API Builder configuration from the API Builder configuration file,
-    * returning either an error or the configuration. You can set the
-    * APIBUILDER_PROFILE environment variable if you want to parse a
-    * specific profile.
-    * 
-    * @param path The path to the configuration file we are reading
+  /** Loads API Builder configuration from the API Builder configuration file, returning either an error or the
+    * configuration. You can set the APIBUILDER_PROFILE environment variable if you want to parse a specific profile.
+    *
+    * @param path
+    *   The path to the configuration file we are reading
     */
   def load(
     path: String = DefaultPath
@@ -124,8 +121,7 @@ object ApibuilderConfig {
 
 }
 
-/**
-  * Helper to read configuration from environment
+/** Helper to read configuration from environment
   */
 object Environment {
 

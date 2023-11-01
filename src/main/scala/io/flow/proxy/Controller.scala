@@ -7,14 +7,11 @@ import play.api.libs.json.Json
 
 case class Controller() extends io.flow.build.Controller {
 
-  /**
-    * Allowlist of applications in the 'api' repo that do not exist in registry
+  /** Allowlist of applications in the 'api' repo that do not exist in registry
     */
   private[this] val ExcludeAllowList = Seq("common", "healthcheck", "usage", "gift-card")
 
-  /**
-    * This is the hostname of the services when running in docker on
-    * our development machines.
+  /** This is the hostname of the services when running in docker on our development machines.
     */
   private[this] val DockerHostname = "172.17.0.1"
 
@@ -27,25 +24,32 @@ case class Controller() extends io.flow.build.Controller {
     buildType: BuildType,
     services: Seq[Service]
   ): Unit = {
-    val routes = services.flatMap(s=>s.resources.flatMap(r=>r.operations.flatMap{o=>
-      o.attributes.find(_.name == "auth") match {
-        case Some(a)=> {
-          val ts = a.value \ "techniques"
-          val rs = a.value \ "roles"
-          ts.as[Seq[String]]
-            .filterNot(_ == "user")
-            .map(t=>(t, Map("method" -> o.method.toString, "path"-> o.path))) ++
-          rs.asOpt[Seq[String]]
-            .map(r=>r.map { t =>
-              (t, Map("method" -> o.method.toString, "path" -> o.path))
-            }).getOrElse(Nil)
+    val routes = services.flatMap(s =>
+      s.resources.flatMap(r =>
+        r.operations.flatMap { o =>
+          o.attributes.find(_.name == "auth") match {
+            case Some(a) => {
+              val ts = a.value \ "techniques"
+              val rs = a.value \ "roles"
+              ts.as[Seq[String]]
+                .filterNot(_ == "user")
+                .map(t => (t, Map("method" -> o.method.toString, "path" -> o.path))) ++
+                rs.asOpt[Seq[String]]
+                  .map(r =>
+                    r.map { t =>
+                      (t, Map("method" -> o.method.toString, "path" -> o.path))
+                    }
+                  )
+                  .getOrElse(Nil)
+            }
+            case None => {
+              Seq(("anonymous", Map("method" -> o.method.toString, "path" -> o.path)))
+            }
+          }
         }
-        case None => {
-          Seq(("anonymous", Map("method" -> o.method.toString, "path"-> o.path)))
-        }
-      }
-    }))
-    val rs= routes.groupBy(_._1).map(r=> (r._1, Map("routes" -> r._2.map(_._2).distinct)))
+      )
+    )
+    val rs = routes.groupBy(_._1).map(r => (r._1, Map("routes" -> r._2.map(_._2).distinct)))
     val m = Json.toJson(rs)
 
     val path = s"/tmp/${buildType}-authorization.json"
@@ -57,12 +61,12 @@ case class Controller() extends io.flow.build.Controller {
     buildType: BuildType,
     downloadCache: DownloadCache,
     allServices: Seq[Service]
-  ) (
-    implicit ec: scala.concurrent.ExecutionContext
+  )(implicit
+    ec: scala.concurrent.ExecutionContext
   ): Unit = {
-    val services = allServices.
-      filter { s => s.resources.nonEmpty }.
-      filterNot { s => ExcludeAllowList.exists(ew => s.name.startsWith(ew)) }
+    val services = allServices.filter { s => s.resources.nonEmpty }.filterNot { s =>
+      ExcludeAllowList.exists(ew => s.name.startsWith(ew))
+    }
 
     val serviceHostResolver = ServiceHostResolver(allServices)
 
@@ -106,7 +110,7 @@ case class Controller() extends io.flow.build.Controller {
     services: Seq[Service],
     version: String,
     env: String
-  ) (
+  )(
     hostProvider: Service => String
   ): Unit = {
     services.toList match {
@@ -115,22 +119,26 @@ case class Controller() extends io.flow.build.Controller {
       }
 
       case _ => {
-        val serversYaml = services.map { service =>
-          Seq(
-            s"- name: ${service.name}",
-            s"  host: ${hostProvider(service)}"
-          ).mkString("\n")
-        }.mkString("\n")
-
-        val operationsYaml = services.flatMap { service =>
-          service.resources.flatMap(_.operations).map { op =>
+        val serversYaml = services
+          .map { service =>
             Seq(
-              s"- method: ${op.method.toString.toUpperCase}",
-              s"  path: ${op.path}",
-              s"  server: ${service.name}"
+              s"- name: ${service.name}",
+              s"  host: ${hostProvider(service)}"
             ).mkString("\n")
           }
-        }.mkString("\n")
+          .mkString("\n")
+
+        val operationsYaml = services
+          .flatMap { service =>
+            service.resources.flatMap(_.operations).map { op =>
+              Seq(
+                s"- method: ${op.method.toString.toUpperCase}",
+                s"  path: ${op.path}",
+                s"  server: ${service.name}"
+              ).mkString("\n")
+            }
+          }
+          .mkString("\n")
 
         val all = s"""version: $version
 

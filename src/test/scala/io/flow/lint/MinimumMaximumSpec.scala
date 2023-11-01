@@ -115,43 +115,59 @@ class MinimumMaximumSpec extends AnyFunSpec with Matchers {
   }
 
   it("Model w/ default > min") {
-    linter.validate(buildServiceWithModel(
-      default = Some("0"),
-      minimum = Some(1)
-    )) should be(
+    linter.validate(
+      buildServiceWithModel(
+        default = Some("0"),
+        minimum = Some(1)
+      )
+    ) should be(
       Seq("Model user Field[email]: Default must be >= minimum[1] and not 0")
     )
   }
 
   it("Model w/ currency max of 3 is fine") {
-    linter.validate(buildServiceWithModel(modelName = "currency", fieldName = "currency", maximum = Some(3))) should be(Nil)
+    linter.validate(buildServiceWithModel(modelName = "currency", fieldName = "currency", maximum = Some(3))) should be(
+      Nil
+    )
   }
 
   it("Model w/ currency max of 5 fails") {
-    linter.validate(buildServiceWithModel(modelName = "currency", fieldName = "currency", maximum = Some(5))) should be(Seq("Model currency Field[currency]: Maximum must be 3 and not 5"))
+    linter.validate(buildServiceWithModel(modelName = "currency", fieldName = "currency", maximum = Some(5))) should be(
+      Seq("Model currency Field[currency]: Maximum must be 3 and not 5")
+    )
   }
 
   it("Model w/ country max of 3 is fine") {
-    linter.validate(buildServiceWithModel(modelName = "country", fieldName = "country", maximum = Some(3))) should be(Nil)
+    linter.validate(buildServiceWithModel(modelName = "country", fieldName = "country", maximum = Some(3))) should be(
+      Nil
+    )
   }
 
   it("Model w/ origin max of 3 is fine") {
-    linter.validate(buildServiceWithModel(modelName = "country", fieldName = "origin", maximum = Some(3))) should be(Nil)
+    linter.validate(buildServiceWithModel(modelName = "country", fieldName = "origin", maximum = Some(3))) should be(
+      Nil
+    )
   }
 
   it("Model w/ country max of 5 fails") {
-    linter.validate(buildServiceWithModel(modelName = "country", fieldName = "country", maximum = Some(5))) should be(Seq("Model country Field[country]: Maximum must be 3 and not 5"))
+    linter.validate(buildServiceWithModel(modelName = "country", fieldName = "country", maximum = Some(5))) should be(
+      Seq("Model country Field[country]: Maximum must be 3 and not 5")
+    )
   }
 
   it("Model w/ country and fielding name containing country with max of 3 is fine") {
-    linter.validate(buildServiceWithModel(modelName = "country", fieldName = "some_country_field", maximum = Some(3))) should be(Nil)
+    linter.validate(
+      buildServiceWithModel(modelName = "country", fieldName = "some_country_field", maximum = Some(3))
+    ) should be(Nil)
   }
 
   it("Model w/ non numeric default is ignored") {
-    linter.validate(buildServiceWithModel(
-      default = Some("one thousand"),
-      minimum = Some(1)
-    )) should be(Nil)
+    linter.validate(
+      buildServiceWithModel(
+        default = Some("one thousand"),
+        minimum = Some(1)
+      )
+    ) should be(Nil)
   }
 
   it("Param w/out min/max is fine") {
@@ -165,7 +181,9 @@ class MinimumMaximumSpec extends AnyFunSpec with Matchers {
       )
     )
 
-    linter.validate(buildServiceWithParameter(minimum = Some(-1), maximum = Some(25), paramType = "[string]")) should be(
+    linter.validate(
+      buildServiceWithParameter(minimum = Some(-1), maximum = Some(25), paramType = "[string]")
+    ) should be(
       Seq(
         "Resource users GET /users Parameter email: Minimum must be >= 0 and not -1",
         "Resource users GET /users Parameter email: Maximum must be 100 and not 25"
@@ -202,6 +220,8 @@ class MinimumMaximumSpec extends AnyFunSpec with Matchers {
   }
 
   it("Imported enum has max ignored") {
-    linter.validate(buildServiceWithParameterAsEnum(operationParamType = "io.flow.common.v0.enums.test", maximum = Some(5))) should be(Nil)
+    linter.validate(
+      buildServiceWithParameterAsEnum(operationParamType = "io.flow.common.v0.enums.test", maximum = Some(5))
+    ) should be(Nil)
   }
 }

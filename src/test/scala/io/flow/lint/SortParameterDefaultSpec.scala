@@ -95,7 +95,9 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
         )
       )
     ) should be(
-      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[-created_at or name] and not[fo]")
+      Seq(
+        "Resource organizations GET /organizations: Parameter sort default expected to be[-created_at or name] and not[fo]"
+      )
     )
 
     Seq("-created_at", "name").foreach { sort =>
@@ -130,7 +132,7 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
       Seq("Resource organizations GET /organizations: Parameter sort default expected to be[name] and not[foo]")
     )
   }
-  
+
   it("Requires 'journal_timestamp' if path ends in /versions") {
     linter.validate(
       buildService(
@@ -145,8 +147,10 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
         path = "/organizations/versions"
       )
     ) should be(
-      Seq("Resource organizations GET /organizations/versions: Parameter sort default expected to be[journal_timestamp] and not[name]")
+      Seq(
+        "Resource organizations GET /organizations/versions: Parameter sort default expected to be[journal_timestamp] and not[name]"
+      )
     )
   }
-  
+
 }

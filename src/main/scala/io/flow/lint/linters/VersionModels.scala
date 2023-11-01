@@ -3,18 +3,10 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Field, Model, Service}
 
-/**
-  * Keep all _version models w/ same structure - 3 leading fields, then a
-  * typed one
-  * 
-  *     "user_version": {
-  *        "fields": [
-  * 		{ "name": "id", "type": "string" },
-  * 		{ "name": "timestamp", "type": "date-time-iso8601" },
-  * 		{ "name": "type", "type": "io.flow.common.v0.enums.change_type" },
-  * 		{ "name": "user", "type": "user" }
-  * 	    ]
-  * 	}
+/** Keep all _version models w/ same structure - 3 leading fields, then a typed one
+  *
+  * "user_version": { "fields": [ { "name": "id", "type": "string" }, { "name": "timestamp", "type": "date-time-iso8601"
+  * }, { "name": "type", "type": "io.flow.common.v0.enums.change_type" }, { "name": "user", "type": "user" } ] }
   */
 case object VersionModels extends Linter with Helpers {
 
@@ -36,13 +28,17 @@ case object VersionModels extends Linter with Helpers {
         ).flatten match {
           case idField :: timestampField :: typeField :: modelField :: Nil => {
             validateType(model, idField, "string") ++
-            validateType(model, timestampField, "date-time-iso8601") ++
-            validateType(model, typeField, "io.flow.common.v0.enums.change_type") ++
-            validateTypes(model, modelField, Seq(
-              baseModelName,
-              s"${baseModelName}_summary",
-              s"expandable_$baseModelName"
-            ))
+              validateType(model, timestampField, "date-time-iso8601") ++
+              validateType(model, typeField, "io.flow.common.v0.enums.change_type") ++
+              validateTypes(
+                model,
+                modelField,
+                Seq(
+                  baseModelName,
+                  s"${baseModelName}_summary",
+                  s"expandable_$baseModelName"
+                )
+              )
           }
           case _ => {
             Seq(error(model, s"Must have exactly 4 fields: id, timestamp, type, $baseModelName"))
@@ -71,7 +67,9 @@ case object VersionModels extends Linter with Helpers {
   private[this] def validateTypes(model: Model, field: Field, datatypes: Seq[String]): Seq[String] = {
     assert(!datatypes.isEmpty)
     datatypes.find { datatype =>
-      field.`type` == datatype || field.`type`.endsWith(s".$datatype") || field.`type`.endsWith(s".expandable_$datatype")
+      field.`type` == datatype || field.`type`.endsWith(s".$datatype") || field.`type`.endsWith(
+        s".expandable_$datatype"
+      )
     } match {
       case None => {
         Seq(

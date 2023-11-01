@@ -4,15 +4,10 @@ import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Method, Operation, Resource, Response, Service}
 import io.apibuilder.spec.v0.models.{ResponseCodeInt, ResponseCodeOption, ResponseCodeUndefinedType}
 
-/**
-  * 
-  * Response codes:
-  * 
-  *   GET: 200, 401
-  *   POST: 200,401, 422
-  *   PUT: 401, 422
-  *   DELETE: 204, 401, 404
-  * 
+/** Response codes:
+  *
+  * GET: 200, 401 POST: 200,401, 422 PUT: 401, 422 DELETE: 204, 401, 404
+  *
   *   - 204 - verify type: unit
   *   - 401 - verify type: unit, description: "unauthorized request"
   */
@@ -35,15 +30,13 @@ case object StandardResponse extends Linter with Helpers {
   }
 
   def validateResource(resource: Resource): Seq[String] = {
-    resource.operations.
-      filter(op => !ignored(op.attributes, "response_codes")).
-      flatMap(validateOperation(resource, _))
+    resource.operations.filter(op => !ignored(op.attributes, "response_codes")).flatMap(validateOperation(resource, _))
   }
 
   def validateOperation(resource: Resource, operation: Operation): Seq[String] = {
     validateResponses(resource, operation) ++
-    validateStandardResponsesHaveNoDescription(resource, operation) ++
-    operation.responses.flatMap(validateResponse(resource, operation, _))
+      validateStandardResponsesHaveNoDescription(resource, operation) ++
+      operation.responses.flatMap(validateResponse(resource, operation, _))
   }
 
   def validateStandardResponsesHaveNoDescription(resource: Resource, operation: Operation): Seq[String] = {
@@ -53,7 +46,15 @@ case object StandardResponse extends Linter with Helpers {
         case Some(response) => {
           response.description match {
             case None => Nil
-            case Some(_) => Seq(error(resource, operation, response, "Must not have a description as this is a globally standard response"))
+            case Some(_) =>
+              Seq(
+                error(
+                  resource,
+                  operation,
+                  response,
+                  "Must not have a description as this is a globally standard response"
+                )
+              )
           }
         }
       }
@@ -71,7 +72,13 @@ case object StandardResponse extends Linter with Helpers {
 
     RequiredResponseCodes.get(operation.method).map(_.sorted) match {
       case None => {
-        Seq(error(resource, operation, s"Missing documentation for required response codes for method[${operation.method}]"))
+        Seq(
+          error(
+            resource,
+            operation,
+            s"Missing documentation for required response codes for method[${operation.method}]"
+          )
+        )
       }
       case Some(expected) => {
         expected.filter(code => !actualCodes.contains(code)) match {
@@ -102,15 +109,13 @@ case object StandardResponse extends Linter with Helpers {
     }
   }
 
-  /**
-    * True if last path component is a variable. Used to differentiate between:
-    * 
+  /** True if last path component is a variable. Used to differentiate between:
+    *
     * DELETE /shopify/carts/:id
-    * 
+    *
     * DELETE /shopify/carts/:id/promo
-    * 
-    * where in the second example we want to allow HTTP 200 response (resource
-    * itself was not deleted)
+    *
+    * where in the second example we want to allow HTTP 200 response (resource itself was not deleted)
     */
   def pathIdentifiesResource(path: String): Boolean = {
     path.split("/").lastOption.getOrElse("").startsWith(":")

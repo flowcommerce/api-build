@@ -3,10 +3,8 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Operation, Parameter, Resource, Service}
 
-/**
-  * We reserve 'method' and 'callback' for jsonp requests (as
-  * implemented by github.com/flowvault/proxy)
-  * 
+/** We reserve 'method' and 'callback' for jsonp requests (as implemented by github.com/flowvault/proxy)
+  *
   * 'envelope' reserved to wrap responses in an envelope (as HTTP 200)
   */
 case object ProxyQueryParameters extends Linter with Helpers {

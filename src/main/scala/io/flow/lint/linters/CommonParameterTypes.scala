@@ -3,9 +3,7 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Method, Operation, Parameter, Resource, Service}
 
-/**
-  * For well known parameters, enforce specific types, defaults,
-  * minimums and maximums. Validates only GET operations.
+/** For well known parameters, enforce specific types, defaults, minimums and maximums. Validates only GET operations.
   */
 case object CommonParameterTypes extends Linter with Helpers {
 
@@ -32,11 +30,11 @@ case object CommonParameterTypes extends Linter with Helpers {
   }
 
   def validateResource(resource: Resource): Seq[String] = {
-    resource.operations.
-      filter(_.method == Method.Get).
-      filter(returnsArray).
-      filter(op => !ignored(op.attributes, "common_parameter_types")).
-      flatMap { op =>
+    resource.operations
+      .filter(_.method == Method.Get)
+      .filter(returnsArray)
+      .filter(op => !ignored(op.attributes, "common_parameter_types"))
+      .flatMap { op =>
         op.parameters.flatMap { param =>
           validateParameter(resource, op, param)
         }
@@ -60,14 +58,21 @@ case object CommonParameterTypes extends Linter with Helpers {
 
       case Some(spec) => {
         compare(resource, op, param, "Type", Some(param.`type`), Some(spec.typ)) ++
-        compare(resource, op, param, "Default", param.default.map(_.toString), spec.default.map(_.toString)) ++
-        compare(resource, op, param, "Minimum", param.minimum, spec.minimum) ++
-        compare(resource, op, param, "Maximum", param.maximum, spec.maximum)
+          compare(resource, op, param, "Default", param.default.map(_.toString), spec.default.map(_.toString)) ++
+          compare(resource, op, param, "Minimum", param.minimum, spec.minimum) ++
+          compare(resource, op, param, "Maximum", param.maximum, spec.maximum)
       }
     }
   }
 
-  private[this] def compare[T](resource: Resource, op: Operation, param: Parameter, label: String, actual: Option[T], expected: Option[T]): Seq[String] = {
+  private[this] def compare[T](
+    resource: Resource,
+    op: Operation,
+    param: Parameter,
+    label: String,
+    actual: Option[T],
+    expected: Option[T]
+  ): Seq[String] = {
     (actual, expected) match {
       case (None, None) => Nil
       case (None, Some(e)) => Seq(error(resource, op, param, s"$label was not specified - should be $e"))

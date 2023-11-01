@@ -39,7 +39,9 @@ class ErrorUnionModelsSpec extends AnyFunSpec with Matchers {
     )
   }
 
-  it("Must have a discriminator named 'code' and associated models must have a field in position 0 named 'messages' of type '[string]'") {
+  it(
+    "Must have a discriminator named 'code' and associated models must have a field in position 0 named 'messages' of type '[string]'"
+  ) {
     linter.validate(buildService(Seq(messages))) should be(Nil)
 
     val itemNumbers = Services.buildField("item_numbers", "[string]")
@@ -51,18 +53,24 @@ class ErrorUnionModelsSpec extends AnyFunSpec with Matchers {
       )
     )
 
-    linter.validate(buildService(Nil)) should be(Seq(
-      "Model no_inventory_reservation_error: requires a field named 'messages'"
-    ))
+    linter.validate(buildService(Nil)) should be(
+      Seq(
+        "Model no_inventory_reservation_error: requires a field named 'messages'"
+      )
+    )
   }
 
   it("messages must have a minimum >= 1") {
-    linter.validate(buildService(Seq(messages.copy(minimum=None)))) should be(Seq(
-      "Model no_inventory_reservation_error Field[messages]: missing minimum"
-    ))
-    linter.validate(buildService(Seq(messages.copy(minimum=Some(0))))) should be(Seq(
-      "Model no_inventory_reservation_error Field[messages]: minimum must be >= 1"
-    ))
+    linter.validate(buildService(Seq(messages.copy(minimum = None)))) should be(
+      Seq(
+        "Model no_inventory_reservation_error Field[messages]: missing minimum"
+      )
+    )
+    linter.validate(buildService(Seq(messages.copy(minimum = Some(0))))) should be(
+      Seq(
+        "Model no_inventory_reservation_error Field[messages]: minimum must be >= 1"
+      )
+    )
   }
 
   it("error union types MUST contain only models") {
@@ -84,9 +92,11 @@ class ErrorUnionModelsSpec extends AnyFunSpec with Matchers {
   }
 
   it("All error union types must end in _error as well") {
-    linter.validate(buildService(Seq(messages), modelName = "foo")) should be(Seq(
-      "Union reservation_error type foo: Model name must end with '_error'"
-    ))
+    linter.validate(buildService(Seq(messages), modelName = "foo")) should be(
+      Seq(
+        "Union reservation_error type foo: Model name must end with '_error'"
+      )
+    )
   }
 
   it("error model that belongs to a non error union type should still get validated") {

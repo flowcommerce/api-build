@@ -10,7 +10,7 @@ trait Controller {
   protected[this] def addError(message: String): Unit = {
     addError(GlobalError, message)
   }
-  
+
   protected[this] def addError(key: String, error: String): Unit = {
     internalErrors.get(key) match {
       case None => {
@@ -27,15 +27,14 @@ trait Controller {
 
   def command: String
 
-  /**
-    * Run things and return a list of errors
+  /** Run things and return a list of errors
     */
   def run(
     buildType: BuildType,
     downloadCache: DownloadCache,
     services: Seq[Service]
-  ) (
-    implicit ec: scala.concurrent.ExecutionContext
+  )(implicit
+    ec: scala.concurrent.ExecutionContext
   ): Unit
 
   def errors(): Map[String, Seq[String]] = internalErrors.toMap

@@ -7,10 +7,9 @@ case object PathsDoNotHaveTrailingSlash extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
     service.resources.flatMap { resource =>
-      resource.operations.
-        filter(_.path.endsWith("/")).map { op =>
-          error(resource, op, "Path cannot end with '/'")
-        }
+      resource.operations.filter(_.path.endsWith("/")).map { op =>
+        error(resource, op, "Path cannot end with '/'")
+      }
     }
   }
 

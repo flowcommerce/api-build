@@ -16,7 +16,7 @@ class LintSpec extends AnyFunSpec with Matchers {
 
     val all = BuildType.all.flatMap(Lint.forBuildType).map(_.toString).distinct.toSet
 
-    for ( file <- Dir.listFiles if file.getName.endsWith(".scala") && !file.getName.endsWith("Helpers.scala") ) {
+    for (file <- Dir.listFiles if file.getName.endsWith(".scala") && !file.getName.endsWith("Helpers.scala")) {
       var found = false
       scala.io.Source.fromFile(file).getLines().foreach {
         case Pattern(className) => {
@@ -25,8 +25,7 @@ class LintSpec extends AnyFunSpec with Matchers {
             fail(s"Lint.All is missing linter[$className] - it contains: " + all.toSeq.sorted.mkString(", "))
           }
         }
-        case _ => {
-        }
+        case _ => {}
       }
 
       if (!found) {

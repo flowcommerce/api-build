@@ -13,7 +13,10 @@ case class Module(name: String, serviceNames: Set[String]) {
 
 object Module {
 
-  val General: Module = Module("general", Set("common", "feed", "healthcheck", "link", "organization", "search", "session", "token", "user"))
+  val General: Module = Module(
+    "general",
+    Set("common", "feed", "healthcheck", "link", "organization", "search", "session", "token", "user")
+  )
   val Webhook: Module = Module("webhook", Set("webhook"))
 
   val All = Seq(

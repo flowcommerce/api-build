@@ -79,5 +79,5 @@ object BuildType {
   private[this] val byName = all.map(x => x.toString.toLowerCase -> x).toMap
 
   def fromString(value: String): Option[BuildType] = byName.get(value.toLowerCase)
-    
+
 }

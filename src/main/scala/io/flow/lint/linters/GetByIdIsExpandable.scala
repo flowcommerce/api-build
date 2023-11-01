@@ -4,20 +4,16 @@ import io.flow.lint.Linter
 import io.flow.lint.util.Expansions
 import io.apibuilder.spec.v0.models.{Method, Operation, Resource, Service}
 
-/**
-  * Enforce that for models with expansion where the return type is
-  * expandable, the get/:id method has the expand parameter
+/** Enforce that for models with expansion where the return type is expandable, the get/:id method has the expand
+  * parameter
   */
 case object GetByIdIsExpandable extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
     nonHealthcheckResources(service).flatMap { resource =>
-      resource.operations.
-        filter(_.method == Method.Get).
-        filter(returnsExpandableType).
-        flatMap {
-          validateOperationHasExpandParameter(resource, _)
-        }
+      resource.operations.filter(_.method == Method.Get).filter(returnsExpandableType).flatMap {
+        validateOperationHasExpandParameter(resource, _)
+      }
     }
   }
 
