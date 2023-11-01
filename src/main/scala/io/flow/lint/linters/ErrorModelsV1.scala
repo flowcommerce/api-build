@@ -3,28 +3,24 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Field, Model, Service, Union}
 
-/**
-  * For error models (those with an error_id field in position 1), validate:
+/** For error models (those with an error_id field in position 1), validate:
   *
-  *   a. second field is timestamp
-  *   b. if 'organization', next
-  *   c. if 'number', next
+  *   a. second field is timestamp b. if 'organization', next c. if 'number', next
   */
 case object ErrorModelsV1 extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    val unionsThatEndInError = service.unions.
-      filter { u => !ignored(u.attributes, "error") }.
-      filter { u => isError(u.name) }
+    val unionsThatEndInError =
+      service.unions.filter { u => !ignored(u.attributes, "error") }.filter { u => isError(u.name) }
 
-    val modelErrors = service.models.
-      filter { m => isError(m.name) }.
-      filter { m => !ignored(m.attributes, "error") }.
-      filter { m =>
+    val modelErrors = service.models
+      .filter { m => isError(m.name) }
+      .filter { m => !ignored(m.attributes, "error") }
+      .filter { m =>
         !unions(service, m).exists { u => isError(u.name) }
-      }.
-      filter { m => errorVersion(m.attributes).contains(1) }.
-      flatMap(validateModel(service, _))
+      }
+      .filter { m => errorVersion(m.attributes).contains(1) }
+      .flatMap(validateModel(service, _))
 
     val unionErrors = unionsThatEndInError.flatMap(validateUnion(service, _))
 
@@ -137,6 +133,4 @@ case object ErrorModelsV1 extends Linter with Helpers {
     typeErrors ++ minimumErrors
   }
 
-
 }
-

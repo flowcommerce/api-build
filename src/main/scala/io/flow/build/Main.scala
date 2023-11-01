@@ -49,10 +49,12 @@ object Main extends App {
           .action((api, c) => c.copy(apis = c.apis :+ api))
           .unbounded()
           .optional()
-          .validate(api => Application.parse(api) match {
-            case Some(_) => success
-            case None => failure(s"Could not parse application[$api]")
-          })
+          .validate(api =>
+            Application.parse(api) match {
+              case Some(_) => success
+              case None => failure(s"Could not parse application[$api]")
+            }
+          )
 
         help("help")
 
@@ -64,8 +66,10 @@ object Main extends App {
           }
           selected.toList match {
             case Nil => {
-              failure(s"Invalid command[${c.buildCommand}] for build type[${c.buildType}]. " +
-                s"Must be one of: all, " + controllers(c.buildType).map(_.command).mkString(", "))
+              failure(
+                s"Invalid command[${c.buildCommand}] for build type[${c.buildType}]. " +
+                  s"Must be one of: all, " + controllers(c.buildType).map(_.command).mkString(", ")
+              )
             }
             case _ => {
               success
@@ -90,18 +94,23 @@ object Main extends App {
           dl.downloadServices(allApplications) match {
             case Left(errors) => {
               println(s"Errors downloading services:")
-              errors.foreach { e => println(s" - $e")}
+              errors.foreach { e => println(s" - $e") }
               System.exit(errors.length)
             }
             case Right(services) => run(config.buildType, dl, selected, services)
           }
         case None =>
-          // error message already printed
+        // error message already printed
       }
     }
   }
 
-  private[this] def run(buildType: BuildType, downloadCache: DownloadCache, controllers: Seq[Controller], services: Seq[Service]): Unit = {
+  private[this] def run(
+    buildType: BuildType,
+    downloadCache: DownloadCache,
+    controllers: Seq[Controller],
+    services: Seq[Service]
+  ): Unit = {
     val errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (globalErrors.nonEmpty) {
       errors += ("config" -> globalErrors.toSeq)

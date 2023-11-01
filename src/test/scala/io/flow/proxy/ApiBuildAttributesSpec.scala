@@ -4,9 +4,7 @@ import io.flow.helpers.ServiceHostHelpers
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class ApiBuildAttributesSpec extends AnyFunSpec with Matchers
-  with ServiceHostHelpers
-{
+class ApiBuildAttributesSpec extends AnyFunSpec with Matchers with ServiceHostHelpers {
 
   it("host with no attribute") {
     ApiBuildAttributes(

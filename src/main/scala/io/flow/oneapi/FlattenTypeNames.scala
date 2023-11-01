@@ -57,25 +57,25 @@ case class FlattenTypeNames(flattenedServices: List[ApiBuilderService]) {
     operation.copy(
       body = operation.body.map { b => rewrite(helper, service, b) },
       parameters = operation.parameters.map { p => rewrite(helper, service, p) },
-      responses = operation.responses.map { r => rewrite(helper, service, r) },
+      responses = operation.responses.map { r => rewrite(helper, service, r) }
     )
   }
 
   private[this] def rewrite(helper: ApiBuilderHelper, service: ApiBuilderService, body: Body): Body = {
     body.copy(
-      `type` = doRewriteType(helper, service, body.`type`),
+      `type` = doRewriteType(helper, service, body.`type`)
     )
   }
 
   private[this] def rewrite(helper: ApiBuilderHelper, service: ApiBuilderService, parameter: Parameter): Parameter = {
     parameter.copy(
-      `type` = doRewriteType(helper, service, parameter.`type`),
+      `type` = doRewriteType(helper, service, parameter.`type`)
     )
   }
 
   private[this] def rewrite(helper: ApiBuilderHelper, service: ApiBuilderService, response: Response): Response = {
     response.copy(
-      `type` = doRewriteType(helper, service, response.`type`),
+      `type` = doRewriteType(helper, service, response.`type`)
     )
   }
 
@@ -83,7 +83,7 @@ case class FlattenTypeNames(flattenedServices: List[ApiBuilderService]) {
     ApiBuilderType.Enum(
       typ.service,
       typ.`enum`.copy(
-        name = doRewriteType(helper, typ.service, typ.`enum`.name),
+        name = doRewriteType(helper, typ.service, typ.`enum`.name)
       )
     )
   }
@@ -95,14 +95,17 @@ case class FlattenTypeNames(flattenedServices: List[ApiBuilderService]) {
         name = doRewriteType(helper, typ.service, typ.union.name),
         types = typ.union.types.map { t =>
           t.copy(
-            `type` = doRewriteType(helper, typ.service, t.`type`),
+            `type` = doRewriteType(helper, typ.service, t.`type`)
           )
         }
       )
     )
   }
 
-  private[this] def rewriteInterface(helper: ApiBuilderHelper, typ: ApiBuilderType.Interface): ApiBuilderType.Interface = {
+  private[this] def rewriteInterface(
+    helper: ApiBuilderHelper,
+    typ: ApiBuilderType.Interface
+  ): ApiBuilderType.Interface = {
     ApiBuilderType.Interface(
       typ.service,
       typ.interface.copy(

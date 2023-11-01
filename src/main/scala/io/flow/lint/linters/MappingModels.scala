@@ -3,20 +3,15 @@ package io.flow.lint.linters
 import io.apibuilder.spec.v0.models.{Field, Model, Service}
 import io.flow.lint.Linter
 
-/**
-  * Mapping models create qualified associations between two models. We enforce
-  * naming such that <model1>_<model2>_mapping must have the fields:
-  * 
-  *   a. id
-  *   b. model1 of type model1_reference
-  *   c. model2 of type model2_reference
+/** Mapping models create qualified associations between two models. We enforce naming such that
+  * <model1>_<model2>_mapping must have the fields:
+  *
+  *   a. id b. model1 of type model1_reference c. model2 of type model2_reference
   */
 case object MappingModels extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.models.
-      filter { m => isMapping(m.name) }.
-      flatMap(validateModel)
+    service.models.filter { m => isMapping(m.name) }.flatMap(validateModel)
   }
 
   private[this] def validateModel(model: Model): Seq[String] = {

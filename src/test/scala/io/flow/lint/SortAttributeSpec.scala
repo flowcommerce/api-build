@@ -47,7 +47,7 @@ class SortAttributeSpec extends AnyFunSpec with Matchers {
   it("should be empty when sort attribute exists") {
     linter.validate(
       buildService(sortParameter, sortAttribute)
-    ) should be (Nil)
+    ) should be(Nil)
   }
 
   it("should have errors when sort attribute is missing") {

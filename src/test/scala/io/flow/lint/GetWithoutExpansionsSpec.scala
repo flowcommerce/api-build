@@ -201,9 +201,11 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
           sortParameter
         )
       )
-    ) should be(Seq(
-      "Resource organizations GET /organizations: Parameter[id] must be the first parameter"
-    ))
+    ) should be(
+      Seq(
+        "Resource organizations GET /organizations: Parameter[id] must be the first parameter"
+      )
+    )
 
     linter.validate(
       buildResourceWithSearch(
@@ -215,9 +217,11 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
           otherParameter
         )
       )
-    ) should be(Seq(
-      "Resource organizations GET /organizations: Last 3 parameters must be limit, offset, sort and not offset, sort, other"
-    ))
+    ) should be(
+      Seq(
+        "Resource organizations GET /organizations: Last 3 parameters must be limit, offset, sort and not offset, sort, other"
+      )
+    )
   }
 
   it("GET / with valid parameters") {

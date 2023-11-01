@@ -19,9 +19,10 @@ object Lint {
 
   def forBuildType(buildType: BuildType): Seq[Linter] = {
     buildType match {
-      case BuildType.ApiMisc | BuildType.ApiMiscEvent => Seq(
-        linters.BeaconEventsMustHaveAttributes
-      )
+      case BuildType.ApiMisc | BuildType.ApiMiscEvent =>
+        Seq(
+          linters.BeaconEventsMustHaveAttributes
+        )
 
       case _ => {
         Seq(

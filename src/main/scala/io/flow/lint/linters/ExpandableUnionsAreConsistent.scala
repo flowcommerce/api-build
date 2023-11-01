@@ -3,23 +3,15 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Service, Union}
 
-/**
-  * Validates that we are consistent with our expansion union types, e.g.:
-  * 
-  *  "expandable_organization": {
-  *    "discriminator": "discriminator",
-  *    "types": [
-  *      { "type": "organization" },
-  *      { "type": "organization_reference" }
-  *    ]
-  *  }
-  * 
-  * We validate that any union named expandable_xxx has exactly two
-  * types: xxx and xxx_reference. Note that the reason we force the
-  * reference last is that when we use parser combinators, we look in
-  * order for the first matching type. Having the types in this order
-  * means the organization will match before the reference (otherwise
-  * we would always end up matching on the reference).
+/** Validates that we are consistent with our expansion union types, e.g.:
+  *
+  * "expandable_organization": { "discriminator": "discriminator", "types": [ { "type": "organization" }, { "type":
+  * "organization_reference" } ] }
+  *
+  * We validate that any union named expandable_xxx has exactly two types: xxx and xxx_reference. Note that the reason
+  * we force the reference last is that when we use parser combinators, we look in order for the first matching type.
+  * Having the types in this order means the organization will match before the reference (otherwise we would always end
+  * up matching on the reference).
   */
 case object ExpandableUnionsAreConsistent extends Linter with Helpers {
 
@@ -34,7 +26,11 @@ case object ExpandableUnionsAreConsistent extends Linter with Helpers {
       case Pattern(name) => {
         service.unions.find(_.name == name) match {
           case None => validateUnionTypes(union, Seq(name, s"${name}_reference")) ++ validateTypeOrder(union, name)
-          case Some(u) => validateUnionTypes(union, u.types.map(_.`type`) ++ Seq(s"${name}_reference")) ++ validateTypeOrder(union, name)
+          case Some(u) =>
+            validateUnionTypes(union, u.types.map(_.`type`) ++ Seq(s"${name}_reference")) ++ validateTypeOrder(
+              union,
+              name
+            )
         }
       }
       case _ => {

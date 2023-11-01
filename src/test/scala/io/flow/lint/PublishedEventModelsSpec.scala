@@ -14,12 +14,14 @@ class PublishedEventModelsSpec extends AnyFunSpec with Matchers {
   ): Service = {
     Services.Base.copy(
       models = Seq(
-        Services.buildModel(
-          name = "organization_rates_published",
-          fields = fields.map { case (name, typ) => Services.buildField(name = name, `type` = typ) }.toList
-        ).copy(
-          attributes = attributes
-        )
+        Services
+          .buildModel(
+            name = "organization_rates_published",
+            fields = fields.map { case (name, typ) => Services.buildField(name = name, `type` = typ) }.toList
+          )
+          .copy(
+            attributes = attributes
+          )
       )
     )
   }

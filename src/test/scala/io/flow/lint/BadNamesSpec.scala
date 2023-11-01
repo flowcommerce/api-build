@@ -29,7 +29,7 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
   }
 
   def buildModelIgnored(
-     fieldName: String
+    fieldName: String
   ): Service = {
     buildModel(fieldName, Seq(Attribute("linter", value = Json.parse("""{ "ignore": ["bad_names"] }""").as[JsObject])))
   }
@@ -60,7 +60,10 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
   def buildResourceIgnored(
     paramName: String
   ): Service = {
-    buildResource(paramName, Seq(Attribute("linter", value = Json.parse("""{ "ignore": ["bad_names"] }""").as[JsObject])))
+    buildResource(
+      paramName,
+      Seq(Attribute("linter", value = Json.parse("""{ "ignore": ["bad_names"] }""").as[JsObject]))
+    )
   }
 
   it("model fields") {
@@ -82,7 +85,6 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
       Nil
     )
   }
-
 
   it("resource parameter names") {
     linter.validate(buildResource("ip_address")) should be(

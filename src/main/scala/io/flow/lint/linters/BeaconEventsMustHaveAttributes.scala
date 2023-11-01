@@ -3,8 +3,7 @@ package io.flow.lint.linters
 import io.apibuilder.spec.v0.models._
 import io.flow.lint.Linter
 
-/**
-  *  All subtypes of the beacon event must have an attributes field
+/** All subtypes of the beacon event must have an attributes field
   */
 case object BeaconEventsMustHaveAttributes extends Linter with Helpers {
 

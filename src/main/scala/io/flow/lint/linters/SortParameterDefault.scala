@@ -3,11 +3,10 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Operation, Resource, Service}
 
-/**
-  *  for resources w/ sort parameter:
-  *    - default to created_at if path ends with /versions
-  *    - default to name, -created_at if there is a name field of type string
-  *    - otherwise default to -created_at
+/** for resources w/ sort parameter:
+  *   - default to created_at if path ends with /versions
+  *   - default to name, -created_at if there is a name field of type string
+  *   - otherwise default to -created_at
   */
 case object SortParameterDefault extends Linter with Helpers {
 
@@ -16,10 +15,10 @@ case object SortParameterDefault extends Linter with Helpers {
   }
 
   def validateResource(service: Service, resource: Resource): Seq[String] = {
-    resource.operations.
-      filter(r => !ignored(r.attributes, "sort")).
-      filter(r => !ignored(r.attributes, "sort_parameter_default")).
-      flatMap(validateOperation(service, resource, _))
+    resource.operations
+      .filter(r => !ignored(r.attributes, "sort"))
+      .filter(r => !ignored(r.attributes, "sort_parameter_default"))
+      .flatMap(validateOperation(service, resource, _))
   }
 
   def validateOperation(service: Service, resource: Resource, operation: Operation): Seq[String] = {
@@ -37,7 +36,13 @@ case object SortParameterDefault extends Linter with Helpers {
             expected.contains(default) match {
               case true => Nil
               case false => {
-                Seq(error(resource, operation, s"Parameter sort default expected to be[${expected.mkString(" or ")}] and not[$default]"))
+                Seq(
+                  error(
+                    resource,
+                    operation,
+                    s"Parameter sort default expected to be[${expected.mkString(" or ")}] and not[$default]"
+                  )
+                )
               }
             }
           }

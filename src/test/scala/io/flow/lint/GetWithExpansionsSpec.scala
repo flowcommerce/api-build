@@ -94,7 +94,9 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
         baseParameters ++ Seq(expandParameter)
       )
     ) should be(
-      Seq("Resource organizations GET /organizations: There are no expansions available - should not have a parameter named expand")
+      Seq(
+        "Resource organizations GET /organizations: There are no expansions available - should not have a parameter named expand"
+      )
     )
   }
 
@@ -115,25 +117,33 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
         "Resource organizations GET /organizations: parameter[expand] is missing example. It must be user",
         "Resource organizations GET /organizations: parameter[expand] is missing maximum. It must be 1"
       )
-
     )
   }
 
   def buildServiceWithUnion(expandableTypeIsArray: Boolean = false): Service = {
-    val card = Services.buildModel("card", Seq(
-      Services.buildField("id"),
-      Services.buildField("name")
-    ))
+    val card = Services.buildModel(
+      "card",
+      Seq(
+        Services.buildField("id"),
+        Services.buildField("name")
+      )
+    )
 
-    val cardReference = Services.buildModel("card_reference", Seq(
-      Services.buildField("id")
-    ))
+    val cardReference = Services.buildModel(
+      "card_reference",
+      Seq(
+        Services.buildField("id")
+      )
+    )
 
     val expandableCardType = if (expandableTypeIsArray) "[expandable_card]" else "expandable_card"
-    val cardAuthorization = Services.buildModel("card_authorization", Seq(
-      Services.buildField("id"),
-      Services.buildField("card", `type` = expandableCardType)
-    ))
+    val cardAuthorization = Services.buildModel(
+      "card_authorization",
+      Seq(
+        Services.buildField("id"),
+        Services.buildField("card", `type` = expandableCardType)
+      )
+    )
 
     val resource = Services.buildResource(
       "authorization",

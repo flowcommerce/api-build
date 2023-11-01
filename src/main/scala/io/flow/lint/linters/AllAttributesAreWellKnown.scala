@@ -3,8 +3,7 @@ package io.flow.lint.linters
 import io.apibuilder.spec.v0.models._
 import io.flow.lint.Linter
 
-/**
-  *  Ensures that attributes we no longer support are not specified
+/** Ensures that attributes we no longer support are not specified
   */
 case object AllAttributesAreWellKnown extends Linter {
 

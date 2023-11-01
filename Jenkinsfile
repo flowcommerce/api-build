@@ -35,7 +35,7 @@ pipeline {
                     script {
                         try {
                             sh '''
-                                sbt clean compile test doc assembly
+                                sbt clean compile test scalafmtSbtCheck scalafmtCheck doc assembly
                             '''
                         } finally {
                             junit allowEmptyResults: true, testResults: '**/target/test-reports/*.xml'
@@ -77,7 +77,7 @@ pipeline {
                                 git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
                                 git checkout main
                                 dev tag
-                                sbt clean assembly
+                                sbt scalafmtSbtCheck scalafmtCheck clean assembly
                                 cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/
                                 cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/api-build.jar
                             '''

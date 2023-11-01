@@ -4,12 +4,11 @@ import io.apibuilder.spec.v0.models.{Method, Operation}
 
 object OperationSort {
 
-  /**
-    * Sort the operations in order so that any statically declared references
-    * sort before equivalent dynamically declared references. For example:
+  /** Sort the operations in order so that any statically declared references sort before equivalent dynamically
+    * declared references. For example:
     *
-    *  - /:organization/experiences/:key
-    *  - /:organization/experiences/items
+    *   - /:organization/experiences/:key
+    *   - /:organization/experiences/items
     *
     * We need the /items path to sort before /:key else it never resolves
     */
@@ -26,10 +25,8 @@ object OperationSort {
     ).mkString(":")
   }
 
-  /**
-    * Returns a numeric index by which we can sort methods. This
-    * allows us to present, for example, all operations with a GET
-    * Method first.
+  /** Returns a numeric index by which we can sort methods. This allows us to present, for example, all operations with
+    * a GET Method first.
     */
   private[this] def methodSortOrder(method: Method): Int = {
     method match {
@@ -45,5 +42,5 @@ object OperationSort {
       case Method.UNDEFINED(_) => 10
     }
   }
-  
+
 }

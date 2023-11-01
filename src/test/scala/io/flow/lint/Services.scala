@@ -26,7 +26,7 @@ object Services {
     description: Option[String] = None,
     deprecation: Option[Deprecation] = None,
     values: Seq[EnumValue] = Nil,
-    attributes: Seq[Attribute] = Nil,
+    attributes: Seq[Attribute] = Nil
   ): Enum = {
     Enum(
       name = name,
@@ -34,17 +34,17 @@ object Services {
       description = description,
       deprecation = deprecation,
       values = values,
-      attributes = attributes,
+      attributes = attributes
     )
   }
 
   def buildEnumValue(
     name: String,
-    value: Option[String] = None,
+    value: Option[String] = None
   ): EnumValue = {
     EnumValue(
       name = name,
-      value = value,
+      value = value
     )
   }
 
@@ -63,16 +63,15 @@ object Services {
 
   def buildUnionType(
     `type`: String,
-    discriminatorValue: Option[String] = None,
+    discriminatorValue: Option[String] = None
   ): UnionType = {
     UnionType(
       `type` = `type`,
-      discriminatorValue = discriminatorValue,
+      discriminatorValue = discriminatorValue
     )
   }
 
-  /**
-    * Builds an attribute with the name 'linter' containing an ignore hint
+  /** Builds an attribute with the name 'linter' containing an ignore hint
     */
   def buildLinterIgnoreAttribute(
     values: Seq[String]
@@ -99,20 +98,20 @@ object Services {
     Header(
       name = name,
       `type` = "string",
-      required = false,
+      required = false
     )
   }
 
   def buildModel(
     name: String,
     fields: Seq[Field] = Nil,
-    attributes: Seq[Attribute] = Nil,
+    attributes: Seq[Attribute] = Nil
   ): Model = {
     Model(
       name = name,
       plural = name + "s",
       fields = fields,
-      attributes = attributes,
+      attributes = attributes
     )
   }
 

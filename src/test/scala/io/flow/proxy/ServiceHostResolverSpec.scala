@@ -4,9 +4,7 @@ import io.flow.helpers.ServiceHostHelpers
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
-class ServiceHostResolverSpec extends AnyFunSpec with Matchers
-  with ServiceHostHelpers
-{
+class ServiceHostResolverSpec extends AnyFunSpec with Matchers with ServiceHostHelpers {
 
   it("host defaults to name of service") {
     val resolver = ServiceHostResolver(

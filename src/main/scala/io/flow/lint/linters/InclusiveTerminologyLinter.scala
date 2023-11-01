@@ -3,12 +3,12 @@ package io.flow.lint.linters
 import io.apibuilder.spec.v0.models._
 import io.flow.lint.Linter
 
-/**
- * With diversity in mind and in an effort to foster an inclusive and safe environment,
- * this linter ensures we avoid the usage of words that can be offensive.
- *
- * @see [RFC](https://docs.google.com/document/d/1V33mFQETX_XalLcGjE7m9kP_LzCwHslHlYlCGi3RqSc/edit)
- */
+/** With diversity in mind and in an effort to foster an inclusive and safe environment, this linter ensures we avoid
+  * the usage of words that can be offensive.
+  *
+  * @see
+  *   [RFC](https://docs.google.com/document/d/1V33mFQETX_XalLcGjE7m9kP_LzCwHslHlYlCGi3RqSc/edit)
+  */
 case object InclusiveTerminologyLinter extends Linter with Helpers {
 
   private[this] val Suggestions = Map(
@@ -19,7 +19,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
     "dummy" -> "placeholder",
     "sanity" -> "completeness",
     "young" -> "junior",
-    "old" -> "senior",
+    "old" -> "senior"
   )
   // Note leaving 'gender' out of linter as capturing gender is a valid use case
 
@@ -33,7 +33,9 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   }
 
   def validateInterface(interface: Interface): Seq[String] = {
-    validateName(interface.name) { m => error(interface, m) } ++ interface.fields.flatMap { validateField(interface, _) }
+    validateName(interface.name) { m => error(interface, m) } ++ interface.fields.flatMap {
+      validateField(interface, _)
+    }
   }
 
   def validateField(interface: Interface, field: Field): Seq[String] = {
@@ -41,7 +43,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   }
 
   def validateHeader(header: Header): Seq[String] = {
-    validateName(header.name)  { m => error(header, m) }
+    validateName(header.name) { m => error(header, m) }
   }
 
   def validateEnum(`enum`: Enum): Seq[String] = {
@@ -64,7 +66,9 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   }
 
   def validateUnion(union: Union): Seq[String] = {
-    validateName(union.name) { m => error(union, m) } ++ validateDiscriminator(union) ++ union.types.flatMap { validateUnionType(union, _) }
+    validateName(union.name) { m => error(union, m) } ++ validateDiscriminator(union) ++ union.types.flatMap {
+      validateUnionType(union, _)
+    }
   }
 
   def validateDiscriminator(union: Union): Seq[String] = {
@@ -75,7 +79,10 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   }
 
   def validateUnionType(union: Union, unionType: UnionType): Seq[String] = {
-    validateName(unionType.`type`) { m => error(union, unionType, m) } ++ validateUnionTypeDiscriminatorValue(union, unionType)
+    validateName(unionType.`type`) { m => error(union, unionType, m) } ++ validateUnionTypeDiscriminatorValue(
+      union,
+      unionType
+    )
   }
 
   def validateUnionTypeDiscriminatorValue(union: Union, unionType: UnionType): Seq[String] = {

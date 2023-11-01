@@ -11,7 +11,7 @@ class BeaconEventsMustHaveAttributesSpec extends AnyFunSpec with Matchers {
   def buildModel(fieldNames: Seq[String]): Model = {
     Services.buildModel(
       "user",
-      fieldNames.map( name =>
+      fieldNames.map(name =>
         Services.buildField(
           name = name
         )

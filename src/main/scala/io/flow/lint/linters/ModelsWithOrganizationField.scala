@@ -3,12 +3,9 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Model, Service}
 
-/**
-  * For models w/ field named organization, ensure organization's position is:
-  *   a. fourth (if first 3 fields are id, timestamp, type), to
-  *      support journals
-  *   b. second field (after id)
-  *   c. first field (if no id)
+/** For models w/ field named organization, ensure organization's position is:
+  *   a. fourth (if first 3 fields are id, timestamp, type), to support journals b. second field (after id) c. first
+  *      field (if no id)
   */
 case object ModelsWithOrganizationField extends Linter with Helpers {
 

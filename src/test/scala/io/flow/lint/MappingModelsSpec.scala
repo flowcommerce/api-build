@@ -13,7 +13,6 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
   private[this] val priceBookReference = Services.buildField("price_book", "price_book_reference")
   private[this] val position = Services.buildField("position", "long")
 
-
   def buildService(
     name: String = "experience_price_book_mapping",
     fields: Seq[Field]

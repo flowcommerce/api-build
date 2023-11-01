@@ -3,9 +3,7 @@ package io.flow.proxy
 import io.apibuilder.spec.v0.models.Service
 import play.api.libs.json.{JsString, JsValue}
 
-/**
-  * Helper to parse the values defined for
-  * the attribute named 'api-build'
+/** Helper to parse the values defined for the attribute named 'api-build'
   */
 case class ApiBuildAttributes(services: Seq[Service]) {
 
@@ -26,5 +24,5 @@ case class ApiBuildAttributes(services: Seq[Service]) {
       case Some(attr) => attr.value.value.get(name)
     }
   }
-  
+
 }

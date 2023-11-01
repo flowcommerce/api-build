@@ -37,28 +37,35 @@ class ModelsWithOrganizationFieldSpec extends AnyFunSpec with Matchers {
   }
 
   it("w/ organization but no id fields") {
-    linter.validate(buildService(Seq("other", "organization"))) should be(Seq(
-      "Model user: Field[organization] must be in position[0] and not[1]"
-    ))
+    linter.validate(buildService(Seq("other", "organization"))) should be(
+      Seq(
+        "Model user: Field[organization] must be in position[0] and not[1]"
+      )
+    )
   }
 
   it("w/ id and organization fields") {
-    linter.validate(buildService(Seq("id", "other", "organization"))) should be(Seq(
-      "Model user: Field[organization] must be in position[1] and not[2]"
-    ))
+    linter.validate(buildService(Seq("id", "other", "organization"))) should be(
+      Seq(
+        "Model user: Field[organization] must be in position[1] and not[2]"
+      )
+    )
   }
 
   it("w/ id, timestamp, type and organization fields") {
-    linter.validate(buildService(Seq("id", "timestamp", "type", "other", "organization"))) should be(Seq(
-      "Model user: Field[organization] must be in position[3] and not[4]"
-    ))
+    linter.validate(buildService(Seq("id", "timestamp", "type", "other", "organization"))) should be(
+      Seq(
+        "Model user: Field[organization] must be in position[3] and not[4]"
+      )
+    )
   }
 
   it("w/ event_id, timestamp, id fields") {
-    linter.validate(buildService(Seq("event_id", "timestamp", "id", "other", "organization"))) should be(Seq(
-      "Model user: Field[organization] must be in position[3] and not[4]"
-    ))
+    linter.validate(buildService(Seq("event_id", "timestamp", "id", "other", "organization"))) should be(
+      Seq(
+        "Model user: Field[organization] must be in position[3] and not[4]"
+      )
+    )
   }
 
-  
 }

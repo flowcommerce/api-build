@@ -20,25 +20,33 @@ class UpsertedDeletedEventModelsSpec extends AnyFunSpec with Matchers {
   }
 
   it("with valid names") {
-    linter.validate(buildService("example_upserted", "example", "example")) should be (Nil)
+    linter.validate(buildService("example_upserted", "example", "example")) should be(Nil)
 
-    linter.validate(buildService("example_upserted", "foo", "example")) should be (
+    linter.validate(buildService("example_upserted", "foo", "example")) should be(
       Seq("Model example_upserted: Event must contain a field whose name and type contain example")
     )
   }
 
   it("with partial names") {
-    linter.validate(buildService("card_authorization_upserted", "card_authorization", "card_authorization")) should be(Nil)
+    linter.validate(buildService("card_authorization_upserted", "card_authorization", "card_authorization")) should be(
+      Nil
+    )
     linter.validate(buildService("card_authorization_upserted", "card", "card_authorization")) should be(Nil)
     linter.validate(buildService("card_authorization_upserted", "authorization", "card_authorization")) should be(Nil)
     linter.validate(buildService("card_authorization_upserted", "foo", "card_authorization")) should be(
-      Seq("Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization")
+      Seq(
+        "Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization"
+      )
     )
     linter.validate(buildService("card_authorization_upserted", "card_authorization", "foo")) should be(
-      Seq("Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization")
+      Seq(
+        "Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization"
+      )
     )
     linter.validate(buildService("card_authorization_deleted", "card_authorization", "foo")) should be(
-      Seq("Model card_authorization_deleted: Event must contain a field whose name and type contain card or authorization")
+      Seq(
+        "Model card_authorization_deleted: Event must contain a field whose name and type contain card or authorization"
+      )
     )
   }
 

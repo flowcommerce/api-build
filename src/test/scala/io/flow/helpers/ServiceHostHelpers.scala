@@ -7,7 +7,8 @@ import play.api.libs.json.Json
 trait ServiceHostHelpers {
 
   def serviceWithHost(name: String, host: Option[String] = None): Service = {
-    Services.Base.copy(name = name,
+    Services.Base.copy(
+      name = name,
       attributes = host.map { h =>
         Attribute(
           name = "api-build",

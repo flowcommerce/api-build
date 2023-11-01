@@ -3,9 +3,7 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Attribute, Field, Model, Operation, Parameter, Resource, Service}
 
-/**
-  *  We have decided to call the same things consistently. This linter
-  *  validates common field and parameter names
+/** We have decided to call the same things consistently. This linter validates common field and parameter names
   */
 case object BadNames extends Linter with Helpers {
 

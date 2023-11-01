@@ -6,10 +6,8 @@ import io.apibuilder.validation.{ApiBuilderService, MultiServiceImpl, TypeName}
 
 import java.util.UUID
 
-/**
- * Finds all declared types in a service, iterating through all models,
- * fields, unions, responses, etc.
- */
+/** Finds all declared types in a service, iterating through all models, fields, unions, responses, etc.
+  */
 object AllTypeNames {
 
   private[this] val defaultNamespace = UUID.randomUUID().toString
@@ -69,5 +67,3 @@ object AllTypeNames {
     Seq(response.`type`) ++ response.headers.getOrElse(Nil).map(_.`type`)
   }
 }
-
-

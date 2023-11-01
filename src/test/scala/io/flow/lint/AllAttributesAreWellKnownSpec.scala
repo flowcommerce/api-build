@@ -10,13 +10,19 @@ class AllAttributesAreWellKnownSpec extends AnyFunSpec with Matchers {
 
   private[this] def build(names: Seq[String]): Service = {
     Services.Base.copy(
-      models = Seq(Services.buildModel(name = "id", attributes = names.map { name =>
-        Services.buildAttribute(name = name)
-      }))
+      models = Seq(
+        Services.buildModel(
+          name = "id",
+          attributes = names.map { name =>
+            Services.buildAttribute(name = name)
+          }
+        )
+      )
     )
   }
 
-  private[this] val ErrorMsg = "Service contains an unknown attribute named 'auth' - remove this attribute or add to AllAttributesAreWellKnown.KnownAttributeNames in the api-build project (https://github.com/flowcommerce/api-build)"
+  private[this] val ErrorMsg =
+    "Service contains an unknown attribute named 'auth' - remove this attribute or add to AllAttributesAreWellKnown.KnownAttributeNames in the api-build project (https://github.com/flowcommerce/api-build)"
 
   it("unsupported attribute") {
     linter.validate(

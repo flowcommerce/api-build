@@ -20,12 +20,18 @@ case class Controller() extends io.flow.build.Controller {
   override val name = "Stream"
   override val command = "stream"
 
-  override def run(buildType: BuildType, downloadCache: DownloadCache, services: Seq[Service])(implicit ec: ExecutionContext): Unit = {
+  override def run(buildType: BuildType, downloadCache: DownloadCache, services: Seq[Service])(implicit
+    ec: ExecutionContext
+  ): Unit = {
 
     @tailrec
     def loadImports(services: Seq[Service], cached: Map[String, Service]): Seq[Service] = {
       val imports = services.flatMap(_.imports).groupBy(_.uri).values.toList.map(_.last)
-      val filteredImports = imports.filterNot(imp => services.exists(svc => svc.organization.key == imp.organization.key && svc.application.key == imp.application.key))
+      val filteredImports = imports.filterNot(imp =>
+        services.exists(svc =>
+          svc.organization.key == imp.organization.key && svc.application.key == imp.application.key
+        )
+      )
       if (filteredImports.isEmpty) {
         services
       } else {
@@ -34,7 +40,9 @@ case class Controller() extends io.flow.build.Controller {
             downloadCache.downloadService(Application.latest(imp.organization.key, imp.application.key)) match {
               case Right(svc) => Some(svc)
               case Left(errors) =>
-                println(s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}: ${errors.mkString(", ")}")
+                println(
+                  s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}: ${errors.mkString(", ")}"
+                )
                 None
             }
           }
@@ -52,7 +60,10 @@ case class Controller() extends io.flow.build.Controller {
         val allServices = loadImports(Seq(service), agg.cache)
         val ms = MultiService(allServices.map(ApiBuilderService.apply).toList)
         val streams = processService(ms, service)
-        Aggregator(agg.streams ++ streams, agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s))
+        Aggregator(
+          agg.streams ++ streams,
+          agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s)
+        )
       }
       saveDescriptor(buildType, StreamDescriptor(result.streams))
     }
@@ -69,7 +80,8 @@ case class Controller() extends io.flow.build.Controller {
           None
         }
         case Some(typ: ApiBuilderType.Union) => {
-          val className = s"${ApiBuilderUtils.toPackageName(typ.namespace, quoteKeywords = false)}.${ApiBuilderUtils.toClassName(typ.name, quoteKeywords = false)}"
+          val className = s"${ApiBuilderUtils.toPackageName(typ.namespace, quoteKeywords = false)}.${ApiBuilderUtils
+              .toClassName(typ.name, quoteKeywords = false)}"
           StreamNames(FlowEnvironment.Production).json(className) match {
             case None =>
               println(s"[ERROR] Unable to generate stream name for union ${typ.qualified} [$className]")
@@ -85,7 +97,8 @@ case class Controller() extends io.flow.build.Controller {
                 None
               } else {
                 val serviceMajorVersion = VersionParser.parse(service.version).major.getOrElse(0L)
-                val internal = if (service.name.contains("-internal-") && !union.name.contains("_internal_")) "internal_" else ""
+                val internal =
+                  if (service.name.contains("-internal-") && !union.name.contains("_internal_")) "internal_" else ""
                 val shortName = s"${union.name}_${internal}v$serviceMajorVersion"
                 val allModels = multiService.allModels.map(_.model)
                 val allUnions = multiService.allUnions.map(_.union)
@@ -105,7 +118,11 @@ case class Controller() extends io.flow.build.Controller {
 
   private val UnionMemberRx = "(.*)_(upserted|deleted)_?(.*)".r
 
-  private def processUnion(multiService: MultiService, apiBuilderUnion: ApiBuilderType.Union, streamName: String): Seq[EventType] = {
+  private def processUnion(
+    multiService: MultiService,
+    apiBuilderUnion: ApiBuilderType.Union,
+    streamName: String
+  ): Seq[EventType] = {
     apiBuilderUnion.union.types.flatMap { member =>
       val types = multiService.findType(
         defaultNamespace = apiBuilderUnion.service.namespace,
@@ -129,11 +146,16 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def processModel(multiService: MultiService, unionMember: UnionType, apiBuilderModel: ApiBuilderType.Model): Seq[EventType] = {
+  private def processModel(
+    multiService: MultiService,
+    unionMember: UnionType,
+    apiBuilderModel: ApiBuilderType.Model
+  ): Seq[EventType] = {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
     apiBuilderModel.name match {
       case UnionMemberRx(typeName, eventType, _) if eventType == "upserted" =>
-        val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName)).toSeq
+        val payloadField =
+          apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName)).toSeq
         if (payloadField.isEmpty) {
           // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: field not found")
         }
@@ -176,29 +198,37 @@ case class Controller() extends io.flow.build.Controller {
     findFieldWithName("id")
       .orElse(
         findFieldWithName("key")
-      ).orElse(
+      )
+      .orElse(
         findFieldWithName("number")
       )
   }
 
-  private def extractPayloadModels(model: ApiBuilderType.Model, typeField: Field, multiService: MultiService): Option[ApiBuilderType.Model] = {
+  private def extractPayloadModels(
+    model: ApiBuilderType.Model,
+    typeField: Field,
+    multiService: MultiService
+  ): Option[ApiBuilderType.Model] = {
     multiService.findType(
       defaultNamespace = model.namespace,
       typeName = typeField.`type`
     ) match {
-      case Some(m: ApiBuilderType.Model) => Some (m)
+      case Some(m: ApiBuilderType.Model) => Some(m)
       case Some(m: ApiBuilderType.Union) => sythesizeModelFromUnion(m, multiService)
       case _ => None
     }
   }
 
-  private def sythesizeModelFromUnion(union: ApiBuilderType.Union, multiService: MultiService): Option[ApiBuilderType.Model] = {
+  private def sythesizeModelFromUnion(
+    union: ApiBuilderType.Union,
+    multiService: MultiService
+  ): Option[ApiBuilderType.Model] = {
     val unionModels = union.types.flatMap { unionType =>
       multiService.findType(
         defaultNamespace = union.namespace,
         typeName = unionType.`type`.`type`
       ) collect {
-        case m: ApiBuilderType.Model =>  Some(m)
+        case m: ApiBuilderType.Model => Some(m)
         case m: ApiBuilderType.Union => sythesizeModelFromUnion(m, multiService)
       }
     }.flatten
@@ -207,10 +237,14 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private def mergeModels(models: Seq[ApiBuilderType.Model], toName: String, service: ApiBuilderService): ApiBuilderType.Model = {
+  private def mergeModels(
+    models: Seq[ApiBuilderType.Model],
+    toName: String,
+    service: ApiBuilderService
+  ): ApiBuilderType.Model = {
     val allFields: Seq[Map[String, Field]] = models.map(_.model.fields).map { _.map(t => t.name -> t).toMap }
 
-    val allFieldNames = allFields.foldLeft(Set.empty[String]){ case (agg, fields) => agg ++ fields.keySet }
+    val allFieldNames = allFields.foldLeft(Set.empty[String]) { case (agg, fields) => agg ++ fields.keySet }
 
     val mergedFields = allFieldNames.flatMap { fieldName =>
       val fields = allFields.flatMap(_.get(fieldName))
@@ -268,8 +302,17 @@ case class Controller() extends io.flow.build.Controller {
         candidate.fold {
           println(s"Skipping unpaired v2 upserted member ${head.eventName}")
           pairUpEvents(tail, deleted)
-        }{ d =>
-          List(CapturedType(head.fieldName, head.typeName, head.payloadType, head.discriminator, d.discriminator, d.payloadType.isDefined)) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
+        } { d =>
+          List(
+            CapturedType(
+              head.fieldName,
+              head.typeName,
+              head.payloadType,
+              head.discriminator,
+              d.discriminator,
+              d.payloadType.isDefined
+            )
+          ) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
         }
       case Nil =>
         deleted.foreach { d =>

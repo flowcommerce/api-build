@@ -23,21 +23,30 @@ case class OneApi(
     "io.flow.external.paypal.v1.models.webhook_event" -> "/"
   )
 
-  private[this] val canonical: ApiBuilderService = ApiBuilderService(originalServices.find(_.name == "common").getOrElse {
-    originalServices.headOption.getOrElse {
-      sys.error("Must have at least one service")
+  private[this] val canonical: ApiBuilderService = ApiBuilderService(
+    originalServices.find(_.name == "common").getOrElse {
+      originalServices.headOption.getOrElse {
+        sys.error("Must have at least one service")
+      }
     }
-  })
+  )
 
   private[this] val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
 
-  private[this] val importedServices: List[ApiBuilderService] = downloadCache.mustDownloadServices(
-    originalServices.flatMap(_.imports).map { imp =>
-      io.flow.build.Application.latest(imp.organization.key, imp.application.key)
-    }.distinct.filterNot { a =>
-      originalServices.exists { s => s.organization.key == a.organization && s.application.key == a.application }
-    }
-  ).map(ApiBuilderService(_)).toList
+  private[this] val importedServices: List[ApiBuilderService] = downloadCache
+    .mustDownloadServices(
+      originalServices
+        .flatMap(_.imports)
+        .map { imp =>
+          io.flow.build.Application.latest(imp.organization.key, imp.application.key)
+        }
+        .distinct
+        .filterNot { a =>
+          originalServices.exists { s => s.organization.key == a.organization && s.application.key == a.application }
+        }
+    )
+    .map(ApiBuilderService(_))
+    .toList
 
   private[this] val services: List[ApiBuilderService] = originalServices.map(ApiBuilderService(_)).toList
   private[this] val multiService: MultiService = MultiServiceImpl(services)
@@ -74,12 +83,10 @@ case class OneApi(
       imports = Nil,
       attributes = Nil,
       annotations = allAnnotations,
-
       enums = multiService.allEnums.map(_.`enum`),
       models = multiService.allModels.map(updateModel).map(_.model),
       interfaces = multiService.allInterfaces.map(updateInterface).map(_.interface),
       unions = multiService.allUnions.map(_.union),
-
       resources = services.flatMap { s =>
         s.service.resources.map { r => updateResource(s, r) }
       }
@@ -110,10 +117,9 @@ case class OneApi(
     }
   }
 
-  /**
-   * Filter imports to the namespaces actually referenced in the service and ensure each import namespace
-   * is specified exactly once.
-   */
+  /** Filter imports to the namespaces actually referenced in the service and ensure each import namespace is specified
+    * exactly once.
+    */
   private[this] def buildImports(baseService: Service, imports: Seq[Import]): Seq[Import] = {
     val allNamespaces = AllTypeNames.findNamespaces(baseService)
     val availableImports = imports.distinctBy(_.namespace)
@@ -127,7 +133,10 @@ case class OneApi(
   }
 
   @scala.annotation.tailrec
-  private[this] def mergeResources(remaining: Seq[Resource], merged: Seq[Resource] = Nil): ValidatedNec[String, Seq[Resource]] = {
+  private[this] def mergeResources(
+    remaining: Seq[Resource],
+    merged: Seq[Resource] = Nil
+  ): ValidatedNec[String, Seq[Resource]] = {
     remaining.toList match {
       case Nil => merged.validNec
       case one :: rest => {
@@ -144,8 +153,7 @@ case class OneApi(
     }
   }
 
-  /**
-    * Merges the two resources:
+  /** Merges the two resources:
     *   - Takes fields from the first resource if both provide (e.g. description)
     *   - If paths are different, raises an error
     */
@@ -181,8 +189,8 @@ case class OneApi(
               case multiplePublic => {
                 (
                   s"Cannot merge resources of type[${a.`type`}] with more than one non internal path:\n" +
-                  multiplePublic.sorted.mkString("  - ", "\n  - ", "\n") +
-                  "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack to add an explicit path for this resource"
+                    multiplePublic.sorted.mkString("  - ", "\n  - ", "\n") +
+                    "To resolve - edit api-build:src/main/scala/io/flow/oneapi/OneApi.scala and update MergeResourcePathsHack to add an explicit path for this resource"
                 ).invalidNec
               }
             }
@@ -204,14 +212,16 @@ case class OneApi(
     }
   }
 
-  /**
-    * Given a string version number in semver, e.g. 1.2.3, returns the
-    * major version number as an integer (e.g. 1)
+  /** Given a string version number in semver, e.g. 1.2.3, returns the major version number as an integer (e.g. 1)
     */
   private[this] def majorVersion(version: String): Int = {
-    version.split("\\.").headOption.getOrElse {
-      sys.error(s"Version[$version] must be in semver")
-    }.toInt
+    version
+      .split("\\.")
+      .headOption
+      .getOrElse {
+        sys.error(s"Version[$version] must be in semver")
+      }
+      .toInt
   }
 
   private[this] def resourceSortKey(resource: Resource): String = {
@@ -259,27 +269,35 @@ case class OneApi(
   private[this] def validateRecordNames(): ValidatedNec[String, Unit] = {
     dups(
       "record",
-      multiService.allTypes.filter {
-        case _: ApiBuilderType.Interface => false
-        case _ => true
-      }.map { s =>
-        ContextualValue(
-          context = s.qualified,
-          value = s.name
-        )
-      }
+      multiService.allTypes
+        .filter {
+          case _: ApiBuilderType.Interface => false
+          case _ => true
+        }
+        .map { s =>
+          ContextualValue(
+            context = s.qualified,
+            value = s.name
+          )
+        }
     )
   }
 
-  /**
-    * Returns an error message if there are duplicate values
+  /** Returns an error message if there are duplicate values
     */
   private[oneapi] def dups(label: String, values: Seq[ContextualValue]): ValidatedNec[String, Unit] = {
-    values.groupBy(_.value.toLowerCase).filter { _._2.size > 1 }.keys.toSeq.sorted.map { dup =>
-      val dupValues = values.filter { v => dup == v.value.toLowerCase }
-      assert(dupValues.size >= 2, s"Could not find duplicates for value[$dup]")
-      s"Duplicate $label[$dup] in: " + dupValues.map(_.context).sorted.mkString(", ")
-    }.toList match {
+    values
+      .groupBy(_.value.toLowerCase)
+      .filter { _._2.size > 1 }
+      .keys
+      .toSeq
+      .sorted
+      .map { dup =>
+        val dupValues = values.filter { v => dup == v.value.toLowerCase }
+        assert(dupValues.size >= 2, s"Could not find duplicates for value[$dup]")
+        s"Duplicate $label[$dup] in: " + dupValues.map(_.context).sorted.mkString(", ")
+      }
+      .toList match {
       case Nil => ().validNec
       case errors => errors.mkString(", ").invalidNec
     }
@@ -298,7 +316,8 @@ case class OneApi(
     unions.map(_.discriminator).distinct.toList match {
       case discriminator :: Nil => {
         val types = unions.flatMap { _.types }
-        val duplicates = types.map(_.`type`).groupBy(identity).collect { case (typ, instances) if instances.length > 1 => typ }
+        val duplicates =
+          types.map(_.`type`).groupBy(identity).collect { case (typ, instances) if instances.length > 1 => typ }
         assert(
           duplicates.isEmpty,
           s"Generated event union has duplicate types: ${duplicates.mkString(", ")}"
@@ -325,7 +344,7 @@ case class OneApi(
       name = "event_type",
       plural = "event_types",
       values = event.types.map { t =>
-        EnumValue( 
+        EnumValue(
           name = t.`type`
         )
       }.distinct,
@@ -348,13 +367,14 @@ case class OneApi(
       description = resource.description.orElse {
         multiServiceWithImports.findType(service.namespace, resource.`type`) match {
           case None => None
-          case Some(t) => t match {
-            case _: ScalarType => None
-            case t: ApiBuilderType.Enum => t.enum.description
-            case t: ApiBuilderType.Interface => t.interface.description
-            case t: ApiBuilderType.Model => t.model.description
-            case t: ApiBuilderType.Union => t.union.description
-          }
+          case Some(t) =>
+            t match {
+              case _: ScalarType => None
+              case t: ApiBuilderType.Enum => t.enum.description
+              case t: ApiBuilderType.Interface => t.interface.description
+              case t: ApiBuilderType.Model => t.model.description
+              case t: ApiBuilderType.Union => t.union.description
+            }
         }
       }
     )
@@ -363,7 +383,7 @@ case class OneApi(
   private[this] def updateOperations(resource: Resource): Resource = {
     sortOperations(
       resource.copy(
-        operations = resource.operations.map(updateOperation),
+        operations = resource.operations.map(updateOperation)
       )
     )
   }

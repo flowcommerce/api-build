@@ -3,26 +3,21 @@ package io.flow.lint.linters
 import io.flow.lint.Linter
 import io.apibuilder.spec.v0.models.{Model, Service}
 
-/**
-  * For event models (models ending with 'upserted', 'deleted'), validate:
-  * 
-  *   a. second field is timestamp
-  *   b. if 'organization', next
-  *   c. if 'number', next
+/** For event models (models ending with 'upserted', 'deleted'), validate:
+  *
+  *   a. second field is timestamp b. if 'organization', next c. if 'number', next
   */
 case object EventUpsertedModels extends Linter with Helpers {
 
   override def validate(service: Service): Seq[String] = {
-    service.models.
-      filter(m => !ignored(m.attributes, "event_model")).
-      filter(isEvent).
-      flatMap(validateOrganizationModel)
+    service.models.filter(m => !ignored(m.attributes, "event_model")).filter(isEvent).flatMap(validateOrganizationModel)
   }
 
   private[this] val Suffixes = List(
-    "upserted", "deleted"
+    "upserted",
+    "deleted"
   )
-  
+
   private[this] def isEvent(model: Model): Boolean = {
     Suffixes.exists { s => model.name.endsWith(s"_$s") }
   }
@@ -98,5 +93,4 @@ case object EventUpsertedModels extends Linter with Helpers {
     }
   }
 
-  
 }

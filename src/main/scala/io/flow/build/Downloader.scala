@@ -12,15 +12,14 @@ import scala.concurrent.Await
 import scala.concurrent.duration.{FiniteDuration, SECONDS}
 import scala.util.{Failure, Success, Try}
 
-/**
-  * Utility to download service.json files from API Builder
+/** Utility to download service.json files from API Builder
   */
 private[build] case class Downloader(config: ApibuilderProfile) {
 
   def downloadServices(
     applications: Seq[Application]
-  )(
-    implicit ec: scala.concurrent.ExecutionContext
+  )(implicit
+    ec: scala.concurrent.ExecutionContext
   ): Either[Seq[String], Seq[Service]] = {
     downloadServices(
       orgKeys = applications.map(_.organization).distinct,
@@ -34,15 +33,16 @@ private[build] case class Downloader(config: ApibuilderProfile) {
     applications: Seq[Application],
     errors: Seq[String] = Nil,
     services: Seq[Service] = Nil
-  )(
-    implicit ec: scala.concurrent.ExecutionContext
+  )(implicit
+    ec: scala.concurrent.ExecutionContext
   ): Either[Seq[String], Seq[Service]] = {
     orgKeys.toList match {
-      case Nil => if (errors.isEmpty) {
-        Right(services)
-      } else {
-        Left(errors)
-      }
+      case Nil =>
+        if (errors.isEmpty) {
+          Right(services)
+        } else {
+          Left(errors)
+        }
       case one :: rest => {
         downloadBatch(one, applications.filter(_.organization == one)) match {
           case Invalid(newErrors) => downloadServices(rest, applications, errors ++ newErrors.toList, services)
@@ -71,9 +71,8 @@ private[build] case class Downloader(config: ApibuilderProfile) {
     }
   }
 
-
-  private[this] def downloadBatch(orgKey: String, applications: Seq[Application])(
-    implicit ec: scala.concurrent.ExecutionContext
+  private[this] def downloadBatch(orgKey: String, applications: Seq[Application])(implicit
+    ec: scala.concurrent.ExecutionContext
   ): ValidatedNec[String, Seq[Service]] = {
     assert(
       applications.forall(_.organization == orgKey),
@@ -82,7 +81,7 @@ private[build] case class Downloader(config: ApibuilderProfile) {
 
     println(
       s"Downloading API Builder Service Spec for $orgKey: " +
-      applications.map(_.applicationVersionLabel).sorted.mkString(" ")
+        applications.map(_.applicationVersionLabel).sorted.mkString(" ")
     )
     Try {
       withClient { client =>

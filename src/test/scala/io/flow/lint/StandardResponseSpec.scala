@@ -181,7 +181,7 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
     Seq("ordererrors", "error", "[generic_error]").foreach { typ =>
       linter.validate(
         buildService(
-        "/organizations/:id",
+          "/organizations/:id",
           Method.Post,
           Seq(
             Response(ResponseCodeInt(200), "[organization]"),
@@ -257,7 +257,7 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         Method.Get,
         Seq(
           Response(ResponseCodeInt(302), "unit"),
-          Response(ResponseCodeInt(401), "unit"),
+          Response(ResponseCodeInt(401), "unit")
         )
       )
     ) shouldBe Nil
