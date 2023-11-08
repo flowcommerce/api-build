@@ -71,11 +71,8 @@ pipeline {
                                 ls
                                 pwd
                             '''
-                            // Run 'dev tag' in the api-build directory
                             sh '''
                                 git config --global --add safe.directory /home/jenkins/workspace/flowcommerce_api-build_main
-                                git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
-                                git checkout main
                                 sbt scalafmtSbtCheck scalafmtCheck clean assembly
                                 cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/
                                 cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/api-build.jar
