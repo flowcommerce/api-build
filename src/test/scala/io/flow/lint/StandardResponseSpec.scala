@@ -12,7 +12,7 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
   def buildService(
     path: String,
     method: Method,
-    responses: Seq[Response]
+    responses: Seq[Response],
   ): Service = {
     Services.Base.copy(
       resources = Seq(
@@ -24,11 +24,11 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
               method = method,
               path = path,
               parameters = Nil,
-              responses = responses
-            )
-          )
-        )
-      )
+              responses = responses,
+            ),
+          ),
+        ),
+      ),
     )
   }
 
@@ -39,14 +39,14 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         Method.Get,
         Seq(
           Response(ResponseCodeInt(200), "[organization]", description = Some("Foo")),
-          Response(ResponseCodeInt(401), "unit", description = Some("Bar"))
-        )
-      )
+          Response(ResponseCodeInt(401), "unit", description = Some("Bar")),
+        ),
+      ),
     ) should be(
       Seq(
         "Resource organizations GET /organizations/:id Response 200: Must not have a description as this is a globally standard response",
-        "Resource organizations GET /organizations/:id Response 401: Must not have a description as this is a globally standard response"
-      )
+        "Resource organizations GET /organizations/:id Response 401: Must not have a description as this is a globally standard response",
+      ),
     )
   }
 
@@ -58,9 +58,9 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         Seq(
           Response(ResponseCodeInt(200), "[organization]"),
           Response(ResponseCodeInt(401), "unit"),
-          Response(ResponseCodeInt(404), "unit")
-        )
-      )
+          Response(ResponseCodeInt(404), "unit"),
+        ),
+      ),
     ) should be(Nil)
   }
 
@@ -72,14 +72,14 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         Seq(
           Response(ResponseCodeInt(204), "string"),
           Response(ResponseCodeInt(401), "string"),
-          Response(ResponseCodeInt(404), "unit")
-        )
-      )
+          Response(ResponseCodeInt(404), "unit"),
+        ),
+      ),
     ) should be(
       Seq(
         "Resource organizations DELETE /organizations/:id Response 204: response must be of type unit and not string",
-        "Resource organizations DELETE /organizations/:id Response 401: response must be of type unit and not string"
-      )
+        "Resource organizations DELETE /organizations/:id Response 401: response must be of type unit and not string",
+      ),
     )
   }
 
@@ -89,13 +89,13 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         "/organizations/:id",
         Method.Get,
         Seq(
-          Response(ResponseCodeInt(404), "unit")
-        )
-      )
+          Response(ResponseCodeInt(404), "unit"),
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations GET /organizations/:id: Missing response codes: 200, 401"
-      )
+        "Resource organizations GET /organizations/:id: Missing response codes: 200, 401",
+      ),
     )
   }
 
@@ -105,13 +105,13 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         "/organizations/:id",
         Method.Patch,
         Seq(
-          Response(ResponseCodeInt(409), "unit")
-        )
-      )
+          Response(ResponseCodeInt(409), "unit"),
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations PATCH /organizations/:id: Missing response codes: 401, 404, 422"
-      )
+        "Resource organizations PATCH /organizations/:id: Missing response codes: 401, 404, 422",
+      ),
     )
   }
 
@@ -121,13 +121,13 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         "/organizations/:id",
         Method.Post,
         Seq(
-          Response(ResponseCodeInt(404), "unit")
-        )
-      )
+          Response(ResponseCodeInt(404), "unit"),
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations POST /organizations/:id: Missing response codes: 401, 422"
-      )
+        "Resource organizations POST /organizations/:id: Missing response codes: 401, 422",
+      ),
     )
   }
 
@@ -137,13 +137,13 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         "/organizations/:id",
         Method.Put,
         Seq(
-          Response(ResponseCodeInt(404), "unit")
-        )
-      )
+          Response(ResponseCodeInt(404), "unit"),
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations PUT /organizations/:id: Missing response codes: 401, 422"
-      )
+        "Resource organizations PUT /organizations/:id: Missing response codes: 401, 422",
+      ),
     )
   }
 
@@ -153,13 +153,13 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         "/organizations/:id",
         Method.Delete,
         Seq(
-          Response(ResponseCodeInt(409), "unit")
-        )
-      )
+          Response(ResponseCodeInt(409), "unit"),
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations DELETE /organizations/:id: Missing response codes: 401, 404"
-      )
+        "Resource organizations DELETE /organizations/:id: Missing response codes: 401, 404",
+      ),
     )
   }
 
@@ -186,13 +186,13 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
           Seq(
             Response(ResponseCodeInt(200), "[organization]"),
             Response(ResponseCodeInt(401), "unit"),
-            Response(ResponseCodeInt(422), typ)
-          )
-        )
+            Response(ResponseCodeInt(422), typ),
+          ),
+        ),
       ) should be(
         Seq(
-          s"Resource organizations POST /organizations/:id Response 422: response must be of type *_error and not $typ"
-        )
+          s"Resource organizations POST /organizations/:id Response 422: response must be of type *_error and not $typ",
+        ),
       )
     }
   }
@@ -204,7 +204,7 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
       "card_error",
       "io.flow.error.v0.models.validation_error",
       "io.flow.error.v0.models.order_error",
-      "io.flow.error.v0.unions.order_error"
+      "io.flow.error.v0.unions.order_error",
     ).foreach { typ =>
       linter.validate(
         buildService(
@@ -213,9 +213,9 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
           Seq(
             Response(ResponseCodeInt(200), "[organization]"),
             Response(ResponseCodeInt(401), "unit"),
-            Response(ResponseCodeInt(422), typ)
-          )
-        )
+            Response(ResponseCodeInt(422), typ),
+          ),
+        ),
       ) should be(Nil)
     }
   }
@@ -234,19 +234,19 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
                 parameters = Nil,
                 responses = Seq(
                   Response(ResponseCodeInt(200), "[organization]"),
-                  Response(ResponseCodeInt(401), "unit")
+                  Response(ResponseCodeInt(401), "unit"),
                 ),
                 attributes = Seq(
                   Attribute(
                     name = "linter",
-                    value = Json.parse("""{ "ignore": ["response_codes"] }""").as[JsObject]
-                  )
-                )
-              )
-            )
-          )
-        )
-      )
+                    value = Json.parse("""{ "ignore": ["response_codes"] }""").as[JsObject],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     ) should be(Nil)
   }
 
@@ -257,9 +257,9 @@ class StandardResponseSpec extends AnyFunSpec with Matchers {
         Method.Get,
         Seq(
           Response(ResponseCodeInt(302), "unit"),
-          Response(ResponseCodeInt(401), "unit")
-        )
-      )
+          Response(ResponseCodeInt(401), "unit"),
+        ),
+      ),
     ) shouldBe Nil
   }
 }

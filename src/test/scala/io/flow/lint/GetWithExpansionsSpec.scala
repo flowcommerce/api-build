@@ -10,7 +10,7 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
 
   val model = Services.buildSimpleModel(
     "organization",
-    fields = Seq("id", "name")
+    fields = Seq("id", "name"),
   )
 
   val idParameter = Parameter(
@@ -18,7 +18,7 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
     `type` = "[string]",
     location = ParameterLocation.Query,
     required = false,
-    maximum = Some(100)
+    maximum = Some(100),
   )
 
   val limitParameter = Parameter(
@@ -28,7 +28,7 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
     required = false,
     default = Some("25"),
     minimum = Some(1),
-    maximum = Some(100)
+    maximum = Some(100),
   )
 
   val offsetParameter = Parameter(
@@ -37,7 +37,7 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
     location = ParameterLocation.Query,
     required = false,
     default = Some("0"),
-    minimum = Some(0)
+    minimum = Some(0),
   )
 
   val sortParameter = Parameter(
@@ -45,7 +45,7 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
     `type` = "string",
     location = ParameterLocation.Query,
     required = false,
-    default = Some("created_at")
+    default = Some("created_at"),
   )
 
   val expandParameter = Parameter(
@@ -53,7 +53,7 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
     `type` = "[string]",
     location = ParameterLocation.Query,
     required = false,
-    default = None
+    default = None,
   )
 
   val baseParameters = Seq(idParameter, limitParameter, offsetParameter, sortParameter)
@@ -71,12 +71,12 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
               path = "/organizations",
               parameters = params,
               responses = Seq(
-                Services.buildResponse(`type` = "[organization]")
-              )
-            )
-          )
-        )
-      )
+                Services.buildResponse(`type` = "[organization]"),
+              ),
+            ),
+          ),
+        ),
+      ),
     )
   }
 
@@ -84,19 +84,19 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
     linter.validate(
       buildService(
         model,
-        baseParameters
-      )
+        baseParameters,
+      ),
     ) should be(Nil)
 
     linter.validate(
       buildService(
         model,
-        baseParameters ++ Seq(expandParameter)
-      )
+        baseParameters ++ Seq(expandParameter),
+      ),
     ) should be(
       Seq(
-        "Resource organizations GET /organizations: There are no expansions available - should not have a parameter named expand"
-      )
+        "Resource organizations GET /organizations: There are no expansions available - should not have a parameter named expand",
+      ),
     )
   }
 
@@ -105,18 +105,18 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
       "organization",
       fields = Seq(
         Services.buildField("id"),
-        Services.buildField("user", "io.flow.common.v0.models.expandable_user")
-      )
+        Services.buildField("user", "io.flow.common.v0.models.expandable_user"),
+      ),
     ),
-    baseParameters ++ Seq(expandParameter)
+    baseParameters ++ Seq(expandParameter),
   )
 
   it("resource w/ expansions validates attributes") {
     linter.validate(serviceWithExpansion) should be(
       Seq(
         "Resource organizations GET /organizations: parameter[expand] is missing example. It must be user",
-        "Resource organizations GET /organizations: parameter[expand] is missing maximum. It must be 1"
-      )
+        "Resource organizations GET /organizations: parameter[expand] is missing maximum. It must be 1",
+      ),
     )
   }
 
@@ -125,15 +125,15 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
       "card",
       Seq(
         Services.buildField("id"),
-        Services.buildField("name")
-      )
+        Services.buildField("name"),
+      ),
     )
 
     val cardReference = Services.buildModel(
       "card_reference",
       Seq(
-        Services.buildField("id")
-      )
+        Services.buildField("id"),
+      ),
     )
 
     val expandableCardType = if (expandableTypeIsArray) "[expandable_card]" else "expandable_card"
@@ -141,8 +141,8 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
       "card_authorization",
       Seq(
         Services.buildField("id"),
-        Services.buildField("card", `type` = expandableCardType)
-      )
+        Services.buildField("card", `type` = expandableCardType),
+      ),
     )
 
     val resource = Services.buildResource(
@@ -155,11 +155,11 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
             Services.buildParameter(name = "limit", `type` = "long"),
             Services.buildParameter(name = "offset", `type` = "long"),
             Services.buildParameter(name = "sort"),
-            Services.buildParameter(name = "expand", `type` = "[string]", maximum = Some(1), example = Some("card"))
+            Services.buildParameter(name = "expand", `type` = "[string]", maximum = Some(1), example = Some("card")),
           ),
-          responseType = "[authorization]"
-        )
-      )
+          responseType = "[authorization]",
+        ),
+      ),
     )
 
     Services.Base.copy(
@@ -170,30 +170,30 @@ class GetWithExpansionsSpec extends AnyFunSpec with Matchers {
           discriminator = Some("discriminator"),
           types = Seq(
             Services.buildUnionType("card"),
-            Services.buildUnionType("card_reference")
-          )
+            Services.buildUnionType("card_reference"),
+          ),
         ),
         Services.buildUnion(
           name = "authorization",
           discriminator = Some("discriminator"),
           types = Seq(
-            Services.buildUnionType("card_authorization")
-          )
-        )
+            Services.buildUnionType("card_authorization"),
+          ),
+        ),
       ),
-      resources = Seq(resource)
+      resources = Seq(resource),
     )
   }
 
   it("validates expandable properties inside union fields") {
     linter.validate(
-      buildServiceWithUnion()
+      buildServiceWithUnion(),
     ) should be(Nil)
   }
 
   it("validates expandable properties when expandable type is an array") {
     linter.validate(
-      buildServiceWithUnion(expandableTypeIsArray = true)
+      buildServiceWithUnion(expandableTypeIsArray = true),
     ) should be(Nil)
   }
 }

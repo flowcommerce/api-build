@@ -32,7 +32,7 @@ case object ErrorModelsV1 extends Linter with Helpers {
       Field(
         name = discName,
         `type` = "string",
-        required = true
+        required = true,
       )
     }.toSeq
 
@@ -52,8 +52,8 @@ case object ErrorModelsV1 extends Linter with Helpers {
           val modelErrors = validateModel(
             service,
             m.copy(
-              fields = discriminatorFields ++ m.fields
-            )
+              fields = discriminatorFields ++ m.fields,
+            ),
           )
 
           nameErrors ++ modelErrors

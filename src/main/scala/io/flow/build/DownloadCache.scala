@@ -6,7 +6,7 @@ import scala.annotation.tailrec
 import scala.collection.concurrent.TrieMap
 
 case class DownloadCache(downloader: Downloader)(implicit
-  ec: scala.concurrent.ExecutionContext
+  ec: scala.concurrent.ExecutionContext,
 ) {
 
   private[this] val cache = TrieMap[Application, Service]()
@@ -19,7 +19,7 @@ case class DownloadCache(downloader: Downloader)(implicit
   @tailrec
   final def downloadAllServicesAndImports(services: Seq[Service], index: Int = 0): Seq[Service] = {
     val all = services ++ mustDownloadServices(
-      services.flatMap(_.imports).map(toApplication)
+      services.flatMap(_.imports).map(toApplication),
     )
     val missing = all.flatMap(_.imports).map(toApplication).filterNot(isDefinedAt)
     if (missing.isEmpty) {
@@ -37,7 +37,7 @@ case class DownloadCache(downloader: Downloader)(implicit
   }
 
   def downloadServices(
-    applications: Seq[Application]
+    applications: Seq[Application],
   ): Either[Seq[String], Seq[Service]] = {
 
     val (cached, remaining) = applications.partition { a => isDefinedAt(cacheKey(a)) }

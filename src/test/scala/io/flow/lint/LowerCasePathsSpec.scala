@@ -9,17 +9,17 @@ class LowerCasePathsSpec extends AnyFunSpec with Matchers {
 
   it("lower case paths are good") {
     linter.validate(
-      Services.buildServiceByPath("/organizations/tiers/:tier_id")
+      Services.buildServiceByPath("/organizations/tiers/:tier_id"),
     ) should be(Nil)
   }
 
   it("Flags upper case paths") {
     linter.validate(
-      Services.buildServiceByPath("/organizations/tiers/:tierId")
+      Services.buildServiceByPath("/organizations/tiers/:tierId"),
     ) should be(
       Seq(
-        "Resource organizations GET /organizations/tiers/:tierId: Path must be all lower case"
-      )
+        "Resource organizations GET /organizations/tiers/:tierId: Path must be all lower case",
+      ),
     )
   }
 }

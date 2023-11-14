@@ -10,19 +10,19 @@ class PublishedEventModelsSpec extends AnyFunSpec with Matchers {
 
   private[this] def buildService(
     fields: Map[String, String],
-    attributes: Seq[Attribute] = Nil
+    attributes: Seq[Attribute] = Nil,
   ): Service = {
     Services.Base.copy(
       models = Seq(
         Services
           .buildModel(
             name = "organization_rates_published",
-            fields = fields.map { case (name, typ) => Services.buildField(name = name, `type` = typ) }.toList
+            fields = fields.map { case (name, typ) => Services.buildField(name = name, `type` = typ) }.toList,
           )
           .copy(
-            attributes = attributes
-          )
-      )
+            attributes = attributes,
+          ),
+      ),
     )
   }
 
@@ -31,12 +31,12 @@ class PublishedEventModelsSpec extends AnyFunSpec with Matchers {
       buildService(
         Map(
           "id" -> "string",
-          "email" -> "string"
+          "email" -> "string",
         ),
         attributes = Seq(
-          Services.buildLinterIgnoreAttribute(Seq("published_event_model"))
-        )
-      )
+          Services.buildLinterIgnoreAttribute(Seq("published_event_model")),
+        ),
+      ),
     ) should be(Nil)
   }
 
@@ -45,13 +45,13 @@ class PublishedEventModelsSpec extends AnyFunSpec with Matchers {
       buildService(
         Map(
           "id" -> "string",
-          "email" -> "string"
-        )
-      )
+          "email" -> "string",
+        ),
+      ),
     ) should be(
       Seq(
-        "Model organization_rates_published: Published event models must contain exactly four fields: event_id, timestamp, organization, data. Your model was defined as: id, email"
-      )
+        "Model organization_rates_published: Published event models must contain exactly four fields: event_id, timestamp, organization, data. Your model was defined as: id, email",
+      ),
     )
   }
 
@@ -62,9 +62,9 @@ class PublishedEventModelsSpec extends AnyFunSpec with Matchers {
           "event_id" -> "string",
           "timestamp" -> "date-time-iso8601",
           "organization" -> "string",
-          "data" -> "organization_rates_data"
-        )
-      )
+          "data" -> "organization_rates_data",
+        ),
+      ),
     ) should be(Nil)
   }
 
@@ -75,16 +75,16 @@ class PublishedEventModelsSpec extends AnyFunSpec with Matchers {
           "event_id" -> "long",
           "timestamp" -> "boolean",
           "organization" -> "integer",
-          "data" -> "string"
-        )
-      )
+          "data" -> "string",
+        ),
+      ),
     ) should be(
       Seq(
         "Model organization_rates_published Field[event_id]: type must be 'string' and not long",
         "Model organization_rates_published Field[timestamp]: type must be 'date-time-iso8601' and not boolean",
         "Model organization_rates_published Field[organization]: type must be 'string' and not integer",
-        "Model organization_rates_published Field[data]: type must be 'organization_rates_data' and not string"
-      )
+        "Model organization_rates_published Field[data]: type must be 'organization_rates_data' and not string",
+      ),
     )
   }
 }

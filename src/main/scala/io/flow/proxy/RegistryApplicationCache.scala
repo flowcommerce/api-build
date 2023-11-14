@@ -11,12 +11,12 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   * applications added to the registry after loading (i.e. there is no refresh).
   */
 private[proxy] case class RegistryApplicationCache(
-  client: RegistryClient
+  client: RegistryClient,
 )(implicit ec: ExecutionContext) {
 
   private[this] val cache: Map[String, Application] = load(
     cache = scala.collection.mutable.Map[String, Application](),
-    offset = 0
+    offset = 0,
   )
 
   /** Get the application with the specified name from the registry.
@@ -39,7 +39,7 @@ private[proxy] case class RegistryApplicationCache(
   def externalPort(registryName: String, serviceName: String): Long = {
     val app = get(registryName).getOrElse {
       sys.error(
-        s"Could not find application named[$serviceName] in Registry at[${client.baseUrl}]. Either add the application to the registry or add an attribute named api-build/host to the apibuilder spec. The context of this error is that as we are building the proxy configuration file, we do not know how to route traffic to the resources defined in this spec."
+        s"Could not find application named[$serviceName] in Registry at[${client.baseUrl}]. Either add the application to the registry or add an attribute named api-build/host to the apibuilder spec. The context of this error is that as we are building the proxy configuration file, we do not know how to route traffic to the resources defined in this spec.",
       )
     }
     app.ports.headOption.map(_.external).getOrElse {
@@ -50,15 +50,15 @@ private[proxy] case class RegistryApplicationCache(
   @tailrec
   private[this] def load(
     cache: scala.collection.mutable.Map[String, Application],
-    offset: Long
+    offset: Long,
   ): Map[String, Application] = {
     val limit = 100L
     val results = Await.result(
       getFromRegistry(
         limit = limit,
-        offset = offset
+        offset = offset,
       ),
-      Duration(5, "seconds")
+      Duration(5, "seconds"),
     )
 
     results.map { apps =>
@@ -75,7 +75,7 @@ private[proxy] case class RegistryApplicationCache(
   }
 
   private[this] def getFromRegistry(limit: Long, offset: Long)(implicit
-    ec: scala.concurrent.ExecutionContext
+    ec: scala.concurrent.ExecutionContext,
   ): Future[Option[Seq[Application]]] = {
     client.applications
       .get(limit = limit, offset = offset)

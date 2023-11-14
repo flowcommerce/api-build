@@ -10,7 +10,7 @@ case class ServiceHostResolver(services: Seq[Service]) {
     apiBuildAttributes.host(serviceName).getOrElse {
       val formattedName = Text.stripSuffix(
         Text.stripSuffix(serviceName.toLowerCase, "-internal-event"),
-        "-internal"
+        "-internal",
       )
       apiBuildAttributes.host(formattedName).getOrElse {
         formattedName

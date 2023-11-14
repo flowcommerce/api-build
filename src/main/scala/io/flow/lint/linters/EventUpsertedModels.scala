@@ -15,7 +15,7 @@ case object EventUpsertedModels extends Linter with Helpers {
 
   private[this] val Suffixes = List(
     "upserted",
-    "deleted"
+    "deleted",
   )
 
   private[this] def isEvent(model: Model): Boolean = {
@@ -29,8 +29,8 @@ case object EventUpsertedModels extends Linter with Helpers {
         "event_id" -> "string",
         "timestamp" -> "date-time-iso8601",
         "organization" -> "string",
-        "number" -> "string"
-      )
+        "number" -> "string",
+      ),
     )
   }
 

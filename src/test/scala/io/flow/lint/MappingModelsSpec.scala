@@ -15,15 +15,15 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
 
   def buildService(
     name: String = "experience_price_book_mapping",
-    fields: Seq[Field]
+    fields: Seq[Field],
   ): Service = {
     Services.Base.copy(
       models = Seq(
         Services.buildModel(
           name = name,
-          fields = fields
-        )
-      )
+          fields = fields,
+        ),
+      ),
     )
   }
 
@@ -31,17 +31,17 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(
       buildService(
         name = "experience_price_book_mapping",
-        fields = Seq(id, experienceReference, priceBookReference)
-      )
+        fields = Seq(id, experienceReference, priceBookReference),
+      ),
     ) should be(Nil)
 
     linter.validate(
       buildService(
         name = "price_book_experience_mapping",
-        fields = Seq(id, experienceReference, priceBookReference)
-      )
+        fields = Seq(id, experienceReference, priceBookReference),
+      ),
     ) should be(
-      Seq("Model 'price_book_experience_mapping' must be named 'experience_price_book_mapping'")
+      Seq("Model 'price_book_experience_mapping' must be named 'experience_price_book_mapping'"),
     )
   }
 
@@ -49,19 +49,19 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(
       buildService(
         name = "experience_price_book_mapping",
-        fields = Seq(id)
-      )
+        fields = Seq(id),
+      ),
     ) should be(
-      Seq("Model experience_price_book_mapping: Mapping models must have at least 3 fields")
+      Seq("Model experience_price_book_mapping: Mapping models must have at least 3 fields"),
     )
 
     linter.validate(
       buildService(
         name = "experience_price_book_mapping",
-        fields = Seq(id, experienceReference)
-      )
+        fields = Seq(id, experienceReference),
+      ),
     ) should be(
-      Seq("Model experience_price_book_mapping: Mapping models must have at least 3 fields")
+      Seq("Model experience_price_book_mapping: Mapping models must have at least 3 fields"),
     )
   }
 
@@ -69,8 +69,8 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(
       buildService(
         name = "experience_price_book_mapping",
-        fields = Seq(id, experienceReference, priceBookReference, position)
-      )
+        fields = Seq(id, experienceReference, priceBookReference, position),
+      ),
     ) should be(Nil)
   }
 
@@ -78,10 +78,10 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(
       buildService(
         name = "experience_price_book_mapping",
-        fields = Seq(id, position, experienceReference, priceBookReference)
-      )
+        fields = Seq(id, position, experienceReference, priceBookReference),
+      ),
     ) should be(
-      Seq("Field 'position' type must be 'position_reference'")
+      Seq("Field 'position' type must be 'position_reference'"),
     )
   }
 
@@ -92,19 +92,19 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(
       buildService(
         name = "experience_price_book_mapping",
-        fields = Seq(id, other, experienceReference, priceBookReference)
-      )
+        fields = Seq(id, other, experienceReference, priceBookReference),
+      ),
     ) should be(
-      Seq("Field 2 'foo' must be named 'order'")
+      Seq("Field 2 'foo' must be named 'order'"),
     )
 
     linter.validate(
       buildService(
         name = "experience_price_book_mapping",
-        fields = Seq(id, experienceReference, fullyQualified)
-      )
+        fields = Seq(id, experienceReference, fullyQualified),
+      ),
     ) should be(
-      Nil
+      Nil,
     )
   }
 
@@ -112,8 +112,8 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(
       buildService(
         name = "experience_price_book_mapping",
-        fields = Seq(id, experienceReference, priceBookReference)
-      )
+        fields = Seq(id, experienceReference, priceBookReference),
+      ),
     ) should be(Nil)
 
     linter.validate(
@@ -122,11 +122,11 @@ class MappingModelsSpec extends AnyFunSpec with Matchers {
         fields = Seq(
           id,
           Services.buildField("experience", "string"),
-          priceBookReference
-        )
-      )
+          priceBookReference,
+        ),
+      ),
     ) should be(
-      Seq("Field 'experience' type must be 'experience_reference'")
+      Seq("Field 'experience' type must be 'experience_reference'"),
     )
   }
 

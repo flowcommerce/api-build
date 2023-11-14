@@ -33,7 +33,7 @@ case object MappingModels extends Linter with Helpers {
       }
       case _ => {
         Seq(
-          error(model, "Mapping models must have at least 3 fields")
+          error(model, "Mapping models must have at least 3 fields"),
         )
       }
     }

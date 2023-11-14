@@ -10,13 +10,13 @@ class OperationSortSpec extends AnyFunSpec with Matchers {
   it("static paths") {
     Seq(
       Services.buildSimpleOperation(
-        path = "/organizations/id"
+        path = "/organizations/id",
       ),
       Services.buildSimpleOperation(
-        path = "/organizations"
-      )
+        path = "/organizations",
+      ),
     ).sortBy(OperationSort.key).map(_.path) should equal(
-      Seq("/organizations", "/organizations/id")
+      Seq("/organizations", "/organizations/id"),
     )
   }
 
@@ -24,40 +24,40 @@ class OperationSortSpec extends AnyFunSpec with Matchers {
     Seq(
       Services.buildSimpleOperation(
         method = Method.Post,
-        path = "/organizations"
+        path = "/organizations",
       ),
       Services.buildSimpleOperation(
         method = Method.Get,
-        path = "/organizations"
-      )
+        path = "/organizations",
+      ),
     ).sortBy(OperationSort.key).map(_.method) should equal(
-      Seq(Method.Get, Method.Post)
+      Seq(Method.Get, Method.Post),
     )
   }
 
   it("simple dynamic paths") {
     Seq(
       Services.buildSimpleOperation(
-        path = "/:organization/experiences/:key"
+        path = "/:organization/experiences/:key",
       ),
       Services.buildSimpleOperation(
-        path = "/:organization/experiences"
-      )
+        path = "/:organization/experiences",
+      ),
     ).sortBy(OperationSort.key).map(_.path) should equal(
-      Seq("/:organization/experiences", "/:organization/experiences/:key")
+      Seq("/:organization/experiences", "/:organization/experiences/:key"),
     )
   }
 
   it("complex dynamic paths") {
     Seq(
       Services.buildSimpleOperation(
-        path = "/:organization/experiences/:key"
+        path = "/:organization/experiences/:key",
       ),
       Services.buildSimpleOperation(
-        path = "/:organization/experiences/items"
-      )
+        path = "/:organization/experiences/items",
+      ),
     ).sortBy(OperationSort.key).map(_.path) should equal(
-      Seq("/:organization/experiences/items", "/:organization/experiences/:key")
+      Seq("/:organization/experiences/items", "/:organization/experiences/:key"),
     )
   }
 

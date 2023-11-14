@@ -3,11 +3,11 @@ package io.flow.oneapi
 case class Module(name: String, serviceNames: Set[String]) {
   assert(
     name.toLowerCase() == name,
-    "Module name must be in lower case"
+    "Module name must be in lower case",
   )
   assert(
     serviceNames.forall { n => n.toLowerCase() == n },
-    "All service names must be in lower case"
+    "All service names must be in lower case",
   )
 }
 
@@ -15,7 +15,7 @@ object Module {
 
   val General: Module = Module(
     "general",
-    Set("common", "feed", "healthcheck", "link", "organization", "search", "session", "token", "user")
+    Set("common", "feed", "healthcheck", "link", "organization", "search", "session", "token", "user"),
   )
   val Webhook: Module = Module("webhook", Set("webhook"))
 
@@ -31,7 +31,7 @@ object Module {
     Module("reference", Set("reference")),
     Module("partner", Set("partner")),
     Module("calculator", Set("calculator")),
-    General
+    General,
   )
 
   def findByServiceName(name: String): Option[Module] = {

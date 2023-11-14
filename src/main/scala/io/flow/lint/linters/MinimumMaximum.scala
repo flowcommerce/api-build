@@ -33,7 +33,7 @@ case object MinimumMaximum extends Linter with Helpers {
           case None => Nil
           case Some(default) => {
             Try(
-              default.toLong
+              default.toLong,
             ) match {
               case Success(d) => {
                 if (d < min) {

@@ -9,8 +9,8 @@ class ServiceHostResolverSpec extends AnyFunSpec with Matchers with ServiceHostH
   it("host defaults to name of service") {
     val resolver = ServiceHostResolver(
       Seq(
-        serviceWithHost("foo")
-      )
+        serviceWithHost("foo"),
+      ),
     )
     resolver.host("foo") should be("foo")
   }
@@ -20,8 +20,8 @@ class ServiceHostResolverSpec extends AnyFunSpec with Matchers with ServiceHostH
       Seq(
         serviceWithHost("user"),
         serviceWithHost("user-internal"),
-        serviceWithHost("user-internal-event")
-      )
+        serviceWithHost("user-internal-event"),
+      ),
     )
     resolver.host("user") should be("user")
     resolver.host("user-internal") should be("user")
@@ -33,8 +33,8 @@ class ServiceHostResolverSpec extends AnyFunSpec with Matchers with ServiceHostH
       Seq(
         serviceWithHost("user", Some("foo")),
         serviceWithHost("user-internal", Some("bar")),
-        serviceWithHost("user-internal-event", Some("baz"))
-      )
+        serviceWithHost("user-internal-event", Some("baz")),
+      ),
     )
     resolver.host("user") should be("foo")
     resolver.host("user-internal") should be("bar")
@@ -45,8 +45,8 @@ class ServiceHostResolverSpec extends AnyFunSpec with Matchers with ServiceHostH
     val resolver = ServiceHostResolver(
       Seq(
         serviceWithHost("user", Some("foo")),
-        serviceWithHost("user-internal")
-      )
+        serviceWithHost("user-internal"),
+      ),
     )
     resolver.host("user") should be("foo")
     resolver.host("user-internal") should be("foo")

@@ -40,8 +40,8 @@ case object SortParameterDefault extends Linter with Helpers {
                   error(
                     resource,
                     operation,
-                    s"Parameter sort default expected to be[${expected.mkString(" or ")}] and not[$default]"
-                  )
+                    s"Parameter sort default expected to be[${expected.mkString(" or ")}] and not[$default]",
+                  ),
                 )
               }
             }

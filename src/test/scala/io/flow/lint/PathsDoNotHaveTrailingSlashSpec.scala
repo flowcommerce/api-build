@@ -9,20 +9,20 @@ class PathsDoNotHaveTrailingSlash extends AnyFunSpec with Matchers {
 
   it("good path") {
     linter.validate(
-      Services.buildServiceByPath("/:organization")
+      Services.buildServiceByPath("/:organization"),
     ) should be(Nil)
     linter.validate(
-      Services.buildServiceByPath("/:organization/users")
+      Services.buildServiceByPath("/:organization/users"),
     ) should be(Nil)
   }
 
   it("bad path") {
     linter.validate(
-      Services.buildServiceByPath("/:organization/")
+      Services.buildServiceByPath("/:organization/"),
     ) should be(
       Seq(
-        "Resource organizations GET /:organization/: Path cannot end with '/'"
-      )
+        "Resource organizations GET /:organization/: Path cannot end with '/'",
+      ),
     )
   }
 }

@@ -66,15 +66,15 @@ case object UpsertedDeletedEventModels extends Linter with Helpers {
         Nil
       } else {
         Seq(
-          error(model, s"Type of field 'id' must be 'string' and not '${f.`type`}'")
+          error(model, s"Type of field 'id' must be 'string' and not '${f.`type`}'"),
         )
       }
     } else {
       Seq(
         error(
           model,
-          s"Event must contain a field whose name and type contain " + typ.baseName.split("_").mkString(" or ")
-        )
+          s"Event must contain a field whose name and type contain " + typ.baseName.split("_").mkString(" or "),
+        ),
       )
     }
   }
@@ -190,6 +190,6 @@ case object UpsertedDeletedEventModels extends Linter with Helpers {
     "ratecard_rate_upserted",
     "shopify_shop_deleted",
     "user_deleted",
-    "user_upserted"
+    "user_upserted",
   )
 }

@@ -28,7 +28,7 @@ case class DeletedEventModel(model: Model, prefix: String) extends EventModel
 
 case class EventInstance(
   union: Union,
-  models: Seq[EventModel]
+  models: Seq[EventModel],
 ) {
   val upserted: Seq[UpsertedEventModel] = models.collect { case m: UpsertedEventModel => m }
   val deleted: Seq[DeletedEventModel] = models.collect { case m: DeletedEventModel => m }
@@ -44,9 +44,9 @@ trait EventHelpers extends Helpers {
           EventModel.fromModel(
             service.models.find(_.name == t.`type`).getOrElse {
               sys.error(s"Union '${union.name}': Failed to find model named ${t.`type`}")
-            }
+            },
           )
-        }
+        },
       )
     }
   }

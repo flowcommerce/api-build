@@ -14,17 +14,17 @@ class SortAttributeSpec extends AnyFunSpec with Matchers {
     `type` = "string",
     location = ParameterLocation.Query,
     required = false,
-    default = None
+    default = None,
   )
 
   val sortAttribute = Attribute(
     name = "sort",
-    Json.obj()
+    Json.obj(),
   )
 
   val otherAttribute = Attribute(
     name = "other",
-    Json.obj()
+    Json.obj(),
   )
 
   def buildService(parameter: Parameter, attribute: Attribute): Service = {
@@ -38,21 +38,21 @@ class SortAttributeSpec extends AnyFunSpec with Matchers {
           responseCode = 200,
           responseType = "[organization]",
           parameters = Seq(parameter),
-          attributes = Seq(attribute)
-        )
-      )
+          attributes = Seq(attribute),
+        ),
+      ),
     )
   }
 
   it("should be empty when sort attribute exists") {
     linter.validate(
-      buildService(sortParameter, sortAttribute)
+      buildService(sortParameter, sortAttribute),
     ) should be(Nil)
   }
 
   it("should have errors when sort attribute is missing") {
     linter.validate(
-      buildService(sortParameter, otherAttribute)
+      buildService(sortParameter, otherAttribute),
     ) should be(Seq("Resource organizations GET /organization: Missing attribute named sort"))
   }
 }

@@ -13,9 +13,9 @@ class UpsertedDeletedEventModelsSpec extends AnyFunSpec with Matchers {
       models = Seq(
         Services.buildModel(
           name = modelName,
-          Seq(Services.buildField(name = fieldName, `type` = fieldType))
-        )
-      )
+          Seq(Services.buildField(name = fieldName, `type` = fieldType)),
+        ),
+      ),
     )
   }
 
@@ -23,37 +23,37 @@ class UpsertedDeletedEventModelsSpec extends AnyFunSpec with Matchers {
     linter.validate(buildService("example_upserted", "example", "example")) should be(Nil)
 
     linter.validate(buildService("example_upserted", "foo", "example")) should be(
-      Seq("Model example_upserted: Event must contain a field whose name and type contain example")
+      Seq("Model example_upserted: Event must contain a field whose name and type contain example"),
     )
   }
 
   it("with partial names") {
     linter.validate(buildService("card_authorization_upserted", "card_authorization", "card_authorization")) should be(
-      Nil
+      Nil,
     )
     linter.validate(buildService("card_authorization_upserted", "card", "card_authorization")) should be(Nil)
     linter.validate(buildService("card_authorization_upserted", "authorization", "card_authorization")) should be(Nil)
     linter.validate(buildService("card_authorization_upserted", "foo", "card_authorization")) should be(
       Seq(
-        "Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization"
-      )
+        "Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization",
+      ),
     )
     linter.validate(buildService("card_authorization_upserted", "card_authorization", "foo")) should be(
       Seq(
-        "Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization"
-      )
+        "Model card_authorization_upserted: Event must contain a field whose name and type contain card or authorization",
+      ),
     )
     linter.validate(buildService("card_authorization_deleted", "card_authorization", "foo")) should be(
       Seq(
-        "Model card_authorization_deleted: Event must contain a field whose name and type contain card or authorization"
-      )
+        "Model card_authorization_deleted: Event must contain a field whose name and type contain card or authorization",
+      ),
     )
   }
 
   it("deleted events can just use 'id' w/ type string") {
     linter.validate(buildService("card_authorization_deleted", "id", "string")) should be(Nil)
     linter.validate(buildService("card_authorization_deleted", "id", "object")) should be(
-      Seq("Model card_authorization_deleted: Type of field 'id' must be 'string' and not 'object'")
+      Seq("Model card_authorization_deleted: Type of field 'id' must be 'string' and not 'object'"),
     )
   }
 

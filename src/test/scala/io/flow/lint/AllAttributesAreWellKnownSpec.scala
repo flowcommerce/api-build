@@ -15,9 +15,9 @@ class AllAttributesAreWellKnownSpec extends AnyFunSpec with Matchers {
           name = "id",
           attributes = names.map { name =>
             Services.buildAttribute(name = name)
-          }
-        )
-      )
+          },
+        ),
+      ),
     )
   }
 
@@ -26,13 +26,13 @@ class AllAttributesAreWellKnownSpec extends AnyFunSpec with Matchers {
 
   it("unsupported attribute") {
     linter.validate(
-      build(Seq("auth"))
+      build(Seq("auth")),
     ) shouldBe Seq(ErrorMsg)
   }
 
   it("unsupported attribute reported at most once") {
     linter.validate(
-      build(Seq("auth", "auth"))
+      build(Seq("auth", "auth")),
     ) shouldBe Seq(ErrorMsg)
   }
 

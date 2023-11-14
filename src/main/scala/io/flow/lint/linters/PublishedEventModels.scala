@@ -19,7 +19,7 @@ case object PublishedEventModels extends Linter with Helpers {
   }
 
   private[this] val Suffixes = List(
-    "published"
+    "published",
   )
 
   private[this] def isPublishedEvent(model: Model): Boolean = {
@@ -37,8 +37,8 @@ case object PublishedEventModels extends Linter with Helpers {
           error(
             model,
             "Published event models must contain exactly four fields: event_id, timestamp, organization, data. " +
-              s"Your model was defined as: ${other.mkString(", ")}"
-          )
+              s"Your model was defined as: ${other.mkString(", ")}",
+          ),
         ) ++ validateTypes(model)
       }
     }
@@ -52,8 +52,8 @@ case object PublishedEventModels extends Linter with Helpers {
         "event_id" -> "string",
         "timestamp" -> "date-time-iso8601",
         "organization" -> "string",
-        "data" -> dataTypeName
-      )
+        "data" -> dataTypeName,
+      ),
     )
   }
 

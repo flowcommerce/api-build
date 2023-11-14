@@ -19,9 +19,9 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
           path = path,
           responseCode = 200,
           responseType = "[organization]",
-          parameters = Seq(param)
-        )
-      )
+          parameters = Seq(param),
+        ),
+      ),
     )
   }
 
@@ -30,7 +30,7 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
     `type` = "string",
     location = ParameterLocation.Query,
     required = false,
-    default = None
+    default = None,
   )
 
   it("No-op if no sort parameter") {
@@ -42,9 +42,9 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
           `type` = "string",
           location = ParameterLocation.Query,
           required = false,
-          default = None
-        )
-      )
+          default = None,
+        ),
+      ),
     ) should be(Nil)
   }
 
@@ -57,11 +57,11 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
           `type` = "string",
           location = ParameterLocation.Query,
           required = false,
-          default = None
-        )
-      )
+          default = None,
+        ),
+      ),
     ) should be(
-      Seq("Resource organizations GET /organizations: Parameter sort requires a default")
+      Seq("Resource organizations GET /organizations: Parameter sort requires a default"),
     )
   }
 
@@ -74,11 +74,11 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
           `type` = "string",
           location = ParameterLocation.Query,
           required = false,
-          default = Some("foo")
-        )
-      )
+          default = Some("foo"),
+        ),
+      ),
     ) should be(
-      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[-created_at] and not[foo]")
+      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[-created_at] and not[foo]"),
     )
   }
 
@@ -91,13 +91,13 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
           `type` = "string",
           location = ParameterLocation.Query,
           required = false,
-          default = Some("fo")
-        )
-      )
+          default = Some("fo"),
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations GET /organizations: Parameter sort default expected to be[-created_at or name] and not[fo]"
-      )
+        "Resource organizations GET /organizations: Parameter sort default expected to be[-created_at or name] and not[fo]",
+      ),
     )
 
     Seq("-created_at", "name").foreach { sort =>
@@ -109,9 +109,9 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
             `type` = "string",
             location = ParameterLocation.Query,
             required = false,
-            default = Some(sort)
-          )
-        )
+            default = Some(sort),
+          ),
+        ),
       ) should be(Nil)
     }
   }
@@ -125,11 +125,11 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
           `type` = "string",
           location = ParameterLocation.Query,
           required = false,
-          default = Some("foo")
-        )
-      )
+          default = Some("foo"),
+        ),
+      ),
     ) should be(
-      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[name] and not[foo]")
+      Seq("Resource organizations GET /organizations: Parameter sort default expected to be[name] and not[foo]"),
     )
   }
 
@@ -142,14 +142,14 @@ class SortParameterDefaultSpec extends AnyFunSpec with Matchers {
           `type` = "string",
           location = ParameterLocation.Query,
           required = false,
-          default = Some("name")
+          default = Some("name"),
         ),
-        path = "/organizations/versions"
-      )
+        path = "/organizations/versions",
+      ),
     ) should be(
       Seq(
-        "Resource organizations GET /organizations/versions: Parameter sort default expected to be[journal_timestamp] and not[name]"
-      )
+        "Resource organizations GET /organizations/versions: Parameter sort default expected to be[journal_timestamp] and not[name]",
+      ),
     )
   }
 

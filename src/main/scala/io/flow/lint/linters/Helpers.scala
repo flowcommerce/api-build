@@ -200,7 +200,7 @@ trait Helpers {
     "date-iso8601",
     "date-time-iso8601",
     "uuid",
-    "unit"
+    "unit",
   )
   def isPrimitiveType(typ: String): Boolean = {
     PrimitiveTypes.contains(baseType(typ))
@@ -278,7 +278,7 @@ trait Helpers {
       case Some(f) if f.`type` == typeName => Nil
       case Some(f) =>
         Seq(
-          error(model, f, s"type must be '$typeName' and not ${f.`type`}")
+          error(model, f, s"type must be '$typeName' and not ${f.`type`}"),
         )
     }
   }

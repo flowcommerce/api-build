@@ -53,7 +53,7 @@ object Main extends App {
             Application.parse(api) match {
               case Some(_) => success
               case None => failure(s"Could not parse application[$api]")
-            }
+            },
           )
 
         help("help")
@@ -68,7 +68,7 @@ object Main extends App {
             case Nil => {
               failure(
                 s"Invalid command[${c.buildCommand}] for build type[${c.buildType}]. " +
-                  s"Must be one of: all, " + controllers(c.buildType).map(_.command).mkString(", ")
+                  s"Must be one of: all, " + controllers(c.buildType).map(_.command).mkString(", "),
               )
             }
             case _ => {
@@ -109,7 +109,7 @@ object Main extends App {
     buildType: BuildType,
     downloadCache: DownloadCache,
     controllers: Seq[Controller],
-    services: Seq[Service]
+    services: Seq[Service],
   ): Unit = {
     val errors = scala.collection.mutable.Map[String, Seq[String]]()
     if (globalErrors.nonEmpty) {

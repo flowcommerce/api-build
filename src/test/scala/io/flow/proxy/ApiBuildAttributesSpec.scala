@@ -8,13 +8,13 @@ class ApiBuildAttributesSpec extends AnyFunSpec with Matchers with ServiceHostHe
 
   it("host with no attribute") {
     ApiBuildAttributes(
-      Seq(serviceWithHost("user"))
+      Seq(serviceWithHost("user")),
     ).host("user") should be(None)
   }
 
   it("host with attribute") {
     ApiBuildAttributes(
-      Seq(serviceWithHost("user"), serviceWithHost("foo", Some("bar")))
+      Seq(serviceWithHost("user"), serviceWithHost("foo", Some("bar"))),
     ).host("foo") should be(Some("bar"))
   }
 }

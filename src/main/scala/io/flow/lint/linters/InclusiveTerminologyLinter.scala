@@ -19,7 +19,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
     "dummy" -> "placeholder",
     "sanity" -> "completeness",
     "young" -> "junior",
-    "old" -> "senior"
+    "old" -> "senior",
   )
   // Note leaving 'gender' out of linter as capturing gender is a valid use case
 
@@ -81,7 +81,7 @@ case object InclusiveTerminologyLinter extends Linter with Helpers {
   def validateUnionType(union: Union, unionType: UnionType): Seq[String] = {
     validateName(unionType.`type`) { m => error(union, unionType, m) } ++ validateUnionTypeDiscriminatorValue(
       union,
-      unionType
+      unionType,
     )
   }
 

@@ -37,7 +37,7 @@ class LintSpec extends AnyFunSpec with Matchers {
   it("Lint.All is alphabetized") {
     BuildType.all.foreach { bt =>
       Lint.forBuildType(bt).map(_.toString).sorted should be(
-        Lint.forBuildType(bt).map(_.toString)
+        Lint.forBuildType(bt).map(_.toString),
       )
     }
   }

@@ -12,7 +12,7 @@ import scala.concurrent.ExecutionContext
 case class Controller() extends io.flow.build.Controller {
   private val BannedStreamNames = Set(
     "production.local.item.event.v0.local_item_event.json",
-    "production.localized.item.internal.event.v0.localized_item_event.json"
+    "production.localized.item.internal.event.v0.localized_item_event.json",
   )
 
   private val ArrayTypeMatcher = """\[(.+)\]""".r
@@ -21,7 +21,7 @@ case class Controller() extends io.flow.build.Controller {
   override val command = "stream"
 
   override def run(buildType: BuildType, downloadCache: DownloadCache, services: Seq[Service])(implicit
-    ec: ExecutionContext
+    ec: ExecutionContext,
   ): Unit = {
 
     @tailrec
@@ -29,8 +29,8 @@ case class Controller() extends io.flow.build.Controller {
       val imports = services.flatMap(_.imports).groupBy(_.uri).values.toList.map(_.last)
       val filteredImports = imports.filterNot(imp =>
         services.exists(svc =>
-          svc.organization.key == imp.organization.key && svc.application.key == imp.application.key
-        )
+          svc.organization.key == imp.organization.key && svc.application.key == imp.application.key,
+        ),
       )
       if (filteredImports.isEmpty) {
         services
@@ -41,7 +41,7 @@ case class Controller() extends io.flow.build.Controller {
               case Right(svc) => Some(svc)
               case Left(errors) =>
                 println(
-                  s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}: ${errors.mkString(", ")}"
+                  s"[ERROR] Failed to fetch import ${imp.organization.key} ${imp.application.key}: ${errors.mkString(", ")}",
                 )
                 None
             }
@@ -62,7 +62,7 @@ case class Controller() extends io.flow.build.Controller {
         val streams = processService(ms, service)
         Aggregator(
           agg.streams ++ streams,
-          agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s)
+          agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s),
         )
       }
       saveDescriptor(buildType, StreamDescriptor(result.streams))
@@ -73,7 +73,7 @@ case class Controller() extends io.flow.build.Controller {
     service.unions.filter(u => u.name.endsWith("_event") && u.discriminator.isDefined).flatMap { union =>
       multiService.findType(
         defaultNamespace = service.namespace,
-        typeName = union.name
+        typeName = union.name,
       ) match {
         case None => {
           println(s"[ERROR] Unable to find union ${union.name} in service ${service.name}")
@@ -121,12 +121,12 @@ case class Controller() extends io.flow.build.Controller {
   private def processUnion(
     multiService: MultiService,
     apiBuilderUnion: ApiBuilderType.Union,
-    streamName: String
+    streamName: String,
   ): Seq[EventType] = {
     apiBuilderUnion.union.types.flatMap { member =>
       val types = multiService.findType(
         defaultNamespace = apiBuilderUnion.service.namespace,
-        typeName = member.`type`
+        typeName = member.`type`,
       )
       if (types.isEmpty) {
         println(s"[ERROR] Unable to find model for union ${apiBuilderUnion.qualified} member ${member.`type`}")
@@ -149,7 +149,7 @@ case class Controller() extends io.flow.build.Controller {
   private def processModel(
     multiService: MultiService,
     unionMember: UnionType,
-    apiBuilderModel: ApiBuilderType.Model
+    apiBuilderModel: ApiBuilderType.Model,
   ): Seq[EventType] = {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
     apiBuilderModel.name match {
@@ -197,21 +197,21 @@ case class Controller() extends io.flow.build.Controller {
     def findFieldWithName(name: String) = model.model.fields.find(f => f.name == name && f.`type` == "string")
     findFieldWithName("id")
       .orElse(
-        findFieldWithName("key")
+        findFieldWithName("key"),
       )
       .orElse(
-        findFieldWithName("number")
+        findFieldWithName("number"),
       )
   }
 
   private def extractPayloadModels(
     model: ApiBuilderType.Model,
     typeField: Field,
-    multiService: MultiService
+    multiService: MultiService,
   ): Option[ApiBuilderType.Model] = {
     multiService.findType(
       defaultNamespace = model.namespace,
-      typeName = typeField.`type`
+      typeName = typeField.`type`,
     ) match {
       case Some(m: ApiBuilderType.Model) => Some(m)
       case Some(m: ApiBuilderType.Union) => sythesizeModelFromUnion(m, multiService)
@@ -221,12 +221,12 @@ case class Controller() extends io.flow.build.Controller {
 
   private def sythesizeModelFromUnion(
     union: ApiBuilderType.Union,
-    multiService: MultiService
+    multiService: MultiService,
   ): Option[ApiBuilderType.Model] = {
     val unionModels = union.types.flatMap { unionType =>
       multiService.findType(
         defaultNamespace = union.namespace,
-        typeName = unionType.`type`.`type`
+        typeName = unionType.`type`.`type`,
       ) collect {
         case m: ApiBuilderType.Model => Some(m)
         case m: ApiBuilderType.Union => sythesizeModelFromUnion(m, multiService)
@@ -240,7 +240,7 @@ case class Controller() extends io.flow.build.Controller {
   private def mergeModels(
     models: Seq[ApiBuilderType.Model],
     toName: String,
-    service: ApiBuilderService
+    service: ApiBuilderService,
   ): ApiBuilderType.Model = {
     val allFields: Seq[Map[String, Field]] = models.map(_.model.fields).map { _.map(t => t.name -> t).toMap }
 
@@ -288,7 +288,7 @@ case class Controller() extends io.flow.build.Controller {
       deprecation = None,
       fields = mergedFields.toSeq,
       attributes = Nil,
-      interfaces = Nil
+      interfaces = Nil,
     )
 
     ApiBuilderType.Model(service, model)
@@ -310,8 +310,8 @@ case class Controller() extends io.flow.build.Controller {
               head.payloadType,
               head.discriminator,
               d.discriminator,
-              d.payloadType.isDefined
-            )
+              d.payloadType.isDefined,
+            ),
           ) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
         }
       case Nil =>

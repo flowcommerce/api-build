@@ -11,38 +11,38 @@ class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
   private[this] val codeEnum = Services.buildEnum(
     "checkout_error_code",
     values = Seq(
-      Services.buildEnumValue("unknown")
-    )
+      Services.buildEnumValue("unknown"),
+    ),
   )
   private[this] val code = Services.buildField("code", "checkout_error_code")
   private[this] val message = Services.buildField("message")
   private[this] val error = Services.buildModel(
     "checkout_error",
-    fields = Seq(code, message)
+    fields = Seq(code, message),
   )
   private[this] val errors = Services.buildModel(
     "checkout_errors",
     fields = Seq(
-      Services.buildField("errors", s"[${error.name}]")
-    )
+      Services.buildField("errors", s"[${error.name}]"),
+    ),
   )
 
   def buildService(models: Seq[Model]): Service = {
     Services.Base.copy(
       enums = Seq(codeEnum),
-      models = models
+      models = models,
     )
   }
 
   it("errors must contain field named 'errors'") {
     linter.validate(
       buildService(
-        Seq(Services.buildModel("test_errors"))
-      )
+        Seq(Services.buildModel("test_errors")),
+      ),
     ) should be(
       Seq(
-        "Model test_errors: must contain a field named 'errors'"
-      )
+        "Model test_errors: must contain a field named 'errors'",
+      ),
     )
 
     linter.validate(buildService(Seq(errors))) should be(Nil)
@@ -55,15 +55,15 @@ class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
           Services.buildModel(
             "checkout_errors",
             fields = Seq(
-              Services.buildField("errors", "string")
-            )
-          )
-        )
-      )
+              Services.buildField("errors", "string"),
+            ),
+          ),
+        ),
+      ),
     ) should be(
       Seq(
-        "Model checkout_errors Field[errors]: type must be an array and not 'string'"
-      )
+        "Model checkout_errors Field[errors]: type must be an array and not 'string'",
+      ),
     )
   }
 
@@ -74,15 +74,15 @@ class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
           Services.buildModel(
             "checkout_errors",
             fields = Seq(
-              Services.buildField("errors", "[foo]")
-            )
-          )
-        )
-      )
+              Services.buildField("errors", "[foo]"),
+            ),
+          ),
+        ),
+      ),
     ) should be(
       Seq(
-        "Model checkout_errors Field[errors]: type '[foo]' must end in '_error'"
-      )
+        "Model checkout_errors Field[errors]: type '[foo]' must end in '_error'",
+      ),
     )
   }
 
@@ -90,31 +90,31 @@ class ErrorModelsV2Spec extends AnyFunSpec with Matchers {
     def build(fields: Seq[Field]) = {
       linter.validate(
         buildService(
-          Seq(Services.buildModel("test_error", fields = fields))
-        )
+          Seq(Services.buildModel("test_error", fields = fields)),
+        ),
       )
     }
 
     build(
       Seq(
         code,
-        Services.buildField("bar", "string")
-      )
+        Services.buildField("bar", "string"),
+      ),
     ) should be(
       Seq(
-        "Model test_error: must contain a field named 'message'"
-      )
+        "Model test_error: must contain a field named 'message'",
+      ),
     )
 
     build(
       Seq(
         code,
-        Services.buildField("message", "integer")
-      )
+        Services.buildField("message", "integer"),
+      ),
     ) should be(
       Seq(
-        "Model test_error Field[message]: type must be 'string' and not 'integer'"
-      )
+        "Model test_error Field[message]: type must be 'string' and not 'integer'",
+      ),
     )
 
     linter.validate(buildService(Seq(error))) should be(Nil)

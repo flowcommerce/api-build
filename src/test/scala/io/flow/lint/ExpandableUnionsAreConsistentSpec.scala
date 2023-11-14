@@ -16,25 +16,25 @@ class ExpandableUnionsAreConsistentSpec extends AnyFunSpec with Matchers {
           discriminator = Some("discriminator"),
           types = types.map { t =>
             Services.buildUnionType(t)
-          }
-        )
-      )
+          },
+        ),
+      ),
     )
   }
 
   it("with no types") {
     linter.validate(buildService(Nil)) should be(
-      Seq("Union expandable_user: must contain the following types: user, user_reference")
+      Seq("Union expandable_user: must contain the following types: user, user_reference"),
     )
   }
 
   it("with single types") {
     linter.validate(buildService(Seq("user_reference"))) should be(
-      Seq("Union expandable_user: must contain a type named 'user'")
+      Seq("Union expandable_user: must contain a type named 'user'"),
     )
 
     linter.validate(buildService(Seq("user"))) should be(
-      Seq("Union expandable_user: must contain a type named 'user_reference'")
+      Seq("Union expandable_user: must contain a type named 'user_reference'"),
     )
   }
 
@@ -44,13 +44,13 @@ class ExpandableUnionsAreConsistentSpec extends AnyFunSpec with Matchers {
 
   it("with valid types in invalid order") {
     linter.validate(buildService(Seq("user_reference", "user"))) should be(
-      Seq("Union expandable_user: types must be in the following order: user, user_reference")
+      Seq("Union expandable_user: types must be in the following order: user, user_reference"),
     )
   }
 
   it("with invalid types") {
     linter.validate(buildService(Seq("foo", "bar"))) should be(
-      Seq("Union expandable_user: must contain the following types: user, user_reference")
+      Seq("Union expandable_user: must contain the following types: user, user_reference"),
     )
   }
 
@@ -62,17 +62,17 @@ class ExpandableUnionsAreConsistentSpec extends AnyFunSpec with Matchers {
           discriminator = Some("discriminator"),
           types = Seq(
             Services.buildUnionType("payment_paypal"),
-            Services.buildUnionType("payment_reference")
-          )
+            Services.buildUnionType("payment_reference"),
+          ),
         ),
         Services.buildUnion(
           name = "payment",
           discriminator = Some("discriminator"),
           types = Seq(
-            Services.buildUnionType("payment_paypal")
-          )
-        )
-      )
+            Services.buildUnionType("payment_paypal"),
+          ),
+        ),
+      ),
     )
 
     linter.validate(s) should be(Nil)
@@ -86,21 +86,21 @@ class ExpandableUnionsAreConsistentSpec extends AnyFunSpec with Matchers {
           discriminator = Some("discriminator"),
           types = Seq(
             Services.buildUnionType("other"),
-            Services.buildUnionType("payment_reference")
-          )
+            Services.buildUnionType("payment_reference"),
+          ),
         ),
         Services.buildUnion(
           name = "payment",
           discriminator = Some("discriminator"),
           types = Seq(
-            Services.buildUnionType("payment_paypal")
-          )
-        )
-      )
+            Services.buildUnionType("payment_paypal"),
+          ),
+        ),
+      ),
     )
 
     linter.validate(s) should be(
-      Seq("Union expandable_payment: must contain a type named 'payment_paypal'")
+      Seq("Union expandable_payment: must contain a type named 'payment_paypal'"),
     )
   }
 
@@ -113,10 +113,10 @@ class ExpandableUnionsAreConsistentSpec extends AnyFunSpec with Matchers {
           types = Seq(
             Services.buildUnionType("card"),
             Services.buildUnionType("card_reference"),
-            Services.buildUnionType("card_summary")
-          )
-        )
-      )
+            Services.buildUnionType("card_summary"),
+          ),
+        ),
+      ),
     )
 
     linter.validate(s) should be(Nil)

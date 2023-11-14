@@ -12,9 +12,9 @@ trait ServiceHostHelpers {
       attributes = host.map { h =>
         Attribute(
           name = "api-build",
-          value = Json.obj("host" -> h)
+          value = Json.obj("host" -> h),
         )
-      }.toSeq
+      }.toSeq,
     )
   }
 

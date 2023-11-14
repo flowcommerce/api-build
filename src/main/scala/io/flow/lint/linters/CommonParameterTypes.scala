@@ -11,18 +11,18 @@ case object CommonParameterTypes extends Linter with Helpers {
     typ: String,
     default: Option[String] = None,
     minimum: Option[Long] = None,
-    maximum: Option[Long] = None
+    maximum: Option[Long] = None,
   )
 
   private[this] val Expected: Map[String, Spec] = Map(
     "id" -> Spec("[string]", default = None, minimum = None, maximum = Some(100)),
     "limit" -> Spec("long", default = Some("25"), minimum = Some(1), maximum = Some(100)),
-    "offset" -> Spec("long", default = Some("0"), minimum = Some(0), maximum = None)
+    "offset" -> Spec("long", default = Some("0"), minimum = Some(0), maximum = None),
   )
 
   private[this] val Types: Map[String, String] = Map(
     "sort" -> "string",
-    "expand" -> "[string]"
+    "expand" -> "[string]",
   )
 
   override def validate(service: Service): Seq[String] = {
@@ -71,7 +71,7 @@ case object CommonParameterTypes extends Linter with Helpers {
     param: Parameter,
     label: String,
     actual: Option[T],
-    expected: Option[T]
+    expected: Option[T],
   ): Seq[String] = {
     (actual, expected) match {
       case (None, None) => Nil
