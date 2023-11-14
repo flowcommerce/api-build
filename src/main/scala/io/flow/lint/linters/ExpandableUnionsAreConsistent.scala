@@ -29,7 +29,7 @@ case object ExpandableUnionsAreConsistent extends Linter with Helpers {
           case Some(u) =>
             validateUnionTypes(union, u.types.map(_.`type`) ++ Seq(s"${name}_reference")) ++ validateTypeOrder(
               union,
-              name
+              name,
             )
         }
       }

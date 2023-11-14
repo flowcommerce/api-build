@@ -10,7 +10,7 @@ class UnionTypesHaveCommonDiscriminatorSpec extends AnyFunSpec with Matchers {
 
   def buildService(
     typeName: String,
-    discriminator: Option[String]
+    discriminator: Option[String],
   ): Service = {
     Services.Base.copy(
       unions = Seq(
@@ -19,22 +19,22 @@ class UnionTypesHaveCommonDiscriminatorSpec extends AnyFunSpec with Matchers {
           discriminator = discriminator,
           types = Seq(
             Services.buildUnionType("string"),
-            Services.buildUnionType("uuid")
-          )
-        )
-      )
+            Services.buildUnionType("uuid"),
+          ),
+        ),
+      ),
     )
   }
 
   it("with no discriminator") {
     linter.validate(buildService("expandable_user", None)) should be(
-      Seq("Union expandable_user: Must have a discriminator with value one of ('discriminator', 'type', 'code')")
+      Seq("Union expandable_user: Must have a discriminator with value one of ('discriminator', 'type', 'code')"),
     )
   }
 
   it("with invalid discriminator") {
     linter.validate(buildService("expandable_user", Some("foo"))) should be(
-      Seq("Union expandable_user: Discriminator must have value one of ('discriminator', 'type', 'code') and not 'foo'")
+      Seq("Union expandable_user: Discriminator must have value one of ('discriminator', 'type', 'code') and not 'foo'"),
     )
   }
 
@@ -52,13 +52,13 @@ class UnionTypesHaveCommonDiscriminatorSpec extends AnyFunSpec with Matchers {
 
   it("union types that end in _error must have a discriminator named 'code'") {
     linter.validate(buildService("user_error", None)) should be(
-      Seq("Union user_error: Must have a discriminator with value one of ('code')")
+      Seq("Union user_error: Must have a discriminator with value one of ('code')"),
     )
   }
 
   it("union types that end in _error with invalid discriminator") {
     linter.validate(buildService("user_error", Some("foo"))) should be(
-      Seq("Union user_error: Discriminator must have value one of ('code') and not 'foo'")
+      Seq("Union user_error: Discriminator must have value one of ('code') and not 'foo'"),
     )
   }
 

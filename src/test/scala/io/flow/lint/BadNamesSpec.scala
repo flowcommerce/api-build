@@ -11,7 +11,7 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
 
   def buildModel(
     fieldName: String,
-    attributes: Seq[Attribute] = Nil
+    attributes: Seq[Attribute] = Nil,
   ): Service = {
     Services.Base.copy(
       models = Seq(
@@ -19,24 +19,24 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
           "user",
           Seq(
             Services.buildField(
-              name = fieldName
-            )
+              name = fieldName,
+            ),
           ),
-          attributes
-        )
-      )
+          attributes,
+        ),
+      ),
     )
   }
 
   def buildModelIgnored(
-    fieldName: String
+    fieldName: String,
   ): Service = {
     buildModel(fieldName, Seq(Attribute("linter", value = Json.parse("""{ "ignore": ["bad_names"] }""").as[JsObject])))
   }
 
   def buildResource(
     paramName: String,
-    attributes: Seq[Attribute] = Nil
+    attributes: Seq[Attribute] = Nil,
   ): Service = {
     buildModel("id").copy(
       resources = Seq(
@@ -47,62 +47,62 @@ class BadNamesSpec extends AnyFunSpec with Matchers {
               path = "/users",
               responseType = "[user]",
               parameters = Seq(
-                Services.buildParameter(paramName)
+                Services.buildParameter(paramName),
               ),
-              attributes = attributes
-            )
-          )
-        )
-      )
+              attributes = attributes,
+            ),
+          ),
+        ),
+      ),
     )
   }
 
   def buildResourceIgnored(
-    paramName: String
+    paramName: String,
   ): Service = {
     buildResource(
       paramName,
-      Seq(Attribute("linter", value = Json.parse("""{ "ignore": ["bad_names"] }""").as[JsObject]))
+      Seq(Attribute("linter", value = Json.parse("""{ "ignore": ["bad_names"] }""").as[JsObject])),
     )
   }
 
   it("model fields") {
     linter.validate(buildModel("ip_address")) should be(
-      Seq("Model user Field[ip_address]: Name must be 'ip'")
+      Seq("Model user Field[ip_address]: Name must be 'ip'"),
     )
 
     linter.validate(buildModel("postal_code")) should be(
-      Seq("Model user Field[postal_code]: Name must be 'postal'")
+      Seq("Model user Field[postal_code]: Name must be 'postal'"),
     )
   }
 
   it("model fields ignored") {
     linter.validate(buildModelIgnored("ip_address")) should be(
-      Nil
+      Nil,
     )
 
     linter.validate(buildModelIgnored("postal_code")) should be(
-      Nil
+      Nil,
     )
   }
 
   it("resource parameter names") {
     linter.validate(buildResource("ip_address")) should be(
-      Seq("Resource users GET /users Parameter ip_address: Name must be 'ip'")
+      Seq("Resource users GET /users Parameter ip_address: Name must be 'ip'"),
     )
 
     linter.validate(buildResource("postal_code")) should be(
-      Seq("Resource users GET /users Parameter postal_code: Name must be 'postal'")
+      Seq("Resource users GET /users Parameter postal_code: Name must be 'postal'"),
     )
   }
 
   it("resource parameter names ignored") {
     linter.validate(buildResourceIgnored("ip_address")) should be(
-      Nil
+      Nil,
     )
 
     linter.validate(buildResourceIgnored("postal_code")) should be(
-      Nil
+      Nil,
     )
   }
 

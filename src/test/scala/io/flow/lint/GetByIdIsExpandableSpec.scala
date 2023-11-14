@@ -10,7 +10,7 @@ class GetByIdIsExpandableSpec extends AnyFunSpec with Matchers {
 
   def buildService(
     responseType: String = "[expandable_organization]",
-    params: Seq[Parameter] = Nil
+    params: Seq[Parameter] = Nil,
   ): Service = {
     Services.Base.copy(
       models = Seq(
@@ -18,9 +18,9 @@ class GetByIdIsExpandableSpec extends AnyFunSpec with Matchers {
           "organization",
           fields = Seq(
             Services.buildField("id"),
-            Services.buildField("user", "io.flow.common.v0.models.expandable_user")
-          )
-        )
+            Services.buildField("user", "io.flow.common.v0.models.expandable_user"),
+          ),
+        ),
       ),
       resources = Seq(
         Resource(
@@ -32,12 +32,12 @@ class GetByIdIsExpandableSpec extends AnyFunSpec with Matchers {
               path = "/organizations",
               parameters = params,
               responses = Seq(
-                Services.buildResponse(`type` = responseType)
-              )
-            )
-          )
-        )
-      )
+                Services.buildResponse(`type` = responseType),
+              ),
+            ),
+          ),
+        ),
+      ),
     )
   }
 
@@ -47,11 +47,11 @@ class GetByIdIsExpandableSpec extends AnyFunSpec with Matchers {
 
   it("resource that returns an expansion") {
     linter.validate(buildService(responseType = "[expandable_organization]")) should be(
-      Seq("Resource organizations GET /organizations: Missing parameter named expand")
+      Seq("Resource organizations GET /organizations: Missing parameter named expand"),
     )
 
     linter.validate(buildService(responseType = "[io.flow.common.v0.models.expandable_organization]")) should be(
-      Seq("Resource organizations GET /organizations: Missing parameter named expand")
+      Seq("Resource organizations GET /organizations: Missing parameter named expand"),
     )
   }
 
@@ -63,10 +63,10 @@ class GetByIdIsExpandableSpec extends AnyFunSpec with Matchers {
             name = "expand",
             `type` = "[string]",
             location = ParameterLocation.Query,
-            required = false
-          )
-        )
-      )
+            required = false,
+          ),
+        ),
+      ),
     ) should be(Nil)
   }
 

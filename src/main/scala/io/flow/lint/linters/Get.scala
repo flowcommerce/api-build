@@ -13,17 +13,17 @@ case object Get extends Linter with Helpers {
 
   private[this] val Primary = Sublinter(
     leadingParam = "id",
-    trailingParams = Seq("limit", "offset", "sort")
+    trailingParams = Seq("limit", "offset", "sort"),
   )
 
   private[this] val PrimaryWithoutSort = Sublinter(
     leadingParam = "id",
-    trailingParams = Seq("limit", "offset")
+    trailingParams = Seq("limit", "offset"),
   )
 
   private[this] val Query = Sublinter(
     leadingParam = "q",
-    trailingParams = Nil
+    trailingParams = Nil,
   )
 
   override def validate(service: Service): Seq[String] = {
@@ -115,8 +115,8 @@ case object Get extends Linter with Helpers {
                 error(
                   resource,
                   operation,
-                  s"There are no expansions available - should not have a parameter named $ExpandName"
-                )
+                  s"There are no expansions available - should not have a parameter named $ExpandName",
+                ),
               )
             }
           }
@@ -142,16 +142,16 @@ case object Get extends Linter with Helpers {
                             error(
                               resource,
                               operation,
-                              s"parameter[expand] is missing example. It must be $requiredExample"
-                            )
+                              s"parameter[expand] is missing example. It must be $requiredExample",
+                            ),
                           )
                         case Some(value) =>
                           Seq(
                             error(
                               resource,
                               operation,
-                              s"parameter[expand] must have example[$requiredExample] and not[$value]"
-                            )
+                              s"parameter[expand] must have example[$requiredExample] and not[$value]",
+                            ),
                           )
                       }
                     }
@@ -166,16 +166,16 @@ case object Get extends Linter with Helpers {
                             error(
                               resource,
                               operation,
-                              s"parameter[expand] is missing maximum. It must be ${names.size}"
-                            )
+                              s"parameter[expand] is missing maximum. It must be ${names.size}",
+                            ),
                           )
                         case value =>
                           Seq(
                             error(
                               resource,
                               operation,
-                              s"parameter[expand] must have maximum[${names.size}] and not[$value]"
-                            )
+                              s"parameter[expand] must have maximum[${names.size}] and not[$value]",
+                            ),
                           )
                       }
                     }
@@ -183,7 +183,7 @@ case object Get extends Linter with Helpers {
 
                   exampleErrors ++ maximumErrors
                 }
-              }
+              },
             )
             .getOrElse(Nil)
         }
@@ -237,7 +237,7 @@ case object Get extends Linter with Helpers {
     def validateParameterPositions(
       resource: Resource,
       operation: Operation,
-      expectedTail: Seq[String]
+      expectedTail: Seq[String],
     ): Seq[String] = {
       val names = queryParameters(operation).map(_.name)
       val tail = names.takeRight(expectedTail.size)
@@ -260,11 +260,11 @@ case object Get extends Linter with Helpers {
               error(
                 resource,
                 operation,
-                s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}"
-              )
+                s"Last ${expectedTail.size} parameters must be ${expectedTail.mkString(", ")} and not ${tail.mkString(", ")}",
+              ),
             )
           }
-        }
+        },
       ).flatten
     }
   }

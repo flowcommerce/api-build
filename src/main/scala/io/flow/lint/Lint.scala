@@ -6,7 +6,7 @@ import io.flow.build.BuildType
 import play.api.libs.json.Json
 
 case class Lint(
-  buildType: BuildType
+  buildType: BuildType,
 ) {
 
   def validate(service: Service): Seq[String] = {
@@ -21,7 +21,7 @@ object Lint {
     buildType match {
       case BuildType.ApiMisc | BuildType.ApiMiscEvent =>
         Seq(
-          linters.BeaconEventsMustHaveAttributes
+          linters.BeaconEventsMustHaveAttributes,
         )
 
       case _ => {
@@ -52,7 +52,7 @@ object Lint {
           linters.StandardResponse,
           linters.UnionTypesHaveCommonDiscriminator,
           linters.UpsertedDeletedEventModels,
-          linters.VersionModels
+          linters.VersionModels,
         )
       }
     }

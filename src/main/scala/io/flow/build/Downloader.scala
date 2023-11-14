@@ -17,13 +17,13 @@ import scala.util.{Failure, Success, Try}
 private[build] case class Downloader(config: ApibuilderProfile) {
 
   def downloadServices(
-    applications: Seq[Application]
+    applications: Seq[Application],
   )(implicit
-    ec: scala.concurrent.ExecutionContext
+    ec: scala.concurrent.ExecutionContext,
   ): Either[Seq[String], Seq[Service]] = {
     downloadServices(
       orgKeys = applications.map(_.organization).distinct,
-      applications = applications
+      applications = applications,
     )
   }
 
@@ -32,9 +32,9 @@ private[build] case class Downloader(config: ApibuilderProfile) {
     orgKeys: Seq[String],
     applications: Seq[Application],
     errors: Seq[String] = Nil,
-    services: Seq[Service] = Nil
+    services: Seq[Service] = Nil,
   )(implicit
-    ec: scala.concurrent.ExecutionContext
+    ec: scala.concurrent.ExecutionContext,
   ): Either[Seq[String], Seq[Service]] = {
     orgKeys.toList match {
       case Nil =>
@@ -61,8 +61,8 @@ private[build] case class Downloader(config: ApibuilderProfile) {
       asyncHttpClient = new AsyncHttpClient(
         new AsyncHttpClientConfig.Builder()
           .setExecutorService(java.util.concurrent.Executors.newCachedThreadPool())
-          .build()
-      )
+          .build(),
+      ),
     )
     try {
       f(client)
@@ -72,16 +72,16 @@ private[build] case class Downloader(config: ApibuilderProfile) {
   }
 
   private[this] def downloadBatch(orgKey: String, applications: Seq[Application])(implicit
-    ec: scala.concurrent.ExecutionContext
+    ec: scala.concurrent.ExecutionContext,
   ): ValidatedNec[String, Seq[Service]] = {
     assert(
       applications.forall(_.organization == orgKey),
-      "All applications must belong to the same org for batch download"
+      "All applications must belong to the same org for batch download",
     )
 
     println(
       s"Downloading API Builder Service Spec for $orgKey: " +
-        applications.map(_.applicationVersionLabel).sorted.mkString(" ")
+        applications.map(_.applicationVersionLabel).sorted.mkString(" "),
     )
     Try {
       withClient { client =>
@@ -92,12 +92,12 @@ private[build] case class Downloader(config: ApibuilderProfile) {
               applications = applications.map { a =>
                 BatchDownloadApplicationForm(
                   applicationKey = a.application,
-                  version = a.version
+                  version = a.version,
                 )
-              }
-            )
+              },
+            ),
           ),
-          FiniteDuration(120, SECONDS)
+          FiniteDuration(120, SECONDS),
         )
       }
     } match {

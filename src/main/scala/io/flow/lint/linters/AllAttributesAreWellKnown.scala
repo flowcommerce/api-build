@@ -12,7 +12,7 @@ case object AllAttributesAreWellKnown extends Linter {
     "graphql",
     "linter",
     "non-crud",
-    "sort"
+    "sort",
   )
 
   override def validate(service: Service): Seq[String] = {

@@ -11,8 +11,8 @@ class VersionModelsSpec extends AnyFunSpec with Matchers {
   def buildService(fields: Seq[Field]): Service = {
     Services.Base.copy(
       models = Seq(
-        Services.buildModel("user_version", fields)
-      )
+        Services.buildModel("user_version", fields),
+      ),
     )
   }
 
@@ -48,9 +48,9 @@ class VersionModelsSpec extends AnyFunSpec with Matchers {
           timestampField,
           typeField,
           userField,
-          Services.buildField("other")
-        )
-      )
+          Services.buildField("other"),
+        ),
+      ),
     ) should be(Seq("Model user_version: Must have exactly 4 fields: id, timestamp, type, user"))
   }
 
@@ -61,9 +61,9 @@ class VersionModelsSpec extends AnyFunSpec with Matchers {
           idField,
           timestampField,
           typeField,
-          Services.buildField("other")
-        )
-      )
+          Services.buildField("other"),
+        ),
+      ),
     ) should be(Seq("Model user_version: Must have exactly 4 fields: id, timestamp, type, user"))
   }
 
@@ -74,9 +74,9 @@ class VersionModelsSpec extends AnyFunSpec with Matchers {
           timestampField,
           typeField,
           userField,
-          idField
-        )
-      )
+          idField,
+        ),
+      ),
     ) should be(Seq("Model user_version: Must have exactly 4 fields: id, timestamp, type, user"))
   }
 
@@ -87,9 +87,9 @@ class VersionModelsSpec extends AnyFunSpec with Matchers {
           idField.copy(`type` = "long"),
           timestampField,
           typeField,
-          userField
-        )
-      )
+          userField,
+        ),
+      ),
     ) should be(Seq("Model user_version Field[id]: Must have type string and not long"))
   }
 
@@ -100,9 +100,9 @@ class VersionModelsSpec extends AnyFunSpec with Matchers {
           idField,
           timestampField.copy(`type` = "long"),
           typeField,
-          userField
-        )
-      )
+          userField,
+        ),
+      ),
     ) should be(Seq("Model user_version Field[timestamp]: Must have type date-time-iso8601 and not long"))
   }
 
@@ -113,9 +113,9 @@ class VersionModelsSpec extends AnyFunSpec with Matchers {
           idField,
           timestampField,
           typeField.copy(`type` = "long"),
-          userField
-        )
-      )
+          userField,
+        ),
+      ),
     ) should be(Seq("Model user_version Field[type]: Must have type io.flow.common.v0.enums.change_type and not long"))
   }
 
@@ -126,17 +126,17 @@ class VersionModelsSpec extends AnyFunSpec with Matchers {
           idField,
           timestampField,
           typeField,
-          userField.copy(`type` = "long")
-        )
-      )
+          userField.copy(`type` = "long"),
+        ),
+      ),
     ) should be(
-      Seq("Model user_version Field[user]: Must have type user or user_summary or expandable_user and not long")
+      Seq("Model user_version Field[user]: Must have type user or user_summary or expandable_user and not long"),
     )
   }
 
   it("error if field is not required") {
     linter.validate(buildService(Seq(idField.copy(required = false), timestampField, typeField, userField))) should be(
-      Seq("Model user_version Field[id]: Must be required")
+      Seq("Model user_version Field[id]: Must be required"),
     )
   }
 

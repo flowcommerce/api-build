@@ -13,7 +13,7 @@ object ApibuilderConfig {
   private[this] val DefaultApibuilderProfile = ApibuilderProfile(
     name = "default",
     baseUrl = "https://api.apibuilder.io",
-    token = None
+    token = None,
   )
 
   /** Loads API Builder configuration from the API Builder configuration file, returning either an error or the
@@ -23,7 +23,7 @@ object ApibuilderConfig {
     *   The path to the configuration file we are reading
     */
   def load(
-    path: String = DefaultPath
+    path: String = DefaultPath,
   ): Either[String, ApibuilderProfile] = {
     val profileName = Environment.optionalString("APIBUILDER_PROFILE").getOrElse(DefaultApibuilderProfile.name)
     val envToken = Environment.optionalString("APIBUILDER_TOKEN")
@@ -110,7 +110,7 @@ object ApibuilderConfig {
         }
 
         currentProfile.map { p => allProfiles += p }
-      }
+      },
     ) match {
       case Success(_) => {
         Right(allProfiles.toSeq)

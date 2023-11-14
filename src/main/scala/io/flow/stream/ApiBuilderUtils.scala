@@ -7,7 +7,7 @@ object ApiBuilderUtils {
         initCap(splitIntoWords(name).map(_.toLowerCase)).mkString("")
       } else {
         snakeToCamelCase(name).capitalize
-      }
+      },
     )
 
     if (quoteKeywords) {
@@ -97,7 +97,7 @@ object ApiBuilderUtils {
     "var",
     "while",
     "with",
-    "yield"
+    "yield",
   ).toSet
 
   private def quoteNameIfKeyword(name: String): String = {

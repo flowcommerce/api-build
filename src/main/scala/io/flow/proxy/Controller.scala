@@ -22,7 +22,7 @@ case class Controller() extends io.flow.build.Controller {
 
   def buildUserPermissionsFile(
     buildType: BuildType,
-    services: Seq[Service]
+    services: Seq[Service],
   ): Unit = {
     val routes = services.flatMap(s =>
       s.resources.flatMap(r =>
@@ -38,7 +38,7 @@ case class Controller() extends io.flow.build.Controller {
                   .map(r =>
                     r.map { t =>
                       (t, Map("method" -> o.method.toString, "path" -> o.path))
-                    }
+                    },
                   )
                   .getOrElse(Nil)
             }
@@ -46,8 +46,8 @@ case class Controller() extends io.flow.build.Controller {
               Seq(("anonymous", Map("method" -> o.method.toString, "path" -> o.path)))
             }
           }
-        }
-      )
+        },
+      ),
     )
     val rs = routes.groupBy(_._1).map(r => (r._1, Map("routes" -> r._2.map(_._2).distinct)))
     val m = Json.toJson(rs)
@@ -60,9 +60,9 @@ case class Controller() extends io.flow.build.Controller {
   def run(
     buildType: BuildType,
     downloadCache: DownloadCache,
-    allServices: Seq[Service]
+    allServices: Seq[Service],
   )(implicit
-    ec: scala.concurrent.ExecutionContext
+    ec: scala.concurrent.ExecutionContext,
   ): Unit = {
     val services = allServices.filter { s => s.resources.nonEmpty }.filterNot { s =>
       ExcludeAllowList.exists(ew => s.name.startsWith(ew))
@@ -90,7 +90,7 @@ case class Controller() extends io.flow.build.Controller {
 
       def externalPort(service: Service): Long = cache.externalPort(
         registryName = serviceHostResolver.host(service.name),
-        serviceName = service.name
+        serviceName = service.name,
       )
 
       buildProxyFile(buildType, services, version, "development") { service =>
@@ -109,9 +109,9 @@ case class Controller() extends io.flow.build.Controller {
     buildType: BuildType,
     services: Seq[Service],
     version: String,
-    env: String
+    env: String,
   )(
-    hostProvider: Service => String
+    hostProvider: Service => String,
   ): Unit = {
     services.toList match {
       case Nil => {
@@ -123,7 +123,7 @@ case class Controller() extends io.flow.build.Controller {
           .map { service =>
             Seq(
               s"- name: ${service.name}",
-              s"  host: ${hostProvider(service)}"
+              s"  host: ${hostProvider(service)}",
             ).mkString("\n")
           }
           .mkString("\n")
@@ -134,7 +134,7 @@ case class Controller() extends io.flow.build.Controller {
               Seq(
                 s"- method: ${op.method.toString.toUpperCase}",
                 s"  path: ${op.path}",
-                s"  server: ${service.name}"
+                s"  server: ${service.name}",
               ).mkString("\n")
             }
           }

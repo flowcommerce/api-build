@@ -11,8 +11,8 @@ class ModelsWithOrganizationFieldSpec extends AnyFunSpec with Matchers {
   def buildService(fields: Seq[String]): Service = {
     Services.Base.copy(
       models = Seq(
-        Services.buildSimpleModel("user", fields)
-      )
+        Services.buildSimpleModel("user", fields),
+      ),
     )
   }
 
@@ -28,43 +28,43 @@ class ModelsWithOrganizationFieldSpec extends AnyFunSpec with Matchers {
             name = "user",
             fields = Seq(
               Services.buildField(name = "foobar"),
-              Services.buildField(name = "organization", required = false)
-            )
-          )
-        )
-      )
+              Services.buildField(name = "organization", required = false),
+            ),
+          ),
+        ),
+      ),
     ) should be(Nil)
   }
 
   it("w/ organization but no id fields") {
     linter.validate(buildService(Seq("other", "organization"))) should be(
       Seq(
-        "Model user: Field[organization] must be in position[0] and not[1]"
-      )
+        "Model user: Field[organization] must be in position[0] and not[1]",
+      ),
     )
   }
 
   it("w/ id and organization fields") {
     linter.validate(buildService(Seq("id", "other", "organization"))) should be(
       Seq(
-        "Model user: Field[organization] must be in position[1] and not[2]"
-      )
+        "Model user: Field[organization] must be in position[1] and not[2]",
+      ),
     )
   }
 
   it("w/ id, timestamp, type and organization fields") {
     linter.validate(buildService(Seq("id", "timestamp", "type", "other", "organization"))) should be(
       Seq(
-        "Model user: Field[organization] must be in position[3] and not[4]"
-      )
+        "Model user: Field[organization] must be in position[3] and not[4]",
+      ),
     )
   }
 
   it("w/ event_id, timestamp, id fields") {
     linter.validate(buildService(Seq("event_id", "timestamp", "id", "other", "organization"))) should be(
       Seq(
-        "Model user: Field[organization] must be in position[3] and not[4]"
-      )
+        "Model user: Field[organization] must be in position[3] and not[4]",
+      ),
     )
   }
 

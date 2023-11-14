@@ -10,7 +10,7 @@ case class KinesisStream(
   capturedEvents: Seq[CapturedType],
   allModels: Seq[Model],
   allUnions: Seq[Union],
-  allEnums: Seq[Enum]
+  allEnums: Seq[Enum],
 )
 
 case class CapturedType(
@@ -19,5 +19,5 @@ case class CapturedType(
   modelType: Model,
   upsertedDiscriminator: String,
   deletedDiscriminator: String,
-  deletedHasModel: Boolean
+  deletedHasModel: Boolean,
 )

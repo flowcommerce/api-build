@@ -32,9 +32,9 @@ trait Controller {
   def run(
     buildType: BuildType,
     downloadCache: DownloadCache,
-    services: Seq[Service]
+    services: Seq[Service],
   )(implicit
-    ec: scala.concurrent.ExecutionContext
+    ec: scala.concurrent.ExecutionContext,
   ): Unit
 
   def errors(): Map[String, Seq[String]] = internalErrors.toMap

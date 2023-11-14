@@ -11,7 +11,7 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
 
   val model = Services.buildSimpleModel(
     "organization",
-    fields = Seq("id", "name")
+    fields = Seq("id", "name"),
   )
 
   val idParameter = Parameter(
@@ -19,7 +19,7 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
     `type` = "[string]",
     location = ParameterLocation.Query,
     required = false,
-    maximum = Some(100)
+    maximum = Some(100),
   )
 
   val limitParameter = Parameter(
@@ -29,7 +29,7 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
     required = false,
     default = Some("25"),
     minimum = Some(1),
-    maximum = Some(100)
+    maximum = Some(100),
   )
 
   val offsetParameter = Parameter(
@@ -38,7 +38,7 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
     location = ParameterLocation.Query,
     required = false,
     default = Some("0"),
-    minimum = Some(0)
+    minimum = Some(0),
   )
 
   val sortParameter = Parameter(
@@ -46,7 +46,7 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
     `type` = "string",
     location = ParameterLocation.Query,
     required = false,
-    default = Some("created_at")
+    default = Some("created_at"),
   )
 
   def buildResourceWithSearch(params: Seq[Parameter]) = {
@@ -61,12 +61,12 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
               path = "/organizations",
               parameters = params,
               responses = Seq(
-                Services.buildResponse(`type` = "[organization]")
-              )
-            )
-          )
-        )
-      )
+                Services.buildResponse(`type` = "[organization]"),
+              ),
+            ),
+          ),
+        ),
+      ),
     )
   }
 
@@ -82,13 +82,13 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
               path = "/organizations",
               parameters = params,
               responses = Seq(
-                Services.buildResponse(`type` = "[io.flow.organization.v0.models.organization]")
+                Services.buildResponse(`type` = "[io.flow.organization.v0.models.organization]"),
               ),
-              attributes = Seq(Attribute("non-crud", Json.obj()))
-            )
-          )
-        )
-      )
+              attributes = Seq(Attribute("non-crud", Json.obj())),
+            ),
+          ),
+        ),
+      ),
     )
   }
 
@@ -100,15 +100,15 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
             name = "id",
             `type` = "[string]",
             location = ParameterLocation.Query,
-            required = true
-          )
-        )
-      )
+            required = true,
+          ),
+        ),
+      ),
     ) should be(
       Seq(
         "Resource organizations GET /organizations: Missing parameters: limit, offset, sort",
-        "Resource organizations GET /organizations: Parameter[id] must be optional"
-      )
+        "Resource organizations GET /organizations: Parameter[id] must be optional",
+      ),
     )
   }
 
@@ -120,15 +120,15 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
             name = "limit",
             `type` = "string",
             location = ParameterLocation.Query,
-            required = true
-          )
-        )
-      )
+            required = true,
+          ),
+        ),
+      ),
     ) should be(
       Seq(
         "Resource organizations GET /organizations: Missing parameters: id, offset, sort",
-        "Resource organizations GET /organizations: Parameter[limit] must be optional"
-      )
+        "Resource organizations GET /organizations: Parameter[limit] must be optional",
+      ),
     )
   }
 
@@ -142,15 +142,15 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
             location = ParameterLocation.Query,
             required = true,
             minimum = Some(1),
-            maximum = Some(100)
-          )
-        )
-      )
+            maximum = Some(100),
+          ),
+        ),
+      ),
     ) should be(
       Seq(
         "Resource organizations GET /organizations: Missing parameters: id, limit, sort",
-        "Resource organizations GET /organizations: Parameter[offset] must be optional"
-      )
+        "Resource organizations GET /organizations: Parameter[offset] must be optional",
+      ),
     )
   }
 
@@ -162,7 +162,7 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
             name = "limit",
             `type` = "string",
             location = ParameterLocation.Query,
-            required = false
+            required = false,
           ),
           Parameter(
             name = "offset",
@@ -170,16 +170,16 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
             location = ParameterLocation.Query,
             required = false,
             minimum = Some(1),
-            maximum = Some(100)
+            maximum = Some(100),
           ),
           Parameter(
             name = "sort",
             `type` = "string",
             location = ParameterLocation.Query,
-            required = false
-          )
-        )
-      )
+            required = false,
+          ),
+        ),
+      ),
     ) should be(Nil)
   }
 
@@ -188,7 +188,7 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
       name = "other",
       `type` = "string",
       location = ParameterLocation.Query,
-      required = false
+      required = false,
     )
 
     linter.validate(
@@ -198,13 +198,13 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
           idParameter,
           limitParameter,
           offsetParameter,
-          sortParameter
-        )
-      )
+          sortParameter,
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations GET /organizations: Parameter[id] must be the first parameter"
-      )
+        "Resource organizations GET /organizations: Parameter[id] must be the first parameter",
+      ),
     )
 
     linter.validate(
@@ -214,13 +214,13 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
           limitParameter,
           offsetParameter,
           sortParameter,
-          otherParameter
-        )
-      )
+          otherParameter,
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations GET /organizations: Last 3 parameters must be limit, offset, sort and not offset, sort, other"
-      )
+        "Resource organizations GET /organizations: Last 3 parameters must be limit, offset, sort and not offset, sort, other",
+      ),
     )
   }
 
@@ -231,9 +231,9 @@ class GetWithoutExpansionsSpec extends AnyFunSpec with Matchers {
           idParameter,
           limitParameter,
           offsetParameter,
-          sortParameter
-        )
-      )
+          sortParameter,
+        ),
+      ),
     ) should be(Nil)
   }
 

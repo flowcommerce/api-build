@@ -7,18 +7,18 @@ object Services {
 
   val Base: Service = Service(
     apidoc = Apidoc(
-      version = "0.9.50"
+      version = "0.9.50",
     ),
     name = "api-lint-test",
     organization = Organization(
-      key = "flow"
+      key = "flow",
     ),
     application = Application(
-      key = "api-lint-test"
+      key = "api-lint-test",
     ),
     namespace = "io.flow.api.lint.test",
     version = "0.0.1",
-    info = Info()
+    info = Info(),
   )
 
   def buildEnum(
@@ -26,7 +26,7 @@ object Services {
     description: Option[String] = None,
     deprecation: Option[Deprecation] = None,
     values: Seq[EnumValue] = Nil,
-    attributes: Seq[Attribute] = Nil
+    attributes: Seq[Attribute] = Nil,
   ): Enum = {
     Enum(
       name = name,
@@ -34,63 +34,63 @@ object Services {
       description = description,
       deprecation = deprecation,
       values = values,
-      attributes = attributes
+      attributes = attributes,
     )
   }
 
   def buildEnumValue(
     name: String,
-    value: Option[String] = None
+    value: Option[String] = None,
   ): EnumValue = {
     EnumValue(
       name = name,
-      value = value
+      value = value,
     )
   }
 
   def buildUnion(
     name: String,
     discriminator: Option[String] = None,
-    types: Seq[UnionType] = Nil
+    types: Seq[UnionType] = Nil,
   ): Union = {
     Union(
       name = name,
       plural = name + "s",
       discriminator = discriminator,
-      types = types
+      types = types,
     )
   }
 
   def buildUnionType(
     `type`: String,
-    discriminatorValue: Option[String] = None
+    discriminatorValue: Option[String] = None,
   ): UnionType = {
     UnionType(
       `type` = `type`,
-      discriminatorValue = discriminatorValue
+      discriminatorValue = discriminatorValue,
     )
   }
 
   /** Builds an attribute with the name 'linter' containing an ignore hint
     */
   def buildLinterIgnoreAttribute(
-    values: Seq[String]
+    values: Seq[String],
   ): Attribute = {
     buildAttribute(
       name = "linter",
       value = Json.obj(
-        "ignore" -> values
-      )
+        "ignore" -> values,
+      ),
     )
   }
 
   def buildAttribute(
     name: String,
-    value: JsObject = Json.obj()
+    value: JsObject = Json.obj(),
   ): Attribute = {
     Attribute(
       name = name,
-      value = value
+      value = value,
     )
   }
 
@@ -98,31 +98,31 @@ object Services {
     Header(
       name = name,
       `type` = "string",
-      required = false
+      required = false,
     )
   }
 
   def buildModel(
     name: String,
     fields: Seq[Field] = Nil,
-    attributes: Seq[Attribute] = Nil
+    attributes: Seq[Attribute] = Nil,
   ): Model = {
     Model(
       name = name,
       plural = name + "s",
       fields = fields,
-      attributes = attributes
+      attributes = attributes,
     )
   }
 
   def buildInterface(
     name: String,
-    fields: Seq[Field] = Nil
+    fields: Seq[Field] = Nil,
   ): Interface = {
     Interface(
       name = name,
       plural = name + "s",
-      fields = fields
+      fields = fields,
     )
   }
 
@@ -135,7 +135,7 @@ object Services {
     required: Boolean = true,
     minimum: Option[Long] = None,
     maximum: Option[Long] = None,
-    example: Option[String] = None
+    example: Option[String] = None,
   ): Field = {
     Field(
       name = name,
@@ -146,21 +146,21 @@ object Services {
       required = required,
       minimum = minimum,
       maximum = maximum,
-      example = example
+      example = example,
     )
   }
 
   def buildSimpleModel(name: String, fields: Seq[String] = Nil): Model = {
     Services.buildModel(
       name = name,
-      fields = fields.map(Services.buildField(_))
+      fields = fields.map(Services.buildField(_)),
     )
   }
 
   def buildSimpleEnum(name: String, values: Seq[EnumValue] = Nil): Enum = {
     Services.buildEnum(
       name = name,
-      values = values
+      values = values,
     )
   }
 
@@ -172,7 +172,7 @@ object Services {
     parameters: Seq[Parameter] = Nil,
     attributes: Seq[Attribute] = Nil,
     responseCode: Int,
-    responseType: String
+    responseType: String,
   ): Resource = {
     Resource(
       `type` = `type`,
@@ -184,20 +184,20 @@ object Services {
           parameters = parameters,
           attributes = attributes,
           responses = Seq(
-            buildResponse(responseCode, responseType)
-          )
-        )
-      )
+            buildResponse(responseCode, responseType),
+          ),
+        ),
+      ),
     )
   }
 
   def buildResource(
     `type`: String,
-    operations: Seq[Operation] = Nil
+    operations: Seq[Operation] = Nil,
   ): Resource = Resource(
     `type` = `type`,
     plural = `type` + "s",
-    operations = operations
+    operations = operations,
   )
 
   def buildSimpleOperation(
@@ -206,16 +206,16 @@ object Services {
     parameters: Seq[Parameter] = Nil,
     responseCode: Int = 200,
     responseType: String = "string",
-    attributes: Seq[Attribute] = Nil
+    attributes: Seq[Attribute] = Nil,
   ): Operation = {
     Operation(
       method = method,
       path = path,
       parameters = parameters,
       responses = Seq(
-        buildResponse(responseCode, responseType)
+        buildResponse(responseCode, responseType),
       ),
-      attributes = attributes
+      attributes = attributes,
     )
   }
 
@@ -223,22 +223,22 @@ object Services {
     name: String = "q",
     `type`: String = "String",
     maximum: Option[Long] = None,
-    example: Option[String] = None
+    example: Option[String] = None,
   ) = Parameter(
     name = name,
     `type` = `type`,
     location = ParameterLocation.Query,
     required = false,
     maximum = maximum,
-    example = example
+    example = example,
   )
 
   def buildResponse(
     code: Int = 200,
-    `type`: String
+    `type`: String,
   ) = Response(
     code = ResponseCodeInt(code),
-    `type` = `type`
+    `type` = `type`,
   )
 
   def buildServiceByPath(path: String): Service = {
@@ -252,11 +252,11 @@ object Services {
               method = Method.Get,
               path = path,
               parameters = Nil,
-              responses = Seq(Services.buildResponse(`type` = "unit"))
-            )
-          )
-        )
-      )
+              responses = Seq(Services.buildResponse(`type` = "unit")),
+            ),
+          ),
+        ),
+      ),
     )
   }
 }

@@ -10,14 +10,14 @@ class GetQuerySpec extends AnyFunSpec with Matchers {
 
   val model = Services.buildSimpleModel(
     "organization",
-    fields = Seq("id", "name")
+    fields = Seq("id", "name"),
   )
 
   val idParameter = Parameter(
     name = "q",
     `type` = "string",
     location = ParameterLocation.Query,
-    required = false
+    required = false,
   )
 
   def buildResourceWithSearch(params: Seq[Parameter]) = {
@@ -32,12 +32,12 @@ class GetQuerySpec extends AnyFunSpec with Matchers {
               path = "/organizations",
               parameters = params,
               responses = Seq(
-                Services.buildResponse(`type` = "[organization]")
-              )
-            )
-          )
-        )
-      )
+                Services.buildResponse(`type` = "[organization]"),
+              ),
+            ),
+          ),
+        ),
+      ),
     )
   }
 
@@ -49,14 +49,14 @@ class GetQuerySpec extends AnyFunSpec with Matchers {
             name = "q",
             `type` = "string",
             location = ParameterLocation.Query,
-            required = true
-          )
-        )
-      )
+            required = true,
+          ),
+        ),
+      ),
     ) should be(
       Seq(
-        "Resource organizations GET /organizations: Parameter[q] must be optional"
-      )
+        "Resource organizations GET /organizations: Parameter[q] must be optional",
+      ),
     )
   }
 
@@ -68,10 +68,10 @@ class GetQuerySpec extends AnyFunSpec with Matchers {
             name = "q",
             `type` = "string",
             location = ParameterLocation.Query,
-            required = false
-          )
-        )
-      )
+            required = false,
+          ),
+        ),
+      ),
     ) should be(Nil)
   }
 

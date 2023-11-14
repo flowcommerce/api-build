@@ -9,11 +9,11 @@ class ProxyQueryParametersSpec extends AnyFunSpec with Matchers {
   private[this] val linter = linters.ProxyQueryParameters
 
   def buildService(
-    paramName: String
+    paramName: String,
   ): Service = {
     Services.Base.copy(
       models = Seq(
-        Services.buildSimpleModel("user")
+        Services.buildSimpleModel("user"),
       ),
       resources = Seq(
         Services.buildSimpleResource(
@@ -29,28 +29,28 @@ class ProxyQueryParametersSpec extends AnyFunSpec with Matchers {
               `type` = "[string]",
               location = ParameterLocation.Query,
               required = false,
-              description = None
-            )
-          )
-        )
-      )
+              description = None,
+            ),
+          ),
+        ),
+      ),
     )
   }
 
   it("allows non reserved words") {
     linter.validate(
-      buildService("id")
+      buildService("id"),
     ) should be(Nil)
   }
 
   it("validates reserved words") {
     Seq("callback", "envelope", "method").foreach { word =>
       linter.validate(
-        buildService(word)
+        buildService(word),
       ) should be(
         Seq(
-          s"Resource users GET /users Parameter $word: name is reserved for use only in https://github.com/flowvault/proxy"
-        )
+          s"Resource users GET /users Parameter $word: name is reserved for use only in https://github.com/flowvault/proxy",
+        ),
       )
     }
   }

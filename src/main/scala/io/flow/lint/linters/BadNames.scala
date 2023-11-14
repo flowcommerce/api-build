@@ -9,7 +9,7 @@ case object BadNames extends Linter with Helpers {
 
   private[this] val Data: Map[String, String] = Map(
     "ip_address" -> "ip",
-    "postal_code" -> "postal"
+    "postal_code" -> "postal",
   )
 
   override def validate(service: Service): Seq[String] = {

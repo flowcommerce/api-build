@@ -22,7 +22,7 @@ case object StandardResponse extends Linter with Helpers {
     Method.Head -> Nil,
     Method.Connect -> Nil,
     Method.Options -> Nil,
-    Method.Trace -> Nil
+    Method.Trace -> Nil,
   )
 
   override def validate(service: Service): Seq[String] = {
@@ -52,8 +52,8 @@ case object StandardResponse extends Linter with Helpers {
                   resource,
                   operation,
                   response,
-                  "Must not have a description as this is a globally standard response"
-                )
+                  "Must not have a description as this is a globally standard response",
+                ),
               )
           }
         }
@@ -76,8 +76,8 @@ case object StandardResponse extends Linter with Helpers {
           error(
             resource,
             operation,
-            s"Missing documentation for required response codes for method[${operation.method}]"
-          )
+            s"Missing documentation for required response codes for method[${operation.method}]",
+          ),
         )
       }
       case Some(expected) => {
@@ -125,7 +125,7 @@ case object StandardResponse extends Linter with Helpers {
     resource: Resource,
     operation: Operation,
     response: Response,
-    datatype: String
+    datatype: String,
   ): Seq[String] = {
     typeMatches(response.`type`, datatype) match {
       case true => {
@@ -139,7 +139,7 @@ case object StandardResponse extends Linter with Helpers {
 
   def typeMatches(
     typ: String,
-    pattern: String
+    pattern: String,
   ): Boolean = {
     typ == pattern match {
       case true => true

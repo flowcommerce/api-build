@@ -24,7 +24,7 @@ case object VersionModels extends Linter with Helpers {
           findField(model, 0, "id"),
           findField(model, 1, "timestamp"),
           findField(model, 2, "type"),
-          findField(model, 3, baseModelName)
+          findField(model, 3, baseModelName),
         ).flatten match {
           case idField :: timestampField :: typeField :: modelField :: Nil => {
             validateType(model, idField, "string") ++
@@ -36,8 +36,8 @@ case object VersionModels extends Linter with Helpers {
                 Seq(
                   baseModelName,
                   s"${baseModelName}_summary",
-                  s"expandable_$baseModelName"
-                )
+                  s"expandable_$baseModelName",
+                ),
               )
           }
           case _ => {
@@ -68,12 +68,12 @@ case object VersionModels extends Linter with Helpers {
     assert(!datatypes.isEmpty)
     datatypes.find { datatype =>
       field.`type` == datatype || field.`type`.endsWith(s".$datatype") || field.`type`.endsWith(
-        s".expandable_$datatype"
+        s".expandable_$datatype",
       )
     } match {
       case None => {
         Seq(
-          error(model, field, s"Must have type ${datatypes.mkString(" or ")} and not ${field.`type`}")
+          error(model, field, s"Must have type ${datatypes.mkString(" or ")} and not ${field.`type`}"),
         )
       }
       case _ => {

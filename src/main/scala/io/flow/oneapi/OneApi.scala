@@ -13,14 +13,14 @@ private[oneapi] case class ContextualValue(context: String, value: String)
 case class OneApi(
   buildType: BuildType,
   downloadCache: DownloadCache,
-  originalServices: Seq[Service]
+  originalServices: Seq[Service],
 ) {
   private[this] val MergeResourcePathsHack = Map(
     "organization" -> "/organizations",
     "timezone" -> "/",
     "io.flow.reference.v0.models.timezone" -> "/",
     "io.flow.common.v0.models.organization" -> "/organizations",
-    "io.flow.external.paypal.v1.models.webhook_event" -> "/"
+    "io.flow.external.paypal.v1.models.webhook_event" -> "/",
   )
 
   private[this] val canonical: ApiBuilderService = ApiBuilderService(
@@ -28,7 +28,7 @@ case class OneApi(
       originalServices.headOption.getOrElse {
         sys.error("Must have at least one service")
       }
-    }
+    },
   )
 
   private[this] val namespace = s"${buildType.namespace}.v" + majorVersion(canonical.service.version)
@@ -43,7 +43,7 @@ case class OneApi(
         .distinct
         .filterNot { a =>
           originalServices.exists { s => s.organization.key == a.organization && s.application.key == a.application }
-        }
+        },
     )
     .map(ApiBuilderService(_))
     .toList
@@ -55,7 +55,7 @@ case class OneApi(
   def process(): ValidatedNec[String, Service] = {
     (
       validatePaths(),
-      validateRecordNames()
+      validateRecordNames(),
     ).mapN { case (_, _) =>
       buildOneApi()
     }
@@ -77,7 +77,7 @@ case class OneApi(
       description = canonical.service.description,
       info = Info(
         license = Some(License(name = "MIT", url = Some("http://opensource.org/licenses/MIT"))),
-        contact = Some(Contact(name = Some("Flow Commerce"), email = Some("tech@flow.io")))
+        contact = Some(Contact(name = Some("Flow Commerce"), email = Some("tech@flow.io"))),
       ),
       headers = Nil,
       imports = Nil,
@@ -89,14 +89,14 @@ case class OneApi(
       unions = multiService.allUnions.map(_.union),
       resources = services.flatMap { s =>
         s.service.resources.map { r => updateResource(s, r) }
-      }
+      },
     )
 
     val flattened = FlattenTypeNames(flattenedServices = services).rewrite(baseService)
     val service = flattened.copy(
       imports = stripAnnotations(
-        buildImports(flattened, originalServices.flatMap(_.imports))
-      )
+        buildImports(flattened, originalServices.flatMap(_.imports)),
+      ),
     )
 
     val sorted = service.copy(
@@ -107,7 +107,7 @@ case class OneApi(
       resources = mergeResources(service.resources) match {
         case Invalid(errors) => sys.error("Error merging resources: " + errors.toList.mkString("\n"))
         case Valid(r) => r.toList.sortBy(resourceSortKey)
-      }
+      },
     )
 
     if (buildType.isEvent) {
@@ -135,7 +135,7 @@ case class OneApi(
   @scala.annotation.tailrec
   private[this] def mergeResources(
     remaining: Seq[Resource],
-    merged: Seq[Resource] = Nil
+    merged: Seq[Resource] = Nil,
   ): ValidatedNec[String, Seq[Resource]] = {
     remaining.toList match {
       case Nil => merged.validNec
@@ -207,7 +207,7 @@ case class OneApi(
           case None => b.description
         },
         operations = a.operations ++ b.operations,
-        attributes = a.attributes ++ b.attributes.filter(attr => !attributeNames.contains(attr.name))
+        attributes = a.attributes ++ b.attributes.filter(attr => !attributeNames.contains(attr.name)),
       )
     }
   }
@@ -232,7 +232,7 @@ case class OneApi(
 
     Seq(
       (10000 + Module.moduleSortIndex(moduleName)).toString,
-      resource.`type`.toLowerCase
+      resource.`type`.toLowerCase,
     ).mkString(":")
   }
 
@@ -242,7 +242,7 @@ case class OneApi(
         r.operations.map { op =>
           ContextualValue(
             context = s"${s.name}:resource[${r.`type`}] ${op.method} ${op.path}",
-            value = normalizePath(op.method, op.path)
+            value = normalizePath(op.method, op.path),
           )
         }
       }
@@ -277,9 +277,9 @@ case class OneApi(
         .map { s =>
           ContextualValue(
             context = s.qualified,
-            value = s.name
+            value = s.name,
           )
-        }
+        },
     )
   }
 
@@ -308,7 +308,7 @@ case class OneApi(
     val eventType = createEventTypeEnum(event)
     service.copy(
       enums = service.enums ++ Seq(eventType),
-      unions = Seq(event)
+      unions = Seq(event),
     )
   }
 
@@ -320,7 +320,7 @@ case class OneApi(
           types.map(_.`type`).groupBy(identity).collect { case (typ, instances) if instances.length > 1 => typ }
         assert(
           duplicates.isEmpty,
-          s"Generated event union has duplicate types: ${duplicates.mkString(", ")}"
+          s"Generated event union has duplicate types: ${duplicates.mkString(", ")}",
         )
 
         Union(
@@ -329,7 +329,7 @@ case class OneApi(
           discriminator = discriminator,
           types = types,
           deprecation = None,
-          attributes = Seq(docsAttribute(Module.Webhook))
+          attributes = Seq(docsAttribute(Module.Webhook)),
         )
       }
 
@@ -345,11 +345,11 @@ case class OneApi(
       plural = "event_types",
       values = event.types.map { t =>
         EnumValue(
-          name = t.`type`
+          name = t.`type`,
         )
       }.distinct,
       deprecation = None,
-      attributes = Seq(docsAttribute(Module.Webhook))
+      attributes = Seq(docsAttribute(Module.Webhook)),
     )
   }
 
@@ -357,8 +357,8 @@ case class OneApi(
     updateDescription(
       service,
       updateOperations(
-        ensureDocsAttribute(service, resource)
-      )
+        ensureDocsAttribute(service, resource),
+      ),
     )
   }
 
@@ -376,22 +376,22 @@ case class OneApi(
               case t: ApiBuilderType.Union => t.union.description
             }
         }
-      }
+      },
     )
   }
 
   private[this] def updateOperations(resource: Resource): Resource = {
     sortOperations(
       resource.copy(
-        operations = resource.operations.map(updateOperation)
-      )
+        operations = resource.operations.map(updateOperation),
+      ),
     )
   }
 
   private[this] def updateOperation(op: Operation): Operation = {
     op.copy(
       parameters = op.parameters.map(updateParameter),
-      responses = op.responses.map(updateResponse)
+      responses = op.responses.map(updateResponse),
     )
   }
 
@@ -399,7 +399,7 @@ case class OneApi(
     param.copy(
       description = param.description.orElse {
         Defaults.ParameterDescriptions.get(param.name)
-      }
+      },
     )
   }
 
@@ -407,7 +407,7 @@ case class OneApi(
     response.copy(
       description = response.description.orElse {
         Defaults.ResponseDescriptions.get(responseCodeToString(response.code))
-      }
+      },
     )
   }
 
@@ -420,7 +420,7 @@ case class OneApi(
 
   private[this] def sortOperations(resource: Resource): Resource = {
     resource.copy(
-      operations = resource.operations.sortBy(OperationSort.key)
+      operations = resource.operations.sortBy(OperationSort.key),
     )
   }
 
@@ -432,7 +432,7 @@ case class OneApi(
           Module.General
         }
         resource.copy(
-          attributes = resource.attributes ++ Seq(docsAttribute(module))
+          attributes = resource.attributes ++ Seq(docsAttribute(module)),
         )
       }
     }
@@ -442,23 +442,23 @@ case class OneApi(
   private[this] def docsAttribute(module: Module): Attribute = Attribute(
     name = "docs",
     value = Json.obj(
-      "module" -> module.name
-    )
+      "module" -> module.name,
+    ),
   )
 
   private[this] def updateInterface(interface: ApiBuilderType.Interface): ApiBuilderType.Interface = {
     interface.copy(
       interface = interface.interface.copy(
-        fields = interface.interface.fields.map(updateField)
-      )
+        fields = interface.interface.fields.map(updateField),
+      ),
     )
   }
 
   private[this] def updateModel(model: ApiBuilderType.Model): ApiBuilderType.Model = {
     model.copy(
       model = model.model.copy(
-        fields = model.model.fields.map(updateField)
-      )
+        fields = model.model.fields.map(updateField),
+      ),
     )
   }
 
@@ -466,7 +466,7 @@ case class OneApi(
     field.copy(
       description = field.description.orElse {
         Defaults.FieldDescriptions.get(field.name)
-      }
+      },
     )
   }
 }

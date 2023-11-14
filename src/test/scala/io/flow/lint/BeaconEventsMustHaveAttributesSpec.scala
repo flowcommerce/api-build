@@ -13,9 +13,9 @@ class BeaconEventsMustHaveAttributesSpec extends AnyFunSpec with Matchers {
       "user",
       fieldNames.map(name =>
         Services.buildField(
-          name = name
-        )
-      )
+          name = name,
+        ),
+      ),
     )
   }
 
@@ -23,16 +23,16 @@ class BeaconEventsMustHaveAttributesSpec extends AnyFunSpec with Matchers {
     Services.buildUnion(
       name,
       types = Seq(
-        Services.buildUnionType(typeName)
-      )
+        Services.buildUnionType(typeName),
+      ),
     )
   }
 
   it("model not part of union") {
     linter.validate(
       Services.Base.copy(
-        models = Seq(buildModel(Seq("id")))
-      )
+        models = Seq(buildModel(Seq("id"))),
+      ),
     ) should be(Nil)
   }
 
@@ -42,20 +42,20 @@ class BeaconEventsMustHaveAttributesSpec extends AnyFunSpec with Matchers {
     linter.validate(
       Services.Base.copy(
         models = Seq(model),
-        unions = Seq(buildUnion("test", model.name))
-      )
+        unions = Seq(buildUnion("test", model.name)),
+      ),
     ) should be(Nil)
 
     val union = buildUnion("event", model.name)
     linter.validate(
       Services.Base.copy(
         models = Seq(model),
-        unions = Seq(union)
-      )
+        unions = Seq(union),
+      ),
     ) should be(
       Seq(
-        "Model user: Must have a field named 'attributes' of type 'beacon_attributes'"
-      )
+        "Model user: Must have a field named 'attributes' of type 'beacon_attributes'",
+      ),
     )
 
     linter.validate(
@@ -63,16 +63,16 @@ class BeaconEventsMustHaveAttributesSpec extends AnyFunSpec with Matchers {
         models = Seq(
           model.copy(
             fields = Seq(
-              Services.buildField("attributes")
-            )
-          )
+              Services.buildField("attributes"),
+            ),
+          ),
         ),
-        unions = Seq(union)
-      )
+        unions = Seq(union),
+      ),
     ) should be(
       Seq(
-        "Model user Field[attributes]: Must not be required and have type 'beacon_attributes' and not 'string'"
-      )
+        "Model user Field[attributes]: Must not be required and have type 'beacon_attributes' and not 'string'",
+      ),
     )
 
     linter.validate(
@@ -80,12 +80,12 @@ class BeaconEventsMustHaveAttributesSpec extends AnyFunSpec with Matchers {
         models = Seq(
           model.copy(
             fields = Seq(
-              Services.buildField("attributes", required = false, `type` = "beacon_attributes")
-            )
-          )
+              Services.buildField("attributes", required = false, `type` = "beacon_attributes"),
+            ),
+          ),
         ),
-        unions = Seq(union)
-      )
+        unions = Seq(union),
+      ),
     ) should be(Nil)
   }
 }

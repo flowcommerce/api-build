@@ -3,7 +3,7 @@ package io.flow.build
 case class Application(
   organization: String,
   application: String,
-  version: String
+  version: String,
 ) {
   val isLatest: Boolean = version == Application.Latest
 
@@ -24,7 +24,7 @@ object Application {
     Application(
       organization = organization,
       application = application,
-      version = Latest
+      version = Latest,
     )
   }
 

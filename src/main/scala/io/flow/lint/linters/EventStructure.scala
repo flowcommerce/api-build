@@ -28,7 +28,7 @@ case object EventStructure extends Linter with EventHelpers {
       validateMatchingDeleteEvents(event),
       validateDeleteEventsHaveId(event.deleted),
       validateNoAdditionalFields(event),
-      validateUpsertedModelsHaveId(service, event.upserted)
+      validateUpsertedModelsHaveId(service, event.upserted),
     ).mapN { case (_, _, _, _) => () }
   }
 
@@ -43,7 +43,7 @@ case object EventStructure extends Linter with EventHelpers {
 
   private[this] def validateMatchingDeleteEvent(
     upserted: UpsertedEventModel,
-    candidates: Seq[DeletedEventModel]
+    candidates: Seq[DeletedEventModel],
   ): ValidatedNec[String, Unit] = {
     candidates.find(_.prefix == upserted.prefix) match {
       case None => s"Missing delete event for '${upserted.model.name}'".invalidNec
@@ -74,7 +74,7 @@ case object EventStructure extends Linter with EventHelpers {
   private[this] def validateNoAdditionalFields(event: EventInstance): ValidatedNec[String, Unit] = {
     (
       validateNoAdditionalFieldsUpserted(event.upserted),
-      validateNoAdditionalFieldsDeleted(event.deleted)
+      validateNoAdditionalFieldsDeleted(event.deleted),
     ).mapN { case (_, _) => () }
   }
 
@@ -98,7 +98,7 @@ case object EventStructure extends Linter with EventHelpers {
 
   private[this] def validateNoAdditionalFields(
     m: EventModel,
-    acceptableFinalFieldNames: Seq[String]
+    acceptableFinalFieldNames: Seq[String],
   ): ValidatedNec[String, Unit] = {
     m.model.fields.zipWithIndex
       .map { case (field, i) =>
@@ -109,7 +109,7 @@ case object EventStructure extends Linter with EventHelpers {
             validateFieldName(
               m,
               field,
-              acceptableFinalFieldNames ++ Seq("organization", "channel", "channel_id", "partner")
+              acceptableFinalFieldNames ++ Seq("organization", "channel", "channel_id", "partner"),
             )
           case 3 => validateFieldName(m, field, acceptableFinalFieldNames)
           case _ => error(m.model, "Cannot have more than 4 fields").invalidNec
@@ -122,7 +122,7 @@ case object EventStructure extends Linter with EventHelpers {
   private[this] def validateFieldName(
     model: EventModel,
     field: Field,
-    allowed: Seq[String]
+    allowed: Seq[String],
   ): ValidatedNec[String, Unit] = {
     if (allowed.contains(field.name)) {
       ().validNec
@@ -140,7 +140,7 @@ case object EventStructure extends Linter with EventHelpers {
 
   private[this] def validateUpsertedModelsHaveId(
     service: Service,
-    models: Seq[UpsertedEventModel]
+    models: Seq[UpsertedEventModel],
   ): ValidatedNec[String, Unit] = {
     models
       .flatMap { m =>
@@ -165,7 +165,7 @@ case object EventStructure extends Linter with EventHelpers {
     event.copy(
       models = event.models.flatMap { m =>
         Some(m).filterNot(_ => LegacyInvalidModels.contains(m.model.name))
-      }
+      },
     )
   }
 
@@ -488,6 +488,6 @@ case object EventStructure extends Linter with EventHelpers {
     "virtual_card_provider_deleted",
     "virtual_card_provider_upserted",
     "virtual_card_refund_deleted",
-    "virtual_card_refund_upserted"
+    "virtual_card_refund_upserted",
   )
 }
