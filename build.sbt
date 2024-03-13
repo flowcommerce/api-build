@@ -37,13 +37,13 @@ lazy val root = project
     scalafmtOnCompile := true,
     scalacOptions ++= allScalacOptions ++ Seq("-release", "17"),
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.2.35",
+      "io.flow" %% "lib-util" % "0.2.36",
       "io.apibuilder" %% "apibuilder-validation" % "0.4.33",
       "com.typesafe.play" %% "play-json" % "2.9.4",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.typelevel" %% "cats-core" % "2.10.0",
       "org.typelevel" %% "cats-effect" % "2.3.3",
-      "org.scalatest" %% "scalatest" % "3.2.17" % Test,
+      "org.scalatest" %% "scalatest" % "3.2.18" % Test,
       "com.github.scopt" %% "scopt" % "4.1.0",
     ),
   )
