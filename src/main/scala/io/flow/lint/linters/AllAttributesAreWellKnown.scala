@@ -13,6 +13,7 @@ case object AllAttributesAreWellKnown extends Linter {
     "linter",
     "non-crud",
     "sort",
+    "io.flow.proxy",
   )
 
   override def validate(service: Service): Seq[String] = {
