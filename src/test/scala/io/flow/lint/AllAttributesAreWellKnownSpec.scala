@@ -44,6 +44,7 @@ class AllAttributesAreWellKnownSpec extends AnyFunSpec with Matchers {
     test("linter") shouldBe Nil
     test("non-crud") shouldBe Nil
     test("sort") shouldBe Nil
+    test("io.flow.proxy") shouldBe Nil
   }
 
 }
