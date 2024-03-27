@@ -79,9 +79,14 @@ pipeline {
                             sh '''
                                 cd aws-s3-public
                                 git add util/api-build/*
-                                git commit -m 'Add new version of api-build' util/api-build
-                                git push origin main
-                                aws s3 sync util s3://io.flow.aws-s3-public/util --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+                                if git diff --cached --exit-code --quiet
+                                then
+                                        echo 'Nothing to commit, not git-pushing nor s3-syncing.' >&2
+                                else
+					git commit -m 'Add new version of api-build' util/api-build
+                                        git push origin main
+                                        aws s3 sync util s3://io.flow.aws-s3-public/util --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+                                fi
                             '''
                             syncDependencyLibrary()
                         }
