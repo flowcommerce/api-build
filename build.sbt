@@ -37,7 +37,7 @@ lazy val root = project
     scalafmtOnCompile := true,
     scalacOptions ++= allScalacOptions ++ Seq("-release", "17"),
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.2.38",
+      "io.flow" %% "lib-util" % "0.2.39",
       "io.apibuilder" %% "apibuilder-validation" % "0.4.33",
       "com.typesafe.play" %% "play-json" % "2.9.4",
       "com.ning" % "async-http-client" % "1.9.40",
