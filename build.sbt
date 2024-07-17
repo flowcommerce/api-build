@@ -2,7 +2,7 @@ name := "api-build"
 
 organization := "io.flow"
 
-ThisBuild / scalaVersion := "2.13.13"
+ThisBuild / scalaVersion := "2.13.14"
 ThisBuild / javacOptions ++= Seq("-source", "17", "-target", "17")
 enablePlugins(GitVersioning)
 git.useGitDescribe := true
