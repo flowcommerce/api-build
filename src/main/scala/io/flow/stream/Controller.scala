@@ -1,6 +1,5 @@
 package io.flow.stream
 
-import scala.annotation.nowarn
 import io.apibuilder.spec.v0.models.{Field, Model, Service, UnionType}
 import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService}
 import io.flow.build.{Application, BuildType, DownloadCache}
@@ -322,7 +321,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  @nowarn def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
+  def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
     implicit val w1: Writes[CapturedType] = Json.writes[CapturedType]
