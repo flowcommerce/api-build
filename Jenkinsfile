@@ -58,46 +58,48 @@ pipeline {
             when { branch 'main' }
             steps {
                 container('play') {
-                    withCredentials([
-                        usernamePassword(
-                            credentialsId: 'jenkins-x-github',
-                            usernameVariable: 'GIT_USERNAME',
-                            passwordVariable: 'GIT_PASSWORD'
-                        )
-                    ]) {
-                        script {
-                            sh '''
-                                git config --global credential.helper "store --file=/tmp/git-credentials"
-                                echo "https://$GIT_USERNAME:$GIT_PASSWORD@github.com" > /tmp/git-credentials
-                                git config --global --add safe.directory /home/jenkins/workspace
-                                git clone https://github.com/flowcommerce/aws-s3-public.git aws-s3-public
-                            '''
-                            sh '''
-                                cd aws-s3-public
-                                git checkout main &&
-                                git pull --rebase &&
-                                git fetch --tags origin
-                                ls
-                                pwd
-                            '''
-                            sh '''
-                                sbt scalafmtSbtCheck scalafmtCheck clean assembly
-                                cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/
-                                cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/api-build.jar
-                            '''
-                            sh '''
-                                cd aws-s3-public
-                                git add util/api-build/*
-                                if git diff --cached --exit-code --quiet
-                                then
-                                        echo 'Nothing to commit, not git-pushing nor s3-syncing.' >&2
-                                else
-					git commit -m 'Add new version of api-build' util/api-build
-                                        git push origin main
-                                        aws s3 sync util s3://io.flow.aws-s3-public/util --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
-                                fi
-                            '''
-                            syncDependencyLibrary()
+                    withAWS(roleAccount: '479720515435', role: 'jenkins-build') {   
+                        withCredentials([
+                            usernamePassword(
+                                credentialsId: 'jenkins-x-github',
+                                usernameVariable: 'GIT_USERNAME',
+                                passwordVariable: 'GIT_PASSWORD'
+                            )
+                        ]) {
+                            script {
+                                sh '''
+                                    git config --global credential.helper "store --file=/tmp/git-credentials"
+                                    echo "https://$GIT_USERNAME:$GIT_PASSWORD@github.com" > /tmp/git-credentials
+                                    git config --global --add safe.directory /home/jenkins/workspace
+                                    git clone https://github.com/flowcommerce/aws-s3-public.git aws-s3-public
+                                '''
+                                sh '''
+                                    cd aws-s3-public
+                                    git checkout main &&
+                                    git pull --rebase &&
+                                    git fetch --tags origin
+                                    ls
+                                    pwd
+                                '''
+                                sh '''
+                                    sbt scalafmtSbtCheck scalafmtCheck clean assembly
+                                    cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/
+                                    cp ./target/scala-2.13/api-build-assembly-*.jar ./aws-s3-public/util/api-build/api-build.jar
+                                '''
+                                sh '''
+                                    cd aws-s3-public
+                                    git add util/api-build/*
+                                    if git diff --cached --exit-code --quiet
+                                    then
+                                            echo 'Nothing to commit, not git-pushing nor s3-syncing.' >&2
+                                    else
+                                            git commit -m 'Add new version of api-build' util/api-build
+                                            git push origin main
+                                            aws s3 sync util s3://io.flow.aws-s3-public/util --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+                                    fi
+                                '''
+                                syncDependencyLibrary()
+                            }
                         }
                     }
                 }
