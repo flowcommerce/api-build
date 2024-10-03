@@ -2,7 +2,7 @@ name := "api-build"
 
 organization := "io.flow"
 
-ThisBuild / scalaVersion := "2.13.14"
+ThisBuild / scalaVersion := "2.13.15"
 ThisBuild / javacOptions ++= Seq("-source", "17", "-target", "17")
 enablePlugins(GitVersioning)
 git.useGitDescribe := true
@@ -43,7 +43,7 @@ lazy val root = project
     scalafmtOnCompile := true,
     scalacOptions ++= allScalacOptions ++ Seq("-release", "17"),
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.2.47",
+      "io.flow" %% "lib-util" % "0.2.48",
       "io.apibuilder" %% "apibuilder-validation" % "0.4.33",
       "com.typesafe.play" %% "play-json" % "2.9.4",
       "com.ning" % "async-http-client" % "1.9.40",
