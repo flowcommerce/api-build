@@ -16,6 +16,7 @@ case object EventStructure extends Linter with EventHelpers {
   override def validate(service: Service): Seq[String] = {
     findAllEvents(service)
       .map(filterLegacyModels)
+      .flatMap(filterVerboseEventModels)
       .map { e => validate(service, e) }
       .sequence match {
       case Invalid(e) => e.toList.distinct
@@ -167,6 +168,19 @@ case object EventStructure extends Linter with EventHelpers {
         Some(m).filterNot(_ => LegacyInvalidModels.contains(m.model.name))
       },
     )
+  }
+
+  private val FilteredVerboseEventModels = Set(
+    "catalog_item_event",
+  )
+
+  // Verbose event models are those with the model present in the deleted event.
+  // Initially had planned verbose to also meant 'upserted' being represented by distinct 'inserted' and
+  // 'updated' events, but this would require a change to EventModel.fromModel to parse these new types.
+  // We can write a validator for those later if satisfied by this approach.
+  // In addition, could we add an annotation to the spec to indicate that we want the verbose model?
+  private[this] def filterVerboseEventModels(event: EventInstance): Option[EventInstance] = {
+    Some(event).filterNot(e => FilteredVerboseEventModels.contains(e.union.name))
   }
 
   private[this] val LegacyInvalidModels = Set(
