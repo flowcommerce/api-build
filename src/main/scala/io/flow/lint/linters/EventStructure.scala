@@ -16,6 +16,7 @@ case object EventStructure extends Linter with EventHelpers {
   override def validate(service: Service): Seq[String] = {
     findAllEvents(service)
       .map(filterLegacyModels)
+      .flatMap(filterEnhancedEventModels)
       .map { e => validate(service, e) }
       .sequence match {
       case Invalid(e) => e.toList.distinct
@@ -167,6 +168,16 @@ case object EventStructure extends Linter with EventHelpers {
         Some(m).filterNot(_ => LegacyInvalidModels.contains(m.model.name))
       },
     )
+  }
+
+  private val EnhancedEventModels = Set(
+    "catalog-item-event",
+  )
+
+  // Enhanced event models are those with Inserted/Updated/Deleted events.  We can write a validator
+  // for those later.
+  private[this] def filterEnhancedEventModels(event: EventInstance): Option[EventInstance] = {
+    Some(event).filterNot(e => EnhancedEventModels.contains(e.union.name))
   }
 
   private[this] val LegacyInvalidModels = Set(
