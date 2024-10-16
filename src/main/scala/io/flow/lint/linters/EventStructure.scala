@@ -170,16 +170,27 @@ case object EventStructure extends Linter with EventHelpers {
     )
   }
 
-  private val VerboseEventModels = Set(
-    "catalog-item-event",
+  case class EventModelFilter(unionName: String, modelNames: String*)
+
+  private val FilteredVerboseEventModels = Set(
+    EventModelFilter("catalog-item-event", "item_deleted"),
   )
 
   // Verbose event models are those with Inserted/Updated/Deleted events (as opposed to Upserted/Deleted).
   // We can write a validator for those later if satisfied by this approach.
   // In addition, could we add an annotation to the spec to indicate that we want the verbose model?
-  private[this] def filterVerboseEventModels(event: EventInstance): Option[EventInstance] = {
-    Some(event).filterNot(e => VerboseEventModels.contains(e.union.name))
-  }
+  private[this] def filterVerboseEventModels(event: EventInstance): Option[EventInstance] =
+    FilteredVerboseEventModels.find(_.unionName == event.union.name) match {
+      case None => Some(event)
+      case Some(filter) =>
+        if (filter.modelNames.isEmpty) None // full exclusion
+        else {
+          // Partial exclusion, of model names in the filter
+          Some(
+            event.copy(models = event.models.filterNot(ev => filter.modelNames.contains(ev.model.name))),
+          ).filter(_.models.nonEmpty)
+        }
+    }
 
   private[this] val LegacyInvalidModels = Set(
     "adyen_authorization_deleted",
