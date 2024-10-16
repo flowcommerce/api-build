@@ -196,4 +196,20 @@ class EventStructureSpec extends AnyFunSpec with Matchers {
       "Missing delete event for 'user_upserted_v4'",
     )
   }
+
+  it("ignores verbose models") {
+    val service = Services.Base.copy(
+      unions = Seq(
+        Services.buildUnion(
+          "catalog_item_event",
+          types = Seq(
+            Services.buildUnionType("item_upserted"),
+          ),
+        ),
+      ),
+      models = Seq(buildEventModel("item_upserted", Nil)),
+    )
+    // Fails with Missing delete event for 'item_upserted' if not ignored
+    linter.validate(service) shouldBe Nil
+  }
 }
