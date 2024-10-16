@@ -187,7 +187,7 @@ case object EventStructure extends Linter with EventHelpers {
         else {
           // Partial exclusion, of model names in the filter
           Some(
-            event.copy(models = event.models.filterNot(ev => filter.modelNames.contains(ev.model.name))),
+            event.copy(models = event.models.filterNot(em => filter.modelNames.contains(em.model.name))),
           ).filter(_.models.nonEmpty)
         }
     }
