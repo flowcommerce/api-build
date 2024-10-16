@@ -174,7 +174,9 @@ case object EventStructure extends Linter with EventHelpers {
     "catalog_item_event",
   )
 
-  // Verbose event models are those with Inserted/Updated/Deleted events (as opposed to Upserted/Deleted).
+  // Verbose event models are those with the model present in the deleted event.
+  // Initially had planned verbose to also meant 'upserted' being represented by distinct 'inserted' and
+  // 'updated' events, but this would require a change to EventModel.fromModel to parse these new types.
   // We can write a validator for those later if satisfied by this approach.
   // In addition, could we add an annotation to the spec to indicate that we want the verbose model?
   private[this] def filterVerboseEventModels(event: EventInstance): Option[EventInstance] = {
