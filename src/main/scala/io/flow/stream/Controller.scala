@@ -2,7 +2,7 @@ package io.flow.stream
 
 import io.apibuilder.spec.v0.models.{Field, Model, Service, UnionType}
 import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService}
-import io.flow.build.{Application, BuildType, DownloadCache}
+import io.flow.build.{Application, BuildConfig, BuildType, DownloadCache}
 import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
 
 import scala.annotation.tailrec
@@ -19,7 +19,12 @@ case class Controller() extends io.flow.build.Controller {
   override val name = "Stream"
   override val command = "stream"
 
-  override def run(buildType: BuildType, downloadCache: DownloadCache, services: Seq[Service])(implicit
+  override def run(
+    buildType: BuildType,
+    buildConfig: BuildConfig,
+    downloadCache: DownloadCache,
+    services: Seq[Service],
+  )(implicit
     ec: ExecutionContext,
   ): Unit = {
 

@@ -2,7 +2,7 @@ package io.flow.oneapi
 
 import cats.data.Validated.{Invalid, Valid}
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{Application, BuildType, DownloadCache}
+import io.flow.build.{Application, BuildConfig, BuildType, DownloadCache}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -11,6 +11,7 @@ case class Controller() extends io.flow.build.Controller {
 
   def run(
     buildType: BuildType,
+    buildConfig: BuildConfig,
     downloadCache: DownloadCache,
     services: Seq[Service],
   )(implicit

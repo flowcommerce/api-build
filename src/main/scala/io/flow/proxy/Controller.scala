@@ -1,7 +1,7 @@
 package io.flow.proxy
 
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{Application, BuildType, DownloadCache}
+import io.flow.build.{Application, BuildConfig, BuildType, DownloadCache}
 import io.flow.registry.v0.{Client => RegistryClient}
 import play.api.libs.json.Json
 
@@ -59,6 +59,7 @@ case class Controller() extends io.flow.build.Controller {
 
   def run(
     buildType: BuildType,
+    buildConfig: BuildConfig,
     downloadCache: DownloadCache,
     allServices: Seq[Service],
   )(implicit
@@ -83,7 +84,7 @@ case class Controller() extends io.flow.build.Controller {
     val registryClient = new RegistryClient()
     try {
       buildProxyFile(buildType, services, version, "production") { service =>
-        s"https://${serviceHostResolver.host(service.name)}.api.flow.io"
+        s"${buildConfig.protocol}://${serviceHostResolver.host(service.name)}.${buildConfig.domain}"
       }
 
       val cache = RegistryApplicationCache(registryClient)

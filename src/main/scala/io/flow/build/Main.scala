@@ -44,6 +44,12 @@ object Main extends App {
           .text("One of: " + controllers(BuildType.Api).map(_.command).mkString("all, ", ", ", ""))
           .required()
 
+        opt[Unit]("http-only")
+          .action((_, c) => c.copy(protocol = "http"))
+
+        opt[String]('d', "domain")
+          .action((d, c) => c.copy(domain = d))
+
         arg[String]("<flow/experience>...")
           .text("API specs from APIBuilder")
           .action((api, c) => c.copy(apis = c.apis :+ api))
@@ -80,6 +86,7 @@ object Main extends App {
 
       parser.parse(args, Config()) match {
         case Some(config) =>
+          println(config)
           val selected = if (config.buildCommand == "all") {
             controllers(config.buildType)
           } else {
@@ -89,7 +96,7 @@ object Main extends App {
           val allApplications: Seq[Application] = config.apis.flatMap { name =>
             Application.parse(name)
           }
-
+          val buildConfig = BuildConfig(protocol = config.protocol, domain = config.domain)
           val dl = DownloadCache(Downloader(profile))
           dl.downloadServices(allApplications) match {
             case Left(errors) => {
@@ -97,7 +104,7 @@ object Main extends App {
               errors.foreach { e => println(s" - $e") }
               System.exit(errors.length)
             }
-            case Right(services) => run(config.buildType, dl, selected, services)
+            case Right(services) => run(config.buildType, buildConfig, dl, selected, services)
           }
         case None =>
         // error message already printed
@@ -107,6 +114,7 @@ object Main extends App {
 
   private[this] def run(
     buildType: BuildType,
+    buildConfig: BuildConfig,
     downloadCache: DownloadCache,
     controllers: Seq[Controller],
     services: Seq[Service],
@@ -121,7 +129,7 @@ object Main extends App {
       println(s"${controller.name} Starting")
       println("==================================================")
 
-      controller.run(buildType, downloadCache, services)
+      controller.run(buildType, buildConfig, downloadCache, services)
       controller.errors().foreach {
         case (key, errs) => {
           errors.get(key) match {
