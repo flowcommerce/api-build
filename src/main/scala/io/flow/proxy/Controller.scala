@@ -5,6 +5,9 @@ import io.flow.build.{Application, BuildConfig, BuildType, DownloadCache}
 import io.flow.registry.v0.{Client => RegistryClient}
 import play.api.libs.json.Json
 
+import java.io.File
+import java.nio.file.Path
+
 case class Controller() extends io.flow.build.Controller {
 
   /** Allowlist of applications in the 'api' repo that do not exist in registry
@@ -20,8 +23,9 @@ case class Controller() extends io.flow.build.Controller {
   override val name = "Proxy"
   override val command = "proxy"
 
-  def buildUserPermissionsFile(
+  private def buildUserPermissionsFile(
     buildType: BuildType,
+    output: Path,
     services: Seq[Service],
   ): Unit = {
     val routes = services.flatMap(s =>
@@ -52,7 +56,7 @@ case class Controller() extends io.flow.build.Controller {
     val rs = routes.groupBy(_._1).map(r => (r._1, Map("routes" -> r._2.map(_._2).distinct)))
     val m = Json.toJson(rs)
 
-    val path = s"/tmp/${buildType}-authorization.json"
+    val path = output.resolve(s"${buildType}-authorization.json").toFile
     writeToFile(path, Json.prettyPrint(m))
     println(s" - $path")
   }
@@ -77,13 +81,13 @@ case class Controller() extends io.flow.build.Controller {
     }
 
     println("Building authorization from: " + services.map(_.name).mkString(", "))
-    buildUserPermissionsFile(buildType, services)
+    buildUserPermissionsFile(buildType, buildConfig.output, services)
 
     println("Building proxy from: " + services.map(_.name).mkString(", "))
 
     val registryClient = new RegistryClient()
     try {
-      buildProxyFile(buildType, services, version, "production") { service =>
+      buildProxyFile(buildType, buildConfig.output, services, version, "production") { service =>
         s"${buildConfig.protocol}://${serviceHostResolver.host(service.name)}.${buildConfig.domain}"
       }
 
@@ -94,11 +98,11 @@ case class Controller() extends io.flow.build.Controller {
         serviceName = service.name,
       )
 
-      buildProxyFile(buildType, services, version, "development") { service =>
+      buildProxyFile(buildType, buildConfig.output, services, version, "development") { service =>
         s"http://$DevelopmentHostname:${externalPort(service)}"
       }
 
-      buildProxyFile(buildType, services, version, "workstation") { service =>
+      buildProxyFile(buildType, buildConfig.output, services, version, "workstation") { service =>
         s"http://$DockerHostname:${externalPort(service)}"
       }
     } finally {
@@ -108,6 +112,7 @@ case class Controller() extends io.flow.build.Controller {
 
   private[this] def buildProxyFile(
     buildType: BuildType,
+    output: Path,
     services: Seq[Service],
     version: String,
     env: String,
@@ -150,17 +155,17 @@ operations:
 ${Text.indent(operationsYaml, 2)}
 """
 
-        val path = s"/tmp/${buildType}-proxy.$env.config"
+        val path = output.resolve(s"${buildType}-proxy.$env.config").toFile
         writeToFile(path, all)
         println(s" - $env: $path")
       }
     }
   }
 
-  private[this] def writeToFile(path: String, contents: String): Unit = {
-    import java.io.{BufferedWriter, File, FileWriter}
+  private[this] def writeToFile(path: File, contents: String): Unit = {
+    import java.io.{BufferedWriter, FileWriter}
 
-    val bw = new BufferedWriter(new FileWriter(new File(path)))
+    val bw = new BufferedWriter(new FileWriter(path))
     try {
       bw.write(contents)
     } finally {

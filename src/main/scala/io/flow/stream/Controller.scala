@@ -5,6 +5,7 @@ import io.apibuilder.validation.{ApiBuilderService, ApiBuilderType, MultiService
 import io.flow.build.{Application, BuildConfig, BuildType, DownloadCache}
 import io.flow.util.{FlowEnvironment, StreamNames, VersionParser}
 
+import java.nio.file.Path
 import scala.annotation.tailrec
 import scala.concurrent.ExecutionContext
 
@@ -69,7 +70,7 @@ case class Controller() extends io.flow.build.Controller {
           agg.cache ++ allServices.map(s => s.organization.key + s.application.key -> s),
         )
       }
-      saveDescriptor(buildType, StreamDescriptor(result.streams))
+      saveDescriptor(buildType, buildConfig.output, StreamDescriptor(result.streams))
     }
   }
 
@@ -326,13 +327,13 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  def saveDescriptor(buildType: BuildType, descriptor: StreamDescriptor): Unit = {
+  def saveDescriptor(buildType: BuildType, output: Path, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
     implicit val w1: Writes[CapturedType] = Json.writes[CapturedType]
     implicit val w2: Writes[KinesisStream] = Json.writes[KinesisStream]
     implicit val w3: Writes[StreamDescriptor] = Json.writes[StreamDescriptor]
-    val path = s"/tmp/flow-$buildType-streams.json"
+    val path = output.resolve(s"flow-$buildType-streams.json").toFile
     new java.io.PrintWriter(path) {
       write(Json.prettyPrint(Json.toJson(descriptor)))
       close()

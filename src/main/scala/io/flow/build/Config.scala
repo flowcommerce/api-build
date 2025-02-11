@@ -6,4 +6,5 @@ case class Config(
   domain: String = "api.flow.io",
   buildCommand: String = "all",
   apis: Seq[String] = Seq(),
+  output: java.nio.file.Path = java.nio.file.Paths.get("/tmp"),
 )
