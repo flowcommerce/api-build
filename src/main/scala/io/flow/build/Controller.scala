@@ -31,6 +31,7 @@ trait Controller {
     */
   def run(
     buildType: BuildType,
+    buildConfig: BuildConfig,
     downloadCache: DownloadCache,
     services: Seq[Service],
   )(implicit

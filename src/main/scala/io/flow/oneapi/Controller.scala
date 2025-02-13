@@ -2,7 +2,7 @@ package io.flow.oneapi
 
 import cats.data.Validated.{Invalid, Valid}
 import io.apibuilder.spec.v0.models.Service
-import io.flow.build.{Application, BuildType, DownloadCache}
+import io.flow.build.{Application, BuildConfig, BuildType, DownloadCache}
 
 case class Controller() extends io.flow.build.Controller {
 
@@ -11,6 +11,7 @@ case class Controller() extends io.flow.build.Controller {
 
   def run(
     buildType: BuildType,
+    buildConfig: BuildConfig,
     downloadCache: DownloadCache,
     services: Seq[Service],
   )(implicit
@@ -45,7 +46,7 @@ case class Controller() extends io.flow.build.Controller {
         import io.apibuilder.spec.v0.models.json._
         import play.api.libs.json._
 
-        val path = s"/tmp/flow-$buildType.json"
+        val path = buildConfig.output.resolve(s"flow-$buildType.json").toFile
         new java.io.PrintWriter(path) {
           write(Json.prettyPrint(Json.toJson(service)))
           close()

@@ -3,6 +3,8 @@ package io.flow.build
 import io.apibuilder.spec.v0.models.Service
 import io.flow.{lint, oneapi, proxy, stream}
 
+import java.nio.file.{Files, Path}
+
 object Main extends App {
 
   import scala.concurrent.ExecutionContext.Implicits.global
@@ -43,6 +45,23 @@ object Main extends App {
           .action((cmd, c) => c.copy(buildCommand = cmd))
           .text("One of: " + controllers(BuildType.Api).map(_.command).mkString("all, ", ", ", ""))
           .required()
+
+        opt[Unit]("http-only")
+          .text("If specified, results in http being used as the protocol in host names (default is 'https')")
+          .action((_, c) => c.copy(protocol = "http"))
+
+        opt[String]('d', "domain")
+          .text("Domain to use when constructing the service subdomain (default is 'api.flow.io')")
+          .action((d, c) => c.copy(domain = d))
+
+        opt[Path]('o', "output")
+          .text("Where to write output files (default is '/tmp')")
+          .validate { path =>
+            if (!Files.exists(path)) failure(s"Path does not exist: $path")
+            else if (!Files.isDirectory(path)) failure(s"Path is not a directory: $path")
+            else success
+          }
+          .action((p, c) => c.copy(output = p))
 
         arg[String]("<flow/experience>...")
           .text("API specs from APIBuilder")
@@ -89,7 +108,7 @@ object Main extends App {
           val allApplications: Seq[Application] = config.apis.flatMap { name =>
             Application.parse(name)
           }
-
+          val buildConfig = BuildConfig(protocol = config.protocol, domain = config.domain, output = config.output)
           val dl = DownloadCache(Downloader(profile))
           dl.downloadServices(allApplications) match {
             case Left(errors) => {
@@ -97,7 +116,7 @@ object Main extends App {
               errors.foreach { e => println(s" - $e") }
               System.exit(errors.length)
             }
-            case Right(services) => run(config.buildType, dl, selected, services)
+            case Right(services) => run(config.buildType, buildConfig, dl, selected, services)
           }
         case None =>
         // error message already printed
@@ -107,6 +126,7 @@ object Main extends App {
 
   private[this] def run(
     buildType: BuildType,
+    buildConfig: BuildConfig,
     downloadCache: DownloadCache,
     controllers: Seq[Controller],
     services: Seq[Service],
@@ -121,7 +141,7 @@ object Main extends App {
       println(s"${controller.name} Starting")
       println("==================================================")
 
-      controller.run(buildType, downloadCache, services)
+      controller.run(buildType, buildConfig, downloadCache, services)
       controller.errors().foreach {
         case (key, errs) => {
           errors.get(key) match {
