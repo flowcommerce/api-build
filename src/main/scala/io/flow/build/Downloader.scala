@@ -101,7 +101,10 @@ private[build] case class Downloader(config: ApibuilderProfile) extends SpecProv
         )
       }
     } match {
-      case Success(result) => result.applications.map(_.service).validNec
+      case Success(result) => {
+        result.applications.foreach(a => println(a.service))
+        result.applications.map(_.service).validNec
+      }
       case Failure(ex) => {
         ex match {
           case io.apibuilder.api.v0.errors.UnitResponse(401) => {
