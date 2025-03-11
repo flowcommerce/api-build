@@ -7,4 +7,5 @@ case class Config(
   buildCommand: String = "all",
   apis: Seq[String] = Seq(),
   output: java.nio.file.Path = java.nio.file.Paths.get("/tmp"),
+  isLocal: Boolean = false,
 )

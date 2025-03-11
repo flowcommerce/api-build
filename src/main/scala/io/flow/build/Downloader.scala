@@ -14,7 +14,7 @@ import scala.util.{Failure, Success, Try}
 
 /** Utility to download service.json files from API Builder
   */
-private[build] case class Downloader(config: ApibuilderProfile) {
+private[build] case class Downloader(config: ApibuilderProfile) extends SpecProvider {
 
   def downloadServices(
     applications: Seq[Application],

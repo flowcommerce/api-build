@@ -5,7 +5,7 @@ import io.apibuilder.spec.v0.models.{Import, Service}
 import scala.annotation.tailrec
 import scala.collection.concurrent.TrieMap
 
-case class DownloadCache(downloader: Downloader)(implicit
+case class DownloadCache(downloader: SpecProvider)(implicit
   ec: scala.concurrent.ExecutionContext,
 ) {
 

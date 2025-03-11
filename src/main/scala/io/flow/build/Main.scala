@@ -63,6 +63,10 @@ object Main extends App {
           }
           .action((p, c) => c.copy(output = p))
 
+        opt[Unit]('l', "local")
+          .text("If specified, do not download specs from apibuilder but use those already in the file system")
+          .action((_, c) => c.copy(isLocal = true))
+
         arg[String]("<flow/experience>...")
           .text("API specs from APIBuilder")
           .action((api, c) => c.copy(apis = c.apis :+ api))
@@ -108,8 +112,13 @@ object Main extends App {
           val allApplications: Seq[Application] = config.apis.flatMap { name =>
             Application.parse(name)
           }
-          val buildConfig = BuildConfig(protocol = config.protocol, domain = config.domain, output = config.output)
-          val dl = DownloadCache(Downloader(profile))
+          val buildConfig =
+            BuildConfig(protocol = config.protocol, domain = config.domain, output = config.output)
+          val dl = DownloadCache(if (config.isLocal) {
+            new LocalSpecProvider()
+          } else {
+            Downloader(profile)
+          })
           dl.downloadServices(allApplications) match {
             case Left(errors) => {
               println(s"Errors downloading services:")
