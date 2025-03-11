@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/flowcommerce/api-build.png?branch=main)](https://travis-ci.org/flowcommerce/api-build)
-
 # api-build
 
 Runs a set of tests against an API defined in apibuilder to ensure
@@ -45,10 +43,6 @@ We are using the sbt assembly plugin to build
 
     sbt assembly
 
-## publishing jar file
-
-    go run ./release.go
-
 ## Running from the command line:
 
     java -jar target/scala-2.13/api-build-assembly-xx.yy.zz.jar api lint flow/common flow/user
@@ -67,4 +61,4 @@ The default behavior is to use the default apibuilder profile.
 
 ## Releasing
 
-    go run release.go
+The release is done automatically on Jenkins whenever a PR is merged onto main, see Jenkinsfile.
