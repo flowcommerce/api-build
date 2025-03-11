@@ -1,0 +1,6 @@
+#!/usr/local/plan9/bin/rc -e
+
+localjar=/home/nicolagi/src/flowcommerce/api-build/target/scala-2.13/api-build-assembly-0.3.24.jar
+
+cd /home/nicolagi/src/flowcommerce/api-internal
+java -jar $localjar api-internal lint flow/label-internal-event
