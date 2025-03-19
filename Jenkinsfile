@@ -58,7 +58,7 @@ pipeline {
             when { branch 'main' }
             steps {
                 container('play') {
-                    withAWS(roleAccount: '479720515435', role: 'jenkins-build') {   
+                    withAWS(roleAccount: '479720515435', role: 'flow-prod-eks-production-jenkins-role') {   
                         withCredentials([
                             usernamePassword(
                                 credentialsId: 'jenkins-x-github',
