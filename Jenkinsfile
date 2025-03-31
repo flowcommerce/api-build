@@ -95,7 +95,7 @@ pipeline {
                                     else
                                             git commit -m 'Add new version of api-build' util/api-build
                                             git push origin main
-                                            aws s3 sync util s3://io.flow.aws-s3-public/util --grants read=uri=http://acs.amazonaws.com/groups/global/AllUsers
+                                            aws s3 sync util s3://io.flow.aws-s3-public/util
                                     fi
                                 '''
                                 syncDependencyLibrary()
