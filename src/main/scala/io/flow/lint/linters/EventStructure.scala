@@ -172,6 +172,7 @@ case object EventStructure extends Linter with EventHelpers {
 
   private val FilteredVerboseEventModels = Set(
     "catalog_item_event",
+    "product_event",
   )
 
   // Verbose event models are those with the model present in the deleted event.
