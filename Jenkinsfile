@@ -3,7 +3,7 @@ pipeline {
         kubernetes {
             inheritFrom 'kaniko-slim'
             containerTemplates([
-                containerTemplate(name: 'play', image: 'flowdocker/play_builder:latest-java17-jammy', command: 'cat', ttyEnabled: true),
+                containerTemplate(name: 'play', image: 'flowdocker/play_builder:latest-java17-noble', command: 'cat', ttyEnabled: true),
             ])
         }
     }
