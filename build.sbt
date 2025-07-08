@@ -45,8 +45,8 @@ lazy val root = project
     scalafmtOnCompile := true,
     scalacOptions ++= allScalacOptions ++ Seq("-release", "17"),
     libraryDependencies ++= Seq(
-      "io.flow" %% "lib-util" % "0.2.54",
-      "io.apibuilder" %% "apibuilder-validation" % "0.4.33",
+      "io.flow" %% "lib-util" % "0.2.58",
+      "com.github.apicollective" %% "apibuilder-validation" % "0.5.3",
       "com.typesafe.play" %% "play-json" % "2.10.6",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.typelevel" %% "cats-core" % "2.10.0",
@@ -57,6 +57,7 @@ lazy val root = project
   )
 
 resolvers += "Artifactory" at "https://flow.jfrog.io/flow/libs-release/"
+resolvers += "jitpack" at "https://jitpack.io"
 Test / javaOptions ++= Seq(
   "--add-exports=java.base/sun.security.x509=ALL-UNNAMED",
   "--add-opens=java.base/sun.security.ssl=ALL-UNNAMED",

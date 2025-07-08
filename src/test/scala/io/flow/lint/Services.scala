@@ -6,8 +6,10 @@ import play.api.libs.json.{JsObject, Json}
 object Services {
 
   val Base: Service = Service(
-    apidoc = Apidoc(
-      version = "0.9.50",
+    apidoc = Some(
+      Apidoc(
+        version = "0.9.50",
+      ),
     ),
     name = "api-lint-test",
     organization = Organization(

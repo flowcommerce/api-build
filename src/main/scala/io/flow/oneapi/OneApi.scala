@@ -8,6 +8,8 @@ import io.apibuilder.validation._
 import io.flow.build.{BuildType, DownloadCache}
 import play.api.libs.json.{JsString, Json}
 
+import scala.annotation.nowarn
+
 private[oneapi] case class ContextualValue(context: String, value: String)
 
 case class OneApi(
@@ -61,6 +63,7 @@ case class OneApi(
     }
   }
 
+  @nowarn
   private[this] def buildOneApi(): Service = {
     // Annotations are not namespaced, they're global. For convenience, we'll collect them from
     // all imports and add them to the root service

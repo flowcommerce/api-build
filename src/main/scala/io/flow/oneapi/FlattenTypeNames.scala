@@ -29,7 +29,7 @@ case class FlattenTypeNames(flattenedServices: List[ApiBuilderService]) {
   def rewrite(service: Service): Service = {
     val multiService = MultiServiceImpl(List(ApiBuilderService(service)))
     val helper = ApiBuilderHelperImpl(multiService)
-    MultiService(multiService.services.map { s => rewrite(helper, s) }).services().head.service
+    MultiService(multiService.services.map { s => rewrite(helper, s) }).services.head.service
   }
 
   private[this] def rewrite(helper: ApiBuilderHelper, service: ApiBuilderService): ApiBuilderService = {
