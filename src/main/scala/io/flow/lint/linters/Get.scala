@@ -55,7 +55,7 @@ case object Get extends Linter with Helpers {
     operation.parameters.filter(_.location == ParameterLocation.Query)
   }
 
-  /** b. first param named "id" with type "[string]" and last three parameters named limit, offset, sort
+  /**   b. first param named "id" with type "[string]" and last three parameters named limit, offset, sort
     */
   private[this] case class Sublinter(leadingParam: String, trailingParams: Seq[String]) {
 
