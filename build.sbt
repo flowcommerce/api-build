@@ -51,7 +51,7 @@ lazy val root = project
       "com.ning" % "async-http-client" % "1.9.40",
       "org.typelevel" %% "cats-core" % "2.10.0",
       "org.typelevel" %% "cats-effect" % "2.3.3",
-      "org.scalatest" %% "scalatest" % "3.2.18" % Test,
+      "org.scalatest" %% "scalatest" % "3.2.19" % Test,
       "com.github.scopt" %% "scopt" % "4.1.0",
     ),
   )
