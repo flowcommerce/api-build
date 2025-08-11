@@ -49,7 +49,7 @@ lazy val root = project
       "com.github.apicollective" %% "apibuilder-validation" % "0.5.6",
       "com.typesafe.play" %% "play-json" % "2.10.6",
       "com.ning" % "async-http-client" % "1.9.40",
-      "org.typelevel" %% "cats-core" % "2.10.0",
+      "org.typelevel" %% "cats-core" % "2.13.0",
       "org.typelevel" %% "cats-effect" % "2.3.3",
       "org.scalatest" %% "scalatest" % "3.2.19" % Test,
       "com.github.scopt" %% "scopt" % "4.1.0",
