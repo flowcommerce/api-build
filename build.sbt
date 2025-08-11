@@ -46,7 +46,7 @@ lazy val root = project
     scalacOptions ++= allScalacOptions ++ Seq("-release", "17"),
     libraryDependencies ++= Seq(
       "io.flow" %% "lib-util" % "0.2.58",
-      "com.github.apicollective" %% "apibuilder-validation" % "0.5.3",
+      "com.github.apicollective" %% "apibuilder-validation" % "0.5.6",
       "com.typesafe.play" %% "play-json" % "2.10.6",
       "com.ning" % "async-http-client" % "1.9.40",
       "org.typelevel" %% "cats-core" % "2.10.0",
