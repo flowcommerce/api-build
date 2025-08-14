@@ -395,6 +395,7 @@ case object EventStructure extends Linter with EventHelpers {
     "processing_transaction_upserted",
     "product_restriction_result_deleted",
     "product_restriction_result_upserted",
+    "product_restriction_state_deleted",
     "rate_deleted",
     "rate_deleted_v2",
     "rate_deleted_v3",
