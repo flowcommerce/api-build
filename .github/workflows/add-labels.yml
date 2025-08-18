@@ -22,9 +22,9 @@ jobs:
           LABEL_COLOR="2ECC71"
           
           # create the label if it doesn't exist
-          if ! gh label list --repo "$REPO" --limit 25 --json name --jq '.[].name' | grep -qi "^$LABEL_NAME$"; then
+          if ! gh label list --repo "$REPO" --json name --jq '.[].name' | grep -qi "^$LABEL_NAME$"; then
             echo "Creating label '$LABEL_NAME'"
-            gh label create "$LABEL_NAME" --color "$LABEL_COLOR" --repo "$REPO"
+            gh label create "$LABEL_NAME" --color "$LABEL_COLOR" --repo "$REPO" --force
           fi
           
           # get current labels on the PR
