@@ -1,0 +1,56 @@
+name: auto-merge
+
+on:
+  status:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  approve-and-merge:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.state == 'success' }}
+    steps:
+      - name: log jenkins context
+        run: |
+          echo "Context is: ${{ github.event.context }}"
+
+      - name: find pull request for this commit
+        id: find_pr
+        run: |
+          REPO="${{ github.repository }}"
+          SHA="${{ github.event.sha }}"
+          
+          # find the PR associated with this commit
+          PR_JSON=$(gh pr list --repo "$REPO" --state open --json number,headRefName,labels,headRefOid)
+          PR_NUMBER=$(echo "$PR_JSON" | jq -r --arg sha "$SHA" '.[] | select(.headRefOid == $sha) | .number')
+          
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No open PR found for commit $SHA, exiting.."
+            exit 0
+          fi
+          
+          # check for auto-merge label
+          HAS_LABEL=$(echo "$PR_JSON" | jq -r --arg sha "$SHA" '.[] | select(.headRefOid == $sha) | .labels[].name' | grep -i '^auto-merge$' || true)
+          
+          if [ -z "$HAS_LABEL" ]; then
+            echo "PR #$PR_NUMBER has no 'auto-merge' label, exiting.."
+            exit 0
+          fi
+          
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: approve PR
+        if: ${{ steps.find_pr.outputs.pr_number != '' }}
+        run: gh pr review --approve "${{ steps.find_pr.outputs.pr_number }}" --repo "${{ github.repository }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: merge PR
+        if: ${{ steps.find_pr.outputs.pr_number != '' }}
+        run: gh pr merge --auto --squash "${{ steps.find_pr.outputs.pr_number }}" --repo "${{ github.repository }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,41 @@
+name: "Add labels"
+
+on:
+  pull_request:
+    types: [opened, labeled, synchronize]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  add-labels:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'scala-steward') }}
+    steps:
+      - name: Add auto-merge label
+        if: ${{ contains(github.event.pull_request.title, 'Flow dependency updates') }}
+        run: |
+          REPO="${{ github.repository }}"
+          PR_URL="${{ github.event.pull_request.html_url }}"
+          LABEL_NAME="auto-merge"
+          LABEL_COLOR="2ECC71"
+          
+          # create the label if it doesn't exist
+          if ! gh label list --repo "$REPO" --limit 25 --json name --jq '.[].name' | grep -qi "^$LABEL_NAME$"; then
+            echo "Creating label '$LABEL_NAME'"
+            gh label create "$LABEL_NAME" --color "$LABEL_COLOR" --repo "$REPO"
+          fi
+          
+          # get current labels on the PR
+          LABELS=$(gh pr view "$PR_URL" --json labels --jq '.labels[].name')
+          
+          # add label if missing
+          if ! echo "$LABELS" | grep -qi "^$LABEL_NAME$"; then
+            echo "Adding '$LABEL_NAME' label to PR"
+            gh pr edit "$PR_URL" --add-label "$LABEL_NAME"
+          else
+            echo "'$LABEL_NAME' label already present"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
