@@ -45,8 +45,8 @@ object Config {
     opt[Path]("production-config")
       .text("Optional yaml file to provide host configuration for servers (production only)")
       .validate { path =>
-        if (!Files.exists(path)) failure(s"Production config file does not exist: $path")
-        else if (!Files.isRegularFile(path)) failure(s"Production config path is not a file: $path")
+        if (!Files.exists(path)) failure(s"Production config file does not exist: '$path'")
+        else if (!Files.isRegularFile(path)) failure(s"Production config path is not a file: '$path'")
         else success
       }
       .action((path, c) => c.copy(productionConfig = Some(path)))
