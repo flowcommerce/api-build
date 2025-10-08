@@ -8,6 +8,18 @@ import play.api.libs.json.Json
 import java.io.File
 import java.nio.file.Path
 
+object Controller {
+  def makeProductionHostProvider(
+    buildConfig: BuildConfig,
+    serviceHostResolver: ServiceHostResolver,
+  ): Service => String = { service =>
+    buildConfig.productionServerConfigs.find(_.name == service.name) match {
+      case Some(serverConfig) => serverConfig.host
+      case None => s"${buildConfig.protocol}://${serviceHostResolver.host(service.name)}.${buildConfig.domain}"
+    }
+  }
+}
+
 case class Controller() extends io.flow.build.Controller {
 
   /** Allowlist of applications in the 'api' repo that do not exist in registry
@@ -87,9 +99,9 @@ case class Controller() extends io.flow.build.Controller {
 
     val registryClient = new RegistryClient()
     try {
-      buildProxyFile(buildType, buildConfig.output, services, version, "production") { service =>
-        s"${buildConfig.protocol}://${serviceHostResolver.host(service.name)}.${buildConfig.domain}"
-      }
+      buildProxyFile(buildType, buildConfig.output, services, version, "production")(
+        Controller.makeProductionHostProvider(buildConfig, serviceHostResolver),
+      )
 
       val cache = RegistryApplicationCache(registryClient)
 
