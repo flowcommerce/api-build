@@ -39,7 +39,7 @@ object Main extends App {
           val allApplications: Seq[Application] = config.apis.flatMap { name =>
             Application.parse(name)
           }
-          val serverConfigs: Seq[ServerConfig] = config.overrideConfig
+          val serverConfigs: Seq[ServerConfig] = config.productionConfigOverride
             .map { path =>
               ServerConfig.parseFile(path) match {
                 case Left(error) => sys.error(s"Failed to parse $path: '$error'")
