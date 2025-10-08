@@ -9,7 +9,7 @@ case class Config(
   buildType: BuildType = BuildType.Api,
   protocol: String = "https",
   domain: String = "api.flow.io",
-  productionConfig: Option[java.nio.file.Path] = None,
+  overrideConfig: Option[java.nio.file.Path] = None,
   buildCommand: String = "all",
   apis: Seq[String] = Seq(),
   output: java.nio.file.Path = java.nio.file.Paths.get("/tmp"),
@@ -42,14 +42,14 @@ object Config {
       .text("Domain to use when constructing the service subdomain (default is 'api.flow.io')")
       .action((d, c) => c.copy(domain = d))
 
-    opt[Path]("production-config")
-      .text("Optional yaml file to provide host configuration for servers (production only)")
+    opt[Path]("override-config")
+      .text("Optional yaml file to override default configuration for servers (production only)")
       .validate { path =>
-        if (!Files.exists(path)) failure(s"Production config file does not exist: '$path'")
-        else if (!Files.isRegularFile(path)) failure(s"Production config path is not a file: '$path'")
+        if (!Files.exists(path)) failure(s"Override config file does not exist: '$path'")
+        else if (!Files.isRegularFile(path)) failure(s"Override config path is not a file: '$path'")
         else success
       }
-      .action((path, c) => c.copy(productionConfig = Some(path)))
+      .action((path, c) => c.copy(overrideConfig = Some(path)))
     opt[Path]('o', "output")
       .text("Where to write output files (default is '/tmp')")
       .validate { path =>
