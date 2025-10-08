@@ -9,4 +9,9 @@ package io.flow.build
   * @param output
   *   Where controllers write files created.
   */
-case class BuildConfig(protocol: String, domain: String, output: java.nio.file.Path)
+case class BuildConfig(
+  protocol: String,
+  domain: String,
+  productionServerConfigs: Seq[ServerConfig],
+  output: java.nio.file.Path,
+)
