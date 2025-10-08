@@ -42,7 +42,7 @@ object Config {
       .text("Domain to use when constructing the service subdomain (default is 'api.flow.io')")
       .action((d, c) => c.copy(domain = d))
 
-    opt[Path]("production-override-config")
+    opt[Path]("production-config-override")
       .text("Optional yaml file to override default configuration for servers (production only)")
       .validate { path =>
         if (!Files.exists(path)) failure(s"Override config file does not exist: '$path'")
