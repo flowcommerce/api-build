@@ -5,14 +5,17 @@ import io.circe.generic.auto._
 import io.circe.yaml
 
 import scala.io.Source
-import scala.util.Using
+import scala.util.{Failure, Success, Using}
 
 case class ServerConfig(name: String, host: String)
 
 object ServerConfig {
   def parseFile(path: java.nio.file.Path): Either[String, Seq[ServerConfig]] =
-    Using.resource(Source.fromFile(path.toUri)) { source =>
+    Using(Source.fromFile(path.toUri)) { source =>
       parseYaml(source.mkString)
+    } match {
+      case Failure(ex) => Left(ex.getMessage)
+      case Success(result) => result
     }
 
   def parseYaml(contents: String): Either[String, Seq[ServerConfig]] = {

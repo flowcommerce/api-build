@@ -4,7 +4,7 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
 
 class ServerConfigSpec extends AnyFunSpec with Matchers {
-  it("parses server list") {
+  it("parses server list from valid yaml") {
     val yaml =
       """
         |# comments
@@ -25,5 +25,11 @@ class ServerConfigSpec extends AnyFunSpec with Matchers {
 
   it("fails to parse") {
     ServerConfig.parseYaml("not yaml") shouldBe Left("DecodingFailure at .servers: Missing required field")
+  }
+
+  it("when file does not exist") {
+    ServerConfig.parseFile(java.nio.file.Paths.get("/tmp/wibblywobblywonder.yaml")) shouldBe Left(
+      "/tmp/wibblywobblywonder.yaml (No such file or directory)",
+    )
   }
 }
