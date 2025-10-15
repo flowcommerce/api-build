@@ -70,7 +70,7 @@ object ReferencedType {
   }
 }
 
-object AllImportsAreUsed extends Linter {
+case object AllImportsAreUsed extends Linter {
 
   override def validate(service: Service): Seq[String] = {
     val referencedTypes = ReferencedType.from(service)
