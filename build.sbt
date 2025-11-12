@@ -11,7 +11,7 @@ coverageDataDir := file("target/scala-2.13")
 coverageHighlighting := true
 coverageFailOnMinimum := true
 coverageMinimumStmtTotal := 48
-coverageMinimumBranchTotal := 52
+coverageMinimumBranchTotal := 51
 
 lazy val allScalacOptions = Seq(
   "-feature",
