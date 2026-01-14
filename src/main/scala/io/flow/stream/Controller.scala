@@ -160,31 +160,13 @@ case class Controller() extends io.flow.build.Controller {
   ): Seq[EventType] = {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
     apiBuilderModel.name match {
-      case UnionMemberRx(typeName, eventType, _) if Set("upserted", "inserted", "updated").contains(eventType) =>
-        val payloadField =
-          apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName)).toSeq
-        if (payloadField.isEmpty) {
-          // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: field not found")
-        }
-        val payloadTypes = payloadField.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
-        if (payloadTypes.isEmpty) {
-          // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: payload type not found")
-        }
-        for {
-          pt <- payloadTypes
-          fld <- payloadField
-          idField <- findIdField(pt)
-        } yield {
-          eventType match {
-            case "inserted" =>
-              EventType.Inserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
-            case "updated" =>
-              EventType.Updated(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
-            case "upserted" =>
-              EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
-          }
-        }
-      case UnionMemberRx(typeName, eventType, _) if eventType == "deleted" =>
+      case UnionMemberRx(typeName, "inserted", _) =>
+        processUpsertLike(multiService, apiBuilderModel, typeName, discriminator)(EventType.Inserted.apply)
+      case UnionMemberRx(typeName, "updated", _) =>
+        processUpsertLike(multiService, apiBuilderModel, typeName, discriminator)(EventType.Updated.apply)
+      case UnionMemberRx(typeName, "upserted", _) =>
+        processUpsertLike(multiService, apiBuilderModel, typeName, discriminator)(EventType.Upserted.apply)
+      case UnionMemberRx(typeName, "deleted", _) =>
         val eventIdField = findIdField(apiBuilderModel)
         val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
         val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
@@ -204,6 +186,26 @@ case class Controller() extends io.flow.build.Controller {
       case _ =>
         // println(s"Skipping misnamed union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
         Nil
+    }
+  }
+
+  private def processUpsertLike(
+    multiService: MultiService,
+    apiBuilderModel: ApiBuilderType.Model,
+    typeName: String,
+    discriminator: String,
+  )(
+    build: (String, String, String, Model, Field, String) => EventType.UpsertLike,
+  ): Seq[EventType.UpsertLike] = {
+    val payloadField =
+      apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName)).toSeq
+    val payloadTypes = payloadField.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
+    for {
+      pt <- payloadTypes
+      fld <- payloadField
+      idField <- findIdField(pt)
+    } yield {
+      build(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
     }
   }
 
