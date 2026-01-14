@@ -95,9 +95,11 @@ case class Controller() extends io.flow.build.Controller {
               None
             case Some(streamName) =>
               val candidates = processUnion(multiService, typ, streamName).toList
+              val inserted = candidates.collect { case i: EventType.Inserted => i }
+              val updated = candidates.collect { case u: EventType.Updated => u }
               val upserted = candidates.collect { case u: EventType.Upserted => u }
               val deleted = candidates.collect { case d: EventType.Deleted => d }
-              val pairs = pairUpEvents(upserted, deleted)
+              val pairs = pairUpEvents(inserted, updated, upserted, deleted)
               if (pairs.isEmpty) {
                 None
               } else {
@@ -173,7 +175,14 @@ case class Controller() extends io.flow.build.Controller {
           fld <- payloadField
           idField <- findIdField(pt)
         } yield {
-          EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
+          eventType match {
+            case "inserted" =>
+              EventType.Inserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
+            case "updated" =>
+              EventType.Updated(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
+            case "upserted" =>
+              EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
+          }
         }
       case UnionMemberRx(typeName, eventType, _) if eventType == "deleted" =>
         val eventIdField = findIdField(apiBuilderModel)
@@ -299,65 +308,47 @@ case class Controller() extends io.flow.build.Controller {
     ApiBuilderType.Model(service, model)
   }
 
-  // Represents one or more upserted events that should be paired together (e.g., item_inserted + item_updated)
-  private case class MergedUpserted(
-    eventNames: Seq[String],
-    typeName: String,
-    fieldName: String,
-    payloadType: Model,
-    idField: Field,
-    discriminators: Seq[String],
-  )
-
-  private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
-    // Merge inserted/updated events with the same typeName - they share the same deleted event
-    // upserted events are kept as-is (not merged with other upserted events)
-    val (insertedUpdated, upsertedOnly) =
-      upserted.partition(u => u.eventName.contains("_inserted") || u.eventName.contains("_updated"))
-    val mergedInsertedUpdated = insertedUpdated
-      .groupBy(u => (u.typeName, u.idField.name))
-      .map { case (_, group) =>
-        val head = group.head
-        MergedUpserted(
-          group.map(_.eventName),
-          head.typeName,
-          head.fieldName,
-          head.payloadType,
-          head.idField,
-          group.map(_.discriminator),
-        )
-      }
-      .toList
-    val mergedUpserted = upsertedOnly.map(u =>
-      MergedUpserted(Seq(u.eventName), u.typeName, u.fieldName, u.payloadType, u.idField, Seq(u.discriminator)),
-    )
-    val allMerged = mergedInsertedUpdated ++ mergedUpserted
-
-    pairUpMergedEvents(allMerged, deleted)
-  }
-
-  private def pairUpMergedEvents(
-    upserted: List[MergedUpserted],
+  private def pairUpEvents(
+    inserted: List[EventType.Inserted],
+    updated: List[EventType.Updated],
+    upserted: List[EventType.Upserted],
     deleted: List[EventType.Deleted],
   ): List[CapturedType] = {
-    upserted match {
-      case head :: tail =>
+    // Merge inserted/updated events with the same typeName - they share the same deleted event
+    val mergedInsertedUpdated: List[List[EventType.UpsertLike]] = (inserted ++ updated)
+      .groupBy(u => (u.typeName, u.idField.name))
+      .values
+      .toList
+
+    // Upserted events are kept as-is (not merged with other events)
+    val allGroups: List[List[EventType.UpsertLike]] = mergedInsertedUpdated ++ upserted.map(List(_))
+
+    pairWithDeleted(allGroups, deleted)
+  }
+
+  private def pairWithDeleted(
+    upsertGroups: List[List[EventType.UpsertLike]],
+    deleted: List[EventType.Deleted],
+  ): List[CapturedType] = {
+    upsertGroups match {
+      case group :: tail =>
+        val head = group.head
         val candidates = deleted.filter(d => d.typeName == head.typeName && d.idField.name == head.idField.name)
         val candidate = candidates.find(_.payloadType.isDefined).orElse(candidates.headOption)
         candidate.fold {
-          head.eventNames.foreach(name => println(s"Skipping unpaired v2 upserted member $name"))
-          pairUpMergedEvents(tail, deleted)
+          group.foreach(u => println(s"Skipping unpaired v2 upserted member ${u.eventName}"))
+          pairWithDeleted(tail, deleted)
         } { d =>
           List(
             CapturedType(
               head.fieldName,
               head.typeName,
               head.payloadType,
-              head.discriminators,
+              group.map(_.discriminator),
               d.discriminator,
               d.payloadType.isDefined,
             ),
-          ) ++ pairUpMergedEvents(tail, deleted.filterNot(_ == d))
+          ) ++ pairWithDeleted(tail, deleted.filterNot(_ == d))
         }
       case Nil =>
         deleted.foreach { d =>
