@@ -121,7 +121,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private val UnionMemberRx = "(.*)_(upserted|deleted)_?(.*)".r
+  private val UnionMemberRx = "(.*)_(upserted|inserted|updated|deleted)_?(.*)".r
 
   private def processUnion(
     multiService: MultiService,
@@ -158,7 +158,7 @@ case class Controller() extends io.flow.build.Controller {
   ): Seq[EventType] = {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
     apiBuilderModel.name match {
-      case UnionMemberRx(typeName, eventType, _) if eventType == "upserted" =>
+      case UnionMemberRx(typeName, eventType, _) if Set("upserted", "inserted", "updated").contains(eventType) =>
         val payloadField =
           apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName)).toSeq
         if (payloadField.isEmpty) {
@@ -173,7 +173,7 @@ case class Controller() extends io.flow.build.Controller {
           fld <- payloadField
           idField <- findIdField(pt)
         } yield {
-          EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
+          EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator, eventType)
         }
       case UnionMemberRx(typeName, eventType, _) if eventType == "deleted" =>
         val eventIdField = findIdField(apiBuilderModel)
@@ -299,25 +299,65 @@ case class Controller() extends io.flow.build.Controller {
     ApiBuilderType.Model(service, model)
   }
 
+  // Represents one or more upserted events that should be paired together (e.g., item_inserted + item_updated)
+  private case class MergedUpserted(
+    eventNames: Seq[String],
+    typeName: String,
+    fieldName: String,
+    payloadType: Model,
+    idField: Field,
+    discriminators: Seq[String],
+  )
+
   private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
+    // Merge inserted/updated events with the same typeName - they share the same deleted event
+    // upserted events are kept as-is (not merged with other upserted events)
+    val (insertedUpdated, upsertedOnly) =
+      upserted.partition(u => u.eventName.contains("_inserted") || u.eventName.contains("_updated"))
+    val mergedInsertedUpdated = insertedUpdated
+      .groupBy(u => (u.typeName, u.idField.name))
+      .map { case (_, group) =>
+        val head = group.head
+        MergedUpserted(
+          group.map(_.eventName),
+          head.typeName,
+          head.fieldName,
+          head.payloadType,
+          head.idField,
+          group.map(_.discriminator),
+        )
+      }
+      .toList
+    val mergedUpserted = upsertedOnly.map(u =>
+      MergedUpserted(Seq(u.eventName), u.typeName, u.fieldName, u.payloadType, u.idField, Seq(u.discriminator)),
+    )
+    val allMerged = mergedInsertedUpdated ++ mergedUpserted
+
+    pairUpMergedEvents(allMerged, deleted)
+  }
+
+  private def pairUpMergedEvents(
+    upserted: List[MergedUpserted],
+    deleted: List[EventType.Deleted],
+  ): List[CapturedType] = {
     upserted match {
       case head :: tail =>
         val candidates = deleted.filter(d => d.typeName == head.typeName && d.idField.name == head.idField.name)
         val candidate = candidates.find(_.payloadType.isDefined).orElse(candidates.headOption)
         candidate.fold {
-          println(s"Skipping unpaired v2 upserted member ${head.eventName}")
-          pairUpEvents(tail, deleted)
+          head.eventNames.foreach(name => println(s"Skipping unpaired v2 upserted member $name"))
+          pairUpMergedEvents(tail, deleted)
         } { d =>
           List(
             CapturedType(
               head.fieldName,
               head.typeName,
               head.payloadType,
-              head.discriminator,
+              head.discriminators,
               d.discriminator,
               d.payloadType.isDefined,
             ),
-          ) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
+          ) ++ pairUpMergedEvents(tail, deleted.filterNot(_ == d))
         }
       case Nil =>
         deleted.foreach { d =>
@@ -330,7 +370,19 @@ case class Controller() extends io.flow.build.Controller {
   def saveDescriptor(buildType: BuildType, output: Path, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
-    implicit val w1: Writes[CapturedType] = Json.writes[CapturedType]
+
+    // Custom Writes for CapturedType to output both upsertedDiscriminator (for backward compatibility)
+    // and upsertedDiscriminators (new format). Can remove upsertedDiscriminator once all clients updated.
+    implicit val w1: Writes[CapturedType] = (ct: CapturedType) =>
+      Json.obj(
+        "fieldName" -> ct.fieldName,
+        "typeName" -> ct.typeName,
+        "modelType" -> ct.modelType,
+        "upsertedDiscriminator" -> ct.upsertedDiscriminators.head,
+        "deletedDiscriminator" -> ct.deletedDiscriminator,
+        "deletedHasModel" -> ct.deletedHasModel,
+        "upsertedDiscriminators" -> ct.upsertedDiscriminators,
+      )
     implicit val w2: Writes[KinesisStream] = Json.writes[KinesisStream]
     implicit val w3: Writes[StreamDescriptor] = Json.writes[StreamDescriptor]
     val path = output.resolve(s"flow-$buildType-streams.json").toFile
