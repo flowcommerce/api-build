@@ -173,7 +173,7 @@ case class Controller() extends io.flow.build.Controller {
           fld <- payloadField
           idField <- findIdField(pt)
         } yield {
-          EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator, eventType)
+          EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
         }
       case UnionMemberRx(typeName, eventType, _) if eventType == "deleted" =>
         val eventIdField = findIdField(apiBuilderModel)

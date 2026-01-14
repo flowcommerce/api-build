@@ -8,8 +8,6 @@ sealed trait EventType {
   def discriminator: String
 }
 object EventType {
-  // actionType is one of: "upserted", "inserted", "updated"
-  // Used to determine grouping: only "inserted" and "updated" are grouped together
   case class Upserted(
     eventName: String,
     typeName: String,
@@ -17,7 +15,6 @@ object EventType {
     payloadType: Model,
     idField: Field,
     discriminator: String,
-    actionType: String,
   ) extends EventType { override val toString = "upserted" }
   case class Deleted(
     eventName: String,
