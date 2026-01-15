@@ -317,10 +317,18 @@ case class Controller() extends io.flow.build.Controller {
     deleted: List[EventType.Deleted],
   ): List[CapturedType] = {
     // Merge inserted/updated events with the same typeName - they share the same deleted event
-    val mergedInsertedUpdated: List[List[EventType.UpsertLike]] = (inserted ++ updated)
-      .groupBy(u => (u.typeName, u.idField.name))
-      .values
-      .toList
+    // Use LinkedHashMap to preserve encounter order (matching main branch behavior)
+    val mergedInsertedUpdated: List[List[EventType.UpsertLike]] = {
+      val grouped = scala.collection.mutable.LinkedHashMap.empty[(String, String), List[EventType.UpsertLike]]
+      (inserted ++ updated).foreach { u =>
+        val key = (u.typeName, u.idField.name)
+        grouped.updateWith(key) {
+          case Some(existing) => Some(existing :+ u)
+          case None => Some(List(u))
+        }
+      }
+      grouped.values.toList
+    }
 
     // Upserted events are kept as-is (not merged with other events)
     val allGroups: List[List[EventType.UpsertLike]] = mergedInsertedUpdated ++ upserted.map(List(_))
