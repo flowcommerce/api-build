@@ -123,7 +123,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private val UnionMemberRx = "(.*)_(upserted|inserted|updated|deleted)_?(.*)".r
+  private[stream] val UnionMemberRx = "(.*)_(upserted|inserted|updated|deleted)_?(.*)".r
 
   private def processUnion(
     multiService: MultiService,
@@ -310,7 +310,7 @@ case class Controller() extends io.flow.build.Controller {
     ApiBuilderType.Model(service, model)
   }
 
-  private def pairUpEvents(
+  private[stream] def pairUpEvents(
     inserted: List[EventType.Inserted],
     updated: List[EventType.Updated],
     upserted: List[EventType.Upserted],
@@ -328,7 +328,7 @@ case class Controller() extends io.flow.build.Controller {
     pairWithDeleted(allGroups, deleted)
   }
 
-  private def pairWithDeleted(
+  private[stream] def pairWithDeleted(
     upsertGroups: List[List[EventType.UpsertLike]],
     deleted: List[EventType.Deleted],
   ): List[CapturedType] = {
