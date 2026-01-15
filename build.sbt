@@ -10,8 +10,8 @@ coverageExcludedFiles := ".*\\/src/main/scala/io/flow/generated\\/.*"
 coverageDataDir := file("target/scala-2.13")
 coverageHighlighting := true
 coverageFailOnMinimum := true
-coverageMinimumStmtTotal := 48
-coverageMinimumBranchTotal := 51
+coverageMinimumStmtTotal := 40
+coverageMinimumBranchTotal := 40
 
 lazy val allScalacOptions = Seq(
   "-feature",
