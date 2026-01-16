@@ -370,7 +370,7 @@ case class Controller() extends io.flow.build.Controller {
         "fieldName" -> ct.fieldName,
         "typeName" -> ct.typeName,
         "modelType" -> ct.modelType,
-        "upsertedDiscriminator" -> ct.upsertedDiscriminators.head,
+        "upsertedDiscriminator" -> ct.upsertedDiscriminators.headOption.getOrElse(""),
         "deletedDiscriminator" -> ct.deletedDiscriminator,
         "deletedHasModel" -> ct.deletedHasModel,
         "upsertedDiscriminators" -> ct.upsertedDiscriminators,
