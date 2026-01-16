@@ -119,8 +119,12 @@ class ControllerSpec extends AnyFunSpec with Matchers {
   describe("pairUpEvents") {
     val controller = Controller()
 
-    def makeInserted(typeName: String, discriminator: String): EventType.Inserted = {
-      val model = makeModel(typeName, Seq(makeIdField()))
+    def makeInserted(
+      typeName: String,
+      discriminator: String,
+      payloadName: Option[String] = None,
+    ): EventType.Inserted = {
+      val model = makeModel(payloadName.getOrElse(typeName), Seq(makeIdField()))
       EventType.Inserted(
         eventName = s"${typeName}_inserted",
         typeName = typeName,
@@ -131,8 +135,12 @@ class ControllerSpec extends AnyFunSpec with Matchers {
       )
     }
 
-    def makeUpdated(typeName: String, discriminator: String): EventType.Updated = {
-      val model = makeModel(typeName, Seq(makeIdField()))
+    def makeUpdated(
+      typeName: String,
+      discriminator: String,
+      payloadName: Option[String] = None,
+    ): EventType.Updated = {
+      val model = makeModel(payloadName.getOrElse(typeName), Seq(makeIdField()))
       EventType.Updated(
         eventName = s"${typeName}_updated",
         typeName = typeName,
@@ -179,7 +187,7 @@ class ControllerSpec extends AnyFunSpec with Matchers {
       result.head.deletedHasModel shouldBe true
     }
 
-    it("merges inserted and updated events for the same type") {
+    it("merges inserted and updated events for the same type and payload") {
       val inserted = List(makeInserted("item", "item_inserted"))
       val updated = List(makeUpdated("item", "item_updated"))
       val deleted = List(makeDeleted("item", "item_deleted"))
@@ -190,6 +198,23 @@ class ControllerSpec extends AnyFunSpec with Matchers {
       result.head.typeName shouldBe "item"
       result.head.upsertedDiscriminators should contain allOf ("item_inserted", "item_updated")
       result.head.deletedDiscriminator shouldBe "item_deleted"
+    }
+
+    it("does not merge inserted and updated events with different payloads") {
+      val inserted = List(makeInserted("item", "item_inserted", payloadName = Some("item_summary")))
+      val updated = List(makeUpdated("item", "item_updated", payloadName = Some("item_full")))
+      val deleted = List(
+        makeDeleted("item", "item_deleted_1"),
+        makeDeleted("item", "item_deleted_2"),
+      )
+
+      val result = controller.pairUpEvents(inserted, updated, Nil, deleted)
+
+      // Should get two separate CapturedTypes since payloads differ
+      result should have size 2
+      result.foreach { ct =>
+        ct.upsertedDiscriminators should have size 1
+      }
     }
 
     it("keeps upserted events separate from inserted/updated") {

@@ -316,9 +316,9 @@ case class Controller() extends io.flow.build.Controller {
     upserted: List[EventType.Upserted],
     deleted: List[EventType.Deleted],
   ): List[CapturedType] = {
-    // Merge inserted/updated events with the same typeName - they share the same deleted event
+    // Merge inserted/updated events with the same typeName and payload - they share the same deleted event
     val mergedInsertedUpdated: List[List[EventType.UpsertLike]] = (inserted ++ updated)
-      .groupBy(u => (u.typeName, u.idField.name))
+      .groupBy(u => (u.typeName, u.idField.name, u.payloadType.name))
       .values
       .toList
 
