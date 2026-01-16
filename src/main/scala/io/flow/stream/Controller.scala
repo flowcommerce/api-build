@@ -95,9 +95,11 @@ case class Controller() extends io.flow.build.Controller {
               None
             case Some(streamName) =>
               val candidates = processUnion(multiService, typ, streamName).toList
+              val inserted = candidates.collect { case i: EventType.Inserted => i }
+              val updated = candidates.collect { case u: EventType.Updated => u }
               val upserted = candidates.collect { case u: EventType.Upserted => u }
               val deleted = candidates.collect { case d: EventType.Deleted => d }
-              val pairs = pairUpEvents(upserted, deleted)
+              val pairs = pairUpEvents(inserted, updated, upserted, deleted)
               if (pairs.isEmpty) {
                 None
               } else {
@@ -121,7 +123,7 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  private val UnionMemberRx = "(.*)_(upserted|deleted)_?(.*)".r
+  private[stream] val UnionMemberRx = "(.*)_(upserted|inserted|updated|deleted)_?(.*)".r
 
   private def processUnion(
     multiService: MultiService,
@@ -158,24 +160,13 @@ case class Controller() extends io.flow.build.Controller {
   ): Seq[EventType] = {
     val discriminator = unionMember.discriminatorValue.getOrElse(unionMember.`type`)
     apiBuilderModel.name match {
-      case UnionMemberRx(typeName, eventType, _) if eventType == "upserted" =>
-        val payloadField =
-          apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName)).toSeq
-        if (payloadField.isEmpty) {
-          // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: field not found")
-        }
-        val payloadTypes = payloadField.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
-        if (payloadTypes.isEmpty) {
-          // println(s"Skipping non v2 upserted union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}: payload type not found")
-        }
-        for {
-          pt <- payloadTypes
-          fld <- payloadField
-          idField <- findIdField(pt)
-        } yield {
-          EventType.Upserted(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
-        }
-      case UnionMemberRx(typeName, eventType, _) if eventType == "deleted" =>
+      case UnionMemberRx(typeName, "inserted", _) =>
+        processUpsertLike(multiService, apiBuilderModel, typeName, discriminator)(EventType.Inserted.apply)
+      case UnionMemberRx(typeName, "updated", _) =>
+        processUpsertLike(multiService, apiBuilderModel, typeName, discriminator)(EventType.Updated.apply)
+      case UnionMemberRx(typeName, "upserted", _) =>
+        processUpsertLike(multiService, apiBuilderModel, typeName, discriminator)(EventType.Upserted.apply)
+      case UnionMemberRx(typeName, "deleted", _) =>
         val eventIdField = findIdField(apiBuilderModel)
         val payloadField = apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName))
         val payloadTypes = payloadField.toSeq.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
@@ -195,6 +186,26 @@ case class Controller() extends io.flow.build.Controller {
       case _ =>
         // println(s"Skipping misnamed union ${apiBuilderUnion.qualified} member ${apiBuilderModel.qualified}")
         Nil
+    }
+  }
+
+  private def processUpsertLike(
+    multiService: MultiService,
+    apiBuilderModel: ApiBuilderType.Model,
+    typeName: String,
+    discriminator: String,
+  )(
+    build: (String, String, String, Model, Field, String) => EventType.UpsertLike,
+  ): Seq[EventType.UpsertLike] = {
+    val payloadField =
+      apiBuilderModel.model.fields.find(EventUnionTypeMatcher.matchFieldToPayloadType(_, typeName)).toSeq
+    val payloadTypes = payloadField.flatMap(pf => extractPayloadModels(apiBuilderModel, pf, multiService))
+    for {
+      pt <- payloadTypes
+      fld <- payloadField
+      idField <- findIdField(pt)
+    } yield {
+      build(apiBuilderModel.name, typeName, fld.name, pt.model, idField, discriminator)
     }
   }
 
@@ -299,25 +310,50 @@ case class Controller() extends io.flow.build.Controller {
     ApiBuilderType.Model(service, model)
   }
 
-  private def pairUpEvents(upserted: List[EventType.Upserted], deleted: List[EventType.Deleted]): List[CapturedType] = {
-    upserted match {
-      case head :: tail =>
+  private[stream] def pairUpEvents(
+    inserted: List[EventType.Inserted],
+    updated: List[EventType.Updated],
+    upserted: List[EventType.Upserted],
+    deleted: List[EventType.Deleted],
+  ): List[CapturedType] = {
+    // Merge inserted/updated events with the same typeName and payload - they share the same deleted event
+    val mergedInsertedUpdated: List[List[EventType.UpsertLike]] = (inserted ++ updated)
+      .groupBy(u => (u.typeName, u.idField.name, u.payloadType.name))
+      .values
+      .toList
+
+    // Upserted events are kept as-is (not merged with other events)
+    val allGroups: List[List[EventType.UpsertLike]] = mergedInsertedUpdated ++ upserted.map(List(_))
+
+    pairWithDeleted(allGroups, deleted)
+  }
+
+  private[stream] def pairWithDeleted(
+    upsertGroups: List[List[EventType.UpsertLike]],
+    deleted: List[EventType.Deleted],
+  ): List[CapturedType] = {
+    upsertGroups match {
+      case group :: tail =>
+        val head = group.head
         val candidates = deleted.filter(d => d.typeName == head.typeName && d.idField.name == head.idField.name)
-        val candidate = candidates.find(_.payloadType.isDefined).orElse(candidates.headOption)
+        val candidate = candidates
+          .find(d => d.payloadType.exists(_.name == head.payloadType.name))
+          .orElse(candidates.find(_.payloadType.isDefined))
+          .orElse(candidates.headOption)
         candidate.fold {
-          println(s"Skipping unpaired v2 upserted member ${head.eventName}")
-          pairUpEvents(tail, deleted)
+          group.foreach(u => println(s"Skipping unpaired v2 upserted member ${u.eventName}"))
+          pairWithDeleted(tail, deleted)
         } { d =>
           List(
             CapturedType(
               head.fieldName,
               head.typeName,
               head.payloadType,
-              head.discriminator,
+              group.map(_.discriminator),
               d.discriminator,
               d.payloadType.isDefined,
             ),
-          ) ++ pairUpEvents(tail, deleted.filterNot(_ == d))
+          ) ++ pairWithDeleted(tail, deleted.filterNot(_ == d))
         }
       case Nil =>
         deleted.foreach { d =>
@@ -327,10 +363,27 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
+  // Custom Writes for CapturedType to output both upsertedDiscriminator (for backward compatibility)
+  // and upsertedDiscriminators (new format). Can remove upsertedDiscriminator once all clients updated.
+  private[stream] implicit val capturedTypeWrites: play.api.libs.json.Writes[CapturedType] = {
+    import play.api.libs.json._
+    import io.apibuilder.spec.v0.models.json._
+    (ct: CapturedType) =>
+      Json.obj(
+        "fieldName" -> ct.fieldName,
+        "typeName" -> ct.typeName,
+        "modelType" -> ct.modelType,
+        "upsertedDiscriminator" -> ct.upsertedDiscriminators.headOption.getOrElse[String](""),
+        "deletedDiscriminator" -> ct.deletedDiscriminator,
+        "deletedHasModel" -> ct.deletedHasModel,
+        "upsertedDiscriminators" -> ct.upsertedDiscriminators,
+      )
+  }
+
   def saveDescriptor(buildType: BuildType, output: Path, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
-    implicit val w1: Writes[CapturedType] = Json.writes[CapturedType]
+
     implicit val w2: Writes[KinesisStream] = Json.writes[KinesisStream]
     implicit val w3: Writes[StreamDescriptor] = Json.writes[StreamDescriptor]
     val path = output.resolve(s"flow-$buildType-streams.json").toFile
