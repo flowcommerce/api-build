@@ -20,6 +20,9 @@ class ControllerSpec extends AnyFunSpec with Matchers {
   }
 
   describe("CapturedType JSON serialization") {
+    val controller = Controller()
+    import controller.capturedTypeWrites
+
     it("serializes with single upsertedDiscriminator for backward compatibility") {
       val capturedType = CapturedType(
         fieldName = "order",
@@ -30,7 +33,7 @@ class ControllerSpec extends AnyFunSpec with Matchers {
         deletedHasModel = true,
       )
 
-      val json = Json.toJson(capturedType)(capturedTypeWrites)
+      val json = Json.toJson(capturedType)
 
       (json \ "upsertedDiscriminator").as[String] shouldBe "order_upserted"
       (json \ "upsertedDiscriminators").as[Seq[String]] shouldBe Seq("order_upserted")
@@ -50,7 +53,7 @@ class ControllerSpec extends AnyFunSpec with Matchers {
         deletedHasModel = false,
       )
 
-      val json = Json.toJson(capturedType)(capturedTypeWrites)
+      val json = Json.toJson(capturedType)
 
       // Backward compatibility: first discriminator is used
       (json \ "upsertedDiscriminator").as[String] shouldBe "item_inserted"
@@ -190,8 +193,10 @@ class ControllerSpec extends AnyFunSpec with Matchers {
     }
 
     it("keeps upserted events separate from inserted/updated") {
+      // Given: an inserted event and an upserted event for the same type "item"
       val inserted = List(makeInserted("item", "item_inserted"))
       val upserted = List(makeUpserted("item", "item_upserted"))
+      // And: two deleted events to pair with them
       val deleted = List(
         makeDeleted("item", "item_deleted_1"),
         makeDeleted("item", "item_deleted_2"),
@@ -199,9 +204,21 @@ class ControllerSpec extends AnyFunSpec with Matchers {
 
       val result = controller.pairUpEvents(inserted, Nil, upserted, deleted)
 
+      // Then: we get two separate CapturedTypes (not merged into one)
       result should have size 2
-      // Both should be paired with different deleted events
-      result.map(_.upsertedDiscriminators.head).toSet shouldBe Set("item_inserted", "item_upserted")
+
+      // And: each CapturedType has exactly one discriminator (not merged)
+      result.foreach { ct =>
+        ct.upsertedDiscriminators should have size 1
+      }
+
+      // And: both discriminators are present across the results
+      val allDiscriminators = result.flatMap(_.upsertedDiscriminators).toSet
+      allDiscriminators shouldBe Set("item_inserted", "item_upserted")
+
+      // And: each is paired with a different deleted event
+      val deletedDiscriminators = result.map(_.deletedDiscriminator).toSet
+      deletedDiscriminators should have size 2
     }
 
     it("handles multiple different types") {
@@ -249,18 +266,4 @@ class ControllerSpec extends AnyFunSpec with Matchers {
     }
   }
 
-  // Helper to get the custom Writes used for CapturedType
-  private def capturedTypeWrites: play.api.libs.json.Writes[CapturedType] = {
-    import io.apibuilder.spec.v0.models.json._
-    (ct: CapturedType) =>
-      Json.obj(
-        "fieldName" -> ct.fieldName,
-        "typeName" -> ct.typeName,
-        "modelType" -> ct.modelType,
-        "upsertedDiscriminator" -> ct.upsertedDiscriminators.head,
-        "deletedDiscriminator" -> ct.deletedDiscriminator,
-        "deletedHasModel" -> ct.deletedHasModel,
-        "upsertedDiscriminators" -> ct.upsertedDiscriminators,
-      )
-  }
 }
