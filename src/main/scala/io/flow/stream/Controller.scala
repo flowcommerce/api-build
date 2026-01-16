@@ -336,7 +336,10 @@ case class Controller() extends io.flow.build.Controller {
       case group :: tail =>
         val head = group.head
         val candidates = deleted.filter(d => d.typeName == head.typeName && d.idField.name == head.idField.name)
-        val candidate = candidates.find(_.payloadType.isDefined).orElse(candidates.headOption)
+        val candidate = candidates
+          .find(d => d.payloadType.exists(_.name == head.payloadType.name))
+          .orElse(candidates.find(_.payloadType.isDefined))
+          .orElse(candidates.headOption)
         candidate.fold {
           group.foreach(u => println(s"Skipping unpaired v2 upserted member ${u.eventName}"))
           pairWithDeleted(tail, deleted)

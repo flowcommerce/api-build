@@ -163,8 +163,13 @@ class ControllerSpec extends AnyFunSpec with Matchers {
       )
     }
 
-    def makeDeleted(typeName: String, discriminator: String, hasPayload: Boolean = true): EventType.Deleted = {
-      val model = makeModel(typeName, Seq(makeIdField()))
+    def makeDeleted(
+      typeName: String,
+      discriminator: String,
+      hasPayload: Boolean = true,
+      payloadName: Option[String] = None,
+    ): EventType.Deleted = {
+      val model = makeModel(payloadName.getOrElse(typeName), Seq(makeIdField()))
       EventType.Deleted(
         eventName = s"${typeName}_deleted",
         typeName = typeName,
@@ -288,6 +293,19 @@ class ControllerSpec extends AnyFunSpec with Matchers {
       result should have size 1
       result.head.deletedDiscriminator shouldBe "order_deleted_with_payload"
       result.head.deletedHasModel shouldBe true
+    }
+
+    it("prefers deleted events with matching payload name") {
+      val inserted = List(makeInserted("item", "item_inserted", payloadName = Some("item_summary")))
+      val deleted = List(
+        makeDeleted("item", "item_deleted_full", payloadName = Some("item_full")),
+        makeDeleted("item", "item_deleted_summary", payloadName = Some("item_summary")),
+      )
+
+      val result = controller.pairUpEvents(inserted, Nil, Nil, deleted)
+
+      result should have size 1
+      result.head.deletedDiscriminator shouldBe "item_deleted_summary"
     }
   }
 
