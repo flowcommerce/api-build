@@ -17,7 +17,7 @@ case class CapturedType(
   fieldName: String,
   typeName: String,
   modelType: Model,
-  upsertedDiscriminator: String,
+  upsertedDiscriminators: Seq[String],
   deletedDiscriminator: String,
   deletedHasModel: Boolean,
 )

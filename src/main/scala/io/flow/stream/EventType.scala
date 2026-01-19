@@ -8,6 +8,30 @@ sealed trait EventType {
   def discriminator: String
 }
 object EventType {
+  sealed trait UpsertLike extends EventType {
+    def fieldName: String
+    def payloadType: Model
+    def idField: Field
+  }
+
+  case class Inserted(
+    eventName: String,
+    typeName: String,
+    fieldName: String,
+    payloadType: Model,
+    idField: Field,
+    discriminator: String,
+  ) extends UpsertLike
+
+  case class Updated(
+    eventName: String,
+    typeName: String,
+    fieldName: String,
+    payloadType: Model,
+    idField: Field,
+    discriminator: String,
+  ) extends UpsertLike
+
   case class Upserted(
     eventName: String,
     typeName: String,
@@ -15,12 +39,13 @@ object EventType {
     payloadType: Model,
     idField: Field,
     discriminator: String,
-  ) extends EventType { override val toString = "upserted" }
+  ) extends UpsertLike
+
   case class Deleted(
     eventName: String,
     typeName: String,
     payloadType: Option[Model],
     idField: Field,
     discriminator: String,
-  ) extends EventType { override val toString = "deleted" }
+  ) extends EventType
 }
