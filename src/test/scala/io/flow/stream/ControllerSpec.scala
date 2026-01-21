@@ -3,7 +3,6 @@ package io.flow.stream
 import io.apibuilder.spec.v0.models.{Field, Model}
 import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json.Json
 
 class ControllerSpec extends AnyFunSpec with Matchers {
 
@@ -17,49 +16,6 @@ class ControllerSpec extends AnyFunSpec with Matchers {
 
   private def makeIdField(name: String = "id"): Field = {
     Field(name = name, `type` = "string", required = true)
-  }
-
-  describe("CapturedType JSON serialization") {
-    val controller = Controller()
-    import controller.capturedTypeWrites
-
-    it("serializes with single upsertedDiscriminator for backward compatibility") {
-      val capturedType = CapturedType(
-        fieldName = "order",
-        typeName = "order",
-        modelType = makeModel("order", Seq(makeIdField())),
-        upsertedDiscriminators = Seq("order_upserted"),
-        deletedDiscriminator = "order_deleted",
-        deletedHasModel = true,
-      )
-
-      val json = Json.toJson(capturedType)
-
-      (json \ "upsertedDiscriminator").as[String] shouldBe "order_upserted"
-      (json \ "upsertedDiscriminators").as[Seq[String]] shouldBe Seq("order_upserted")
-      (json \ "fieldName").as[String] shouldBe "order"
-      (json \ "typeName").as[String] shouldBe "order"
-      (json \ "deletedDiscriminator").as[String] shouldBe "order_deleted"
-      (json \ "deletedHasModel").as[Boolean] shouldBe true
-    }
-
-    it("serializes multiple upsertedDiscriminators (inserted + updated)") {
-      val capturedType = CapturedType(
-        fieldName = "item",
-        typeName = "item",
-        modelType = makeModel("item", Seq(makeIdField())),
-        upsertedDiscriminators = Seq("item_inserted", "item_updated"),
-        deletedDiscriminator = "item_deleted",
-        deletedHasModel = false,
-      )
-
-      val json = Json.toJson(capturedType)
-
-      // Backward compatibility: first discriminator is used
-      (json \ "upsertedDiscriminator").as[String] shouldBe "item_inserted"
-      // New format: all discriminators included
-      (json \ "upsertedDiscriminators").as[Seq[String]] shouldBe Seq("item_inserted", "item_updated")
-    }
   }
 
   describe("UnionMemberRx pattern matching") {

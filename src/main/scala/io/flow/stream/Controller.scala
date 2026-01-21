@@ -363,27 +363,11 @@ case class Controller() extends io.flow.build.Controller {
     }
   }
 
-  // Custom Writes for CapturedType to output both upsertedDiscriminator (for backward compatibility)
-  // and upsertedDiscriminators (new format). Can remove upsertedDiscriminator once all clients updated.
-  private[stream] implicit val capturedTypeWrites: play.api.libs.json.Writes[CapturedType] = {
-    import play.api.libs.json._
-    import io.apibuilder.spec.v0.models.json._
-    (ct: CapturedType) =>
-      Json.obj(
-        "fieldName" -> ct.fieldName,
-        "typeName" -> ct.typeName,
-        "modelType" -> ct.modelType,
-        "upsertedDiscriminator" -> ct.upsertedDiscriminators.headOption.getOrElse[String](""),
-        "deletedDiscriminator" -> ct.deletedDiscriminator,
-        "deletedHasModel" -> ct.deletedHasModel,
-        "upsertedDiscriminators" -> ct.upsertedDiscriminators,
-      )
-  }
-
   def saveDescriptor(buildType: BuildType, output: Path, descriptor: StreamDescriptor): Unit = {
     import play.api.libs.json._
     import io.apibuilder.spec.v0.models.json._
 
+    implicit val w1: Writes[CapturedType] = Json.writes[CapturedType]
     implicit val w2: Writes[KinesisStream] = Json.writes[KinesisStream]
     implicit val w3: Writes[StreamDescriptor] = Json.writes[StreamDescriptor]
     val path = output.resolve(s"flow-$buildType-streams.json").toFile
