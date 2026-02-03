@@ -10,7 +10,7 @@ permissions:
 jobs:
   approve-and-merge:
     runs-on: ubuntu-latest
-    if: ${{ github.event.state == 'success' }}
+    if: ${{ github.event.state == 'success' && github.event.context == 'continuous-integration/jenkins/branch' }}
     steps:
       - name: log jenkins context
         run: |
