@@ -27,6 +27,7 @@ object Lint {
       case _ => {
         Seq(
           linters.AllAttributesAreWellKnown,
+          linters.AllImportsAreUsed,
           linters.BadNames,
           linters.CommonFieldTypes,
           linters.CommonParameterTypes,
