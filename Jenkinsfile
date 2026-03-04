@@ -1,7 +1,7 @@
 pipeline {
     agent {
         kubernetes {
-            inheritFrom 'kaniko-slim'
+            inheritFrom 'generic'
             containerTemplates([
                 containerTemplate(name: 'play', image: '479720515435.dkr.ecr.us-east-1.amazonaws.com/flowcommerce/play_builder_java17_noble:latest', command: 'cat', ttyEnabled: true),
             ])
