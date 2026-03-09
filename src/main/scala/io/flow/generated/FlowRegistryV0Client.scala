@@ -7,7 +7,6 @@ package io.flow.registry.v0.models {
 
   sealed trait Healthcheck extends _root_.scala.Product with _root_.scala.Serializable {
     def healthcheckDiscriminator: HealthcheckDiscriminator
-
   }
 
   /**
