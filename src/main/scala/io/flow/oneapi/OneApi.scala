@@ -56,10 +56,25 @@ case class OneApi(
 
   def process(): ValidatedNec[String, Service] = {
     (
+      validateVersionConsistency(),
       validatePaths(),
       validateRecordNames(),
-    ).mapN { case (_, _) =>
+    ).mapN { case (_, _, _) =>
       buildOneApi()
+    }
+  }
+
+  private[this] def validateVersionConsistency(): ValidatedNec[String, Unit] = {
+    val versions = originalServices.map(_.version).distinct
+    versions.toList match {
+      case Nil | _ :: Nil => ().validNec
+      case _ =>
+        val versionCounts = originalServices.groupBy(_.version).view.mapValues(_.size).toMap
+        val expectedVersion = versionCounts.maxBy(_._2)._1
+        val outliers = originalServices.filterNot(_.version == expectedVersion)
+        val msg = s"Version inconsistency detected. Expected all services at version $expectedVersion but found: " +
+          outliers.map(s => s"${s.name}@${s.version}").mkString(", ")
+        msg.invalidNec
     }
   }
 
