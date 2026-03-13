@@ -1,6 +1,7 @@
 package io.flow.oneapi
 
 import cats.data.Validated.{Invalid, Valid}
+import cats.syntax.all._
 import io.apibuilder.spec.v0.models.Service
 import io.flow.build.{Application, BuildConfig, BuildType, DownloadCache}
 
@@ -34,6 +35,13 @@ case class Controller() extends io.flow.build.Controller {
       }
     }
 
+    validateVersionConsistency(services) match {
+      case Invalid(errs) =>
+        errs.toNonEmptyList.toList.foreach(addError)
+        return
+      case Valid(_) => ()
+    }
+
     val all = services ++ eventService
     println("Building single API from: " + all.map(_.name).mkString(", "))
     OneApi(buildType, downloadCache, all).process() match {
@@ -53,6 +61,20 @@ case class Controller() extends io.flow.build.Controller {
         }
         println(s"One API file created. See: $path")
       }
+    }
+  }
+
+  private def validateVersionConsistency(services: Seq[Service]): cats.data.ValidatedNec[String, Unit] = {
+    val versions = services.map(_.version).distinct
+    versions.toList match {
+      case Nil | _ :: Nil => ().validNec
+      case _ =>
+        val versionCounts = services.groupBy(_.version).view.mapValues(_.size).toMap
+        val expectedVersion = versionCounts.maxBy(_._2)._1
+        val outliers = services.filterNot(_.version == expectedVersion)
+        val msg = s"Version inconsistency detected. Expected all services at version $expectedVersion but found: " +
+          outliers.map(s => s"${s.name}@${s.version}").mkString(", ")
+        msg.invalidNec
     }
   }
 
