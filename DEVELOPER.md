@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/flowcommerce/api-build.png?branch=main)](https://travis-ci.org/flowcommerce/api-build)
-
 # example commands
 
 sbt:api-build> run api oneapi flow/consumer-invoice flow/item flow/content flow/shopify-session flow/error flow/session flow/export flow/harmonization flow/fulfillment flow/ratecard flow/merchant-of-record flow/return flow/token flow/search flow/webhook flow/order-management flow/location flow/field-validation flow/common flow/marketing flow/currency flow/permission flow/checkout flow/import flow/sync flow/experience flow/payment-gateway flow/healthcheck flow/reference flow/jsonp flow/consumer-email flow/user flow/gift-card flow/catalog-exclusion flow/price flow/organization flow/payment flow/shopify flow/inventory flow/customer flow/tracking flow/ftp flow/fraud flow/catalog flow/query-builder flow/link flow/label flow/catalog-return flow/graphql flow/session-context flow/tax flow/order-price
