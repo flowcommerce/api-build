@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/flowcommerce/api-build.png?branch=main)](https://travis-ci.org/flowcommerce/api-build)
-
 # api-build
 
 Runs a set of tests against an API defined in apibuilder to ensure
